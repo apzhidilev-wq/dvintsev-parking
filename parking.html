@@ -2489,6 +2489,14 @@ async function doChangePw(){
   if(!okCur){ show('Неверный текущий пароль'); return; }
   await setUserPassword(users[idx], nw);
   saveUsers(users);
+  // Также синхронизируем пароль с Supabase, чтобы облако работало
+  // на других устройствах с тем же новым паролем.
+  if(SB){
+    try{
+      const { error } = await SB.auth.updateUser({ password: nw });
+      if(error) console.warn('Supabase updateUser:', error.message);
+    }catch(e){ console.warn('Supabase updateUser:', e); }
+  }
   document.getElementById('pwModal').classList.remove('open');
   denyToast('Пароль изменён');
 }
