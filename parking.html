@@ -1092,7 +1092,8 @@ html[data-theme="paper"] .auth-field input:focus{background:#fff}
 .auth-err{font-size:12px;color:var(--red);margin-top:10px;margin-bottom:4px;
   padding:10px 12px;border-radius:var(--r);
   background:rgba(224,85,61,.1);border:1px solid rgba(224,85,61,.3);
-  font-family:var(--mono);letter-spacing:.2px;display:none}
+  font-family:var(--mono);letter-spacing:.2px;display:none;
+  word-wrap:break-word;overflow-wrap:break-word;line-height:1.4}
 .auth-err.show{display:block;animation:shake .28s}
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
 .auth-btn{width:100%;padding:13px 16px;border-radius:var(--r);
@@ -2191,10 +2192,14 @@ async function doLogin(ev){
   const localOk = found ? await verifyPw(found, p) : false;
 
   if(!cloudOk && !localOk){
-    err.textContent = 'Неверный логин или пароль';
+    // Показываем реальную причину провала — облако и локально оба зафейлились
+    const cloudErr = cloudResp.error || 'не отвечает';
+    const localStatus = found ? 'хеш не совпал' : 'юзера нет локально';
+    err.textContent = 'Не удалось войти. Облако: ' + cloudErr + '. Локально: ' + localStatus;
     err.classList.add('show');
     document.getElementById('authPass').value='';
-    setTimeout(()=>err.classList.remove('show'), 2800);
+    setTimeout(()=>err.classList.remove('show'), 8000);
+    console.warn('Login failed.', { cloudErr, localStatus, SB_URL });
     return false;
   }
   err.classList.remove('show');
