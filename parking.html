@@ -2654,20 +2654,20 @@ async function sbDiag(){
       lines.push('After manual write: ' + after);
     }catch(e){ lines.push('Manual write ex: ' + e.message); }
   }
-  // Шаг 4 — полный pull через RAW FETCH (page=200)
+  // Шаг 4 — полный pull через RAW FETCH с ?limit=&offset= (page=50)
   try{
     const all = [];
-    let from = 0; const page = 200;
+    let offset = 0; const page = 50;
     while(true){
       let data;
       try{
-        data = await sbRestFetch('parking_cells?select=*', from, from+page-1);
+        data = await sbRestFetch('parking_cells?select=*', offset, page);
       }catch(e){
-        lines.push('Pull err at '+from+': '+e.message); break;
+        lines.push('Pull err at '+offset+': '+e.message); break;
       }
       all.push(...(data || []));
       if(!data || data.length < page) break;
-      from += page;
+      offset += page;
     }
     lines.push('Full pull total: ' + all.length);
     // Записываем ВСЕ
@@ -2832,8 +2832,13 @@ async function sbPushAllCells(){
 
 // Прямой fetch к Supabase REST API — обходит supabase-js, который
 // на iOS Safari иногда падает с TypeError: Load failed для select-запросов.
-async function sbRestFetch(path, rangeFrom, rangeTo){
-  const url = `${SB_URL}/rest/v1/${path}`;
+// ВАЖНО: используем ?limit=&offset= вместо Range header — последний на
+// iOS Safari трактуется как partial-download (для видео/audio) и обрывается.
+async function sbRestFetch(path, offset, limit){
+  let url = `${SB_URL}/rest/v1/${path}`;
+  if(offset != null && limit != null){
+    url += (url.includes('?') ? '&' : '?') + `limit=${limit}&offset=${offset}`;
+  }
   const session = (await SB.auth.getSession()).data?.session;
   const headers = {
     'apikey': SB_ANON_KEY,
@@ -2841,10 +2846,6 @@ async function sbRestFetch(path, rangeFrom, rangeTo){
     'Accept': 'application/json',
     'Accept-Profile': 'public'
   };
-  if(rangeFrom != null && rangeTo != null){
-    headers['Range-Unit'] = 'items';
-    headers['Range'] = `${rangeFrom}-${rangeTo}`;
-  }
   const resp = await fetch(url, { method:'GET', headers, cache:'no-store' });
   if(!resp.ok) throw new Error('HTTP '+resp.status+' '+resp.statusText);
   return await resp.json();
@@ -2856,14 +2857,14 @@ async function sbPullAllCells(){
   sbStatus('sync');
   try{
     const all = [];
-    let from = 0;
-    // page=200 — iOS Safari душит большие ответы; 200 строк ≈ 100 КБ.
-    const page = 200;
+    let offset = 0;
+    // page=50 — iOS Safari душит ответы > ~100 КБ. 50 строк ≈ 25 КБ.
+    const page = 50;
     while(true){
       let data, lastErr;
       for(let attempt = 0; attempt < 3; attempt++){
         try{
-          data = await sbRestFetch('parking_cells?select=*', from, from+page-1);
+          data = await sbRestFetch('parking_cells?select=*', offset, page);
           lastErr = null;
           break;
         }catch(e){
@@ -2875,7 +2876,7 @@ async function sbPullAllCells(){
       const got = data ? data.length : 0;
       all.push(...(data || []));
       if(got < page) break;
-      from += page;
+      offset += page;
     }
     Object.keys(PARKING).forEach(k=>delete PARKING[k]);
     for(const s of ['А','В','С','Н','ВНЕ']) PARKING[s] = {};
