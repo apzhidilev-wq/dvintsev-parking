@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>БЦ Двинцев — Паркинг</title>
 <style>
 :root{
@@ -439,6 +439,36 @@ html[data-touch="1"] .um-touch-check{ display:inline !important }
 }
 .mobile-burger{ display:none } /* по умолчанию — на десктопе скрыта */
 .mobile-search-btn{ display:none } /* по умолчанию — на десктопе скрыта */
+
+/* ═══ iPhone notch / Dynamic Island / home bar (safe-area-inset) ═══
+   viewport-fit=cover позволяет контенту уходить под notch,
+   но мы защищаем fixed-элементы отступами env(). */
+@supports (padding-top: env(safe-area-inset-top)){
+  .hdr{
+    padding-top:    max(0px, env(safe-area-inset-top));
+    padding-left:   max(22px, calc(22px + env(safe-area-inset-left)));
+    padding-right:  max(22px, calc(22px + env(safe-area-inset-right)));
+  }
+  @media (max-width: 900px){
+    .hdr{
+      padding-top:   max(6px, env(safe-area-inset-top)) !important;
+      padding-left:  max(10px, calc(10px + env(safe-area-inset-left))) !important;
+      padding-right: max(10px, calc(10px + env(safe-area-inset-right))) !important;
+    }
+    /* Боковая панель: сверху учитываем notch */
+    .lpanel{
+      padding-top: env(safe-area-inset-top) !important;
+    }
+    /* Tooltip снизу — выше home bar */
+    #tt{
+      bottom: max(8px, calc(8px + env(safe-area-inset-bottom))) !important;
+    }
+    /* Модалки: не перекрываются home bar */
+    .modal{
+      max-height: calc(100dvh - 24px - env(safe-area-inset-bottom)) !important;
+    }
+  }
+}
 
 /* ═══════════════════ MOBILE SEARCH OVERLAY ═══════════════════ */
 .msearch-overlay{ position:fixed; inset:0; background:var(--bg); z-index:300;
@@ -3741,7 +3771,10 @@ async function renderPlanDocPages(docName){
   // Если новый док стал активным — перепривязать обработчики разметки
   if(planEdit && planEdit.active){
     docState.pages.forEach(p=>{
-      if(p.svg) p.svg.addEventListener('mousedown', onOverlayMouseDown);
+      if(p.svg){
+        p.svg.addEventListener('mousedown', onOverlayMouseDown);
+        p.svg.addEventListener('touchstart', onOverlayPointerDown, {passive:false});
+      }
     });
   }
   // Этап 2: отрисовка пользовательской геометрии ячеек
@@ -3795,6 +3828,15 @@ function clientToSvg(svg, clientX, clientY){
 }
 function snap(v, e){ return e && e.shiftKey ? Math.round(v/5)*5 : v; }
 
+// Извлечь clientX/clientY из mouse- или touch-события
+function evClient(ev){
+  if(ev.touches && ev.touches.length > 0)
+    return {x: ev.touches[0].clientX, y: ev.touches[0].clientY};
+  if(ev.changedTouches && ev.changedTouches.length > 0)
+    return {x: ev.changedTouches[0].clientX, y: ev.changedTouches[0].clientY};
+  return {x: ev.clientX, y: ev.clientY};
+}
+
 function renderPlanShapes(){
   if(!planState || !planState.docs) return;
   const activeDocName = planState.activeDoc;
@@ -3839,12 +3881,14 @@ function drawCellShape(svg, sec, id, cell){
   poly.setAttribute('points', pointsToSvg(pts));
   poly.setAttribute('class','cell-shape '+shapeStatusClass(cell));
   poly.dataset.sec = sec; poly.dataset.id = id;
-  poly.addEventListener('mousedown', onShapeMouseDown);
+  poly.addEventListener('mousedown',  onShapeMouseDown);
+  poly.addEventListener('touchstart', onShapePointerDown, {passive:false});
   poly.addEventListener('click', onShapeClick);
-  // Tooltip on hover (вне режима разметки)
+  // Tooltip on hover/tap (вне режима разметки)
   poly.addEventListener('mouseenter', onShapeHover);
   poly.addEventListener('mousemove',  onShapeHoverMove);
   poly.addEventListener('mouseleave', onShapeHoverLeave);
+  poly.addEventListener('touchstart', onShapeTap, {passive:true});
   svg.appendChild(poly);
   const c = polyCenter(pts);
   const fs = labelFontSizeFor(svg);
@@ -3869,6 +3913,32 @@ function onShapeHoverMove(ev){
 function onShapeHoverLeave(){
   if(typeof hideTT==='function') hideTT();
 }
+// Tap-tooltip для мобильных: тап по ячейке показывает подсказку,
+// второй тап или тап в другом месте — скрывает.
+function onShapeTap(ev){
+  if(planEdit.active) return; // в режиме разметки — не мешаем drag
+  const r = ev.currentTarget;
+  const tt = document.getElementById('tt');
+  // Если tooltip уже показан для этой же ячейки — скрыть
+  if(tt && tt.style.display !== 'none' &&
+     tt.dataset.tapSec === r.dataset.sec && tt.dataset.tapId === r.dataset.id){
+    if(typeof hideTT==='function') hideTT();
+    return;
+  }
+  const touch = ev.touches[0] || ev.changedTouches[0];
+  const fakeEv = { clientX: touch ? touch.clientX : 0,
+                   clientY: touch ? touch.clientY : 0 };
+  if(typeof showTT==='function') showTT(fakeEv, r.dataset.sec, r.dataset.id);
+  if(tt){ tt.dataset.tapSec = r.dataset.sec; tt.dataset.tapId = r.dataset.id; }
+  // Тап вне ячейки — скрыть
+  const hide = e=>{
+    if(!r.contains(e.target)){
+      if(typeof hideTT==='function') hideTT();
+      document.removeEventListener('touchstart', hide, {capture:true});
+    }
+  };
+  setTimeout(()=> document.addEventListener('touchstart', hide, {capture:true, once:true}), 50);
+}
 
 function togglePlanEdit(){
   if(!canAdmin()){ denyToast('Только администратор'); return; }
@@ -3889,13 +3959,19 @@ function togglePlanEdit(){
     if(rectBtn) rectBtn.classList.add('active');
     if(polyBtn) polyBtn.classList.remove('active');
     planState.pages.forEach(p=>{
-      if(p.svg) p.svg.addEventListener('mousedown', onOverlayMouseDown);
+      if(p.svg){
+        p.svg.addEventListener('mousedown', onOverlayMouseDown);
+        p.svg.addEventListener('touchstart', onOverlayPointerDown, {passive:false});
+      }
     });
     window.addEventListener('keydown', onPolyKey);
     denyToast('Режим разметки: drag — прямоугольник, 4 точки — полигон');
   }else{
     planState.pages.forEach(p=>{
-      if(p.svg) p.svg.removeEventListener('mousedown', onOverlayMouseDown);
+      if(p.svg){
+        p.svg.removeEventListener('mousedown', onOverlayMouseDown);
+        p.svg.removeEventListener('touchstart', onOverlayPointerDown);
+      }
     });
     window.removeEventListener('keydown', onPolyKey);
     cleanupDraft();
@@ -4036,7 +4112,7 @@ function cancelSeries(){
   denyToast('Серия отменена');
 }
 
-function onOverlayMouseDown(ev){
+function onOverlayPointerDown(ev){
   if(!planEdit.active) return;
   if(ev.target !== ev.currentTarget && !ev.target.classList.contains('plan-overlay')) return;
   ev.preventDefault(); ev.stopPropagation();
@@ -4045,7 +4121,8 @@ function onOverlayMouseDown(ev){
     return;
   }
   const svg = ev.currentTarget;
-  const p = clientToSvg(svg, ev.clientX, ev.clientY);
+  const {x: cx, y: cy} = evClient(ev);
+  const p = clientToSvg(svg, cx, cy);
   const x = snap(p.x, ev), y = snap(p.y, ev);
   planEdit.mode = 'drawing';
   planEdit.draft = { svg, x0:x, y0:y, x1:x, y1:y, node:null };
@@ -4057,12 +4134,18 @@ function onOverlayMouseDown(ev){
   planEdit.draft.node = r;
   window.addEventListener('mousemove', onDrawMove);
   window.addEventListener('mouseup',   onDrawUp);
+  window.addEventListener('touchmove',  onDrawMove, {passive:false});
+  window.addEventListener('touchend',   onDrawUp);
+  window.addEventListener('touchcancel',onDrawUp);
 }
+// Алиас для совместимости (вызывается из renderDoc)
+function onOverlayMouseDown(ev){ onOverlayPointerDown(ev); }
 
 // ─── Режим «4 точки» ───
 function onPolyClick(ev){
   const svg = ev.currentTarget;
-  const p = clientToSvg(svg, ev.clientX, ev.clientY);
+  const {x: cx, y: cy} = evClient(ev);
+  const p = clientToSvg(svg, cx, cy);
   const x = snap(p.x, ev), y = snap(p.y, ev);
   if(!planEdit.polyDraft){
     planEdit.polyDraft = { svg, node:null, rubber:null, dots:[] };
@@ -4078,6 +4161,7 @@ function onPolyClick(ev){
     svg.appendChild(pl);
     planEdit.polyDraft.node = pl;
     window.addEventListener('mousemove', onPolyMove);
+    window.addEventListener('touchmove',  onPolyMove, {passive:false});
   }
   planEdit.polyPoints.push([x,y]);
   const dot = document.createElementNS(SVG_NS,'circle');
@@ -4090,8 +4174,10 @@ function onPolyClick(ev){
 }
 function onPolyMove(ev){
   if(!planEdit.polyDraft || !planEdit.polyPoints.length) return;
+  if(ev.cancelable) ev.preventDefault();
   const last = planEdit.polyPoints[planEdit.polyPoints.length-1];
-  const p = clientToSvg(planEdit.polyDraft.svg, ev.clientX, ev.clientY);
+  const {x: cx, y: cy} = evClient(ev);
+  const p = clientToSvg(planEdit.polyDraft.svg, cx, cy);
   const x = snap(p.x, ev), y = snap(p.y, ev);
   const rub = planEdit.polyDraft.rubber;
   rub.setAttribute('x1',last[0]); rub.setAttribute('y1',last[1]);
@@ -4118,11 +4204,14 @@ function cleanupPolyDraft(){
   planEdit.polyDraft = null;
   planEdit.polyPoints = [];
   window.removeEventListener('mousemove', onPolyMove);
+  window.removeEventListener('touchmove',  onPolyMove);
 }
 function onDrawMove(ev){
   if(planEdit.mode !== 'drawing' || !planEdit.draft) return;
+  if(ev.cancelable) ev.preventDefault();
   const d = planEdit.draft;
-  const p = clientToSvg(d.svg, ev.clientX, ev.clientY);
+  const {x: cx, y: cy} = evClient(ev);
+  const p = clientToSvg(d.svg, cx, cy);
   d.x1 = snap(p.x, ev); d.y1 = snap(p.y, ev);
   const x = Math.min(d.x0,d.x1), y = Math.min(d.y0,d.y1);
   const w = Math.abs(d.x1-d.x0), h = Math.abs(d.y1-d.y0);
@@ -4130,8 +4219,11 @@ function onDrawMove(ev){
   d.node.setAttribute('width',w);d.node.setAttribute('height',h);
 }
 function onDrawUp(ev){
-  window.removeEventListener('mousemove', onDrawMove);
-  window.removeEventListener('mouseup',   onDrawUp);
+  window.removeEventListener('mousemove',  onDrawMove);
+  window.removeEventListener('mouseup',    onDrawUp);
+  window.removeEventListener('touchmove',  onDrawMove);
+  window.removeEventListener('touchend',   onDrawUp);
+  window.removeEventListener('touchcancel',onDrawUp);
   if(planEdit.mode !== 'drawing' || !planEdit.draft){ planEdit.mode='idle'; return; }
   const d = planEdit.draft;
   const x = Math.min(d.x0,d.x1), y = Math.min(d.y0,d.y1);
@@ -4153,24 +4245,32 @@ function cleanupDraft(){
   planEdit.mode='idle';
 }
 
-function onShapeMouseDown(ev){
+function onShapePointerDown(ev){
   if(!planEdit.active) return;
   ev.stopPropagation();
+  if(ev.cancelable) ev.preventDefault();
   const r = ev.currentTarget;
   const sec = r.dataset.sec, id = r.dataset.id;
   const svg = r.ownerSVGElement;
-  const p = clientToSvg(svg, ev.clientX, ev.clientY);
+  const {x: cx, y: cy} = evClient(ev);
+  const p = clientToSvg(svg, cx, cy);
   const pts = geomPoints(PARKING[sec][id].geom);
   if(!pts) return;
   planEdit.mode='moving';
   planEdit.drag = { svg, sec, id, node:r, startSvg:p, origPts:clonePoints(pts) };
-  window.addEventListener('mousemove', onShapeMove);
-  window.addEventListener('mouseup',   onShapeUp);
+  window.addEventListener('mousemove',  onShapeMove);
+  window.addEventListener('mouseup',    onShapeUp);
+  window.addEventListener('touchmove',  onShapeMove, {passive:false});
+  window.addEventListener('touchend',   onShapeUp);
+  window.addEventListener('touchcancel',onShapeUp);
 }
+function onShapeMouseDown(ev){ onShapePointerDown(ev); }
 function onShapeMove(ev){
   if(planEdit.mode!=='moving' || !planEdit.drag) return;
+  if(ev.cancelable) ev.preventDefault();
   const d = planEdit.drag;
-  const p = clientToSvg(d.svg, ev.clientX, ev.clientY);
+  const {x: cx, y: cy} = evClient(ev);
+  const p = clientToSvg(d.svg, cx, cy);
   let dx = p.x - d.startSvg.x, dy = p.y - d.startSvg.y;
   if(ev.shiftKey){ dx = Math.round(dx/5)*5; dy = Math.round(dy/5)*5; }
   const newPts = d.origPts.map(pp=>[pp[0]+dx, pp[1]+dy]);
@@ -4186,8 +4286,11 @@ function onShapeMove(ev){
   PARKING[d.sec][d.id].geom = { points: newPts };
 }
 function onShapeUp(){
-  window.removeEventListener('mousemove', onShapeMove);
-  window.removeEventListener('mouseup',   onShapeUp);
+  window.removeEventListener('mousemove',  onShapeMove);
+  window.removeEventListener('mouseup',    onShapeUp);
+  window.removeEventListener('touchmove',  onShapeMove);
+  window.removeEventListener('touchend',   onShapeUp);
+  window.removeEventListener('touchcancel',onShapeUp);
   planEdit.mode='idle'; planEdit.drag=null;
 }
 function onShapeClick(ev){
