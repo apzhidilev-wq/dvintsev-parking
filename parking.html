@@ -1248,7 +1248,7 @@ html[data-theme="paper"] .um-list-item{background:#fffaf0}
     <div class="auth-err" id="authErr">Неверный логин или пароль</div>
     <label class="auth-remember"><input type="checkbox" id="authRemember" checked>Запомнить меня на 7 дней</label>
     <button type="submit" class="auth-btn">Войти</button>
-    <div id="authBuildTag" style="margin-top:14px;font-size:9.5px;color:var(--tx3);font-family:var(--mono);letter-spacing:.5px;text-align:center;opacity:.6">build 2026-04-27.22:00 · v9 (debug)</div>
+    <div id="authBuildTag" style="margin-top:14px;font-size:9.5px;color:var(--tx3);font-family:var(--mono);letter-spacing:.5px;text-align:center;opacity:.6">build 2026-04-27.22:20 · v10 (debug, simple-cors)</div>
   </form>
 </div>
 
@@ -2772,17 +2772,25 @@ async function sbSignInRaw(email, password, timeoutMs){
   const ac = new AbortController();
   const t = setTimeout(()=>ac.abort(), timeoutMs || 8000);
   try{
-    const r = await fetch(`${SB_URL}/auth/v1/token?grant_type=password`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': SB_ANON_KEY,
-        'Authorization': 'Bearer ' + SB_ANON_KEY
-      },
-      body: JSON.stringify({ email, password }),
-      signal: ac.signal,
-      cache: 'no-store'
-    });
+    // CORS-simple request: только Content-Type=text/plain (whitelisted),
+    // body = JSON string как plain text. Это убирает CORS preflight,
+    // который iPhone Safari через iCloud Private Relay тормозит/отвергает.
+    // Supabase Auth принимает application/json и парсит его сам.
+    const r = await fetch(
+      `${SB_URL}/auth/v1/token?grant_type=password&apikey=${encodeURIComponent(SB_ANON_KEY)}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'text/plain;charset=UTF-8'
+        },
+        body: JSON.stringify({ email, password }),
+        signal: ac.signal,
+        credentials: 'omit',
+        cache: 'no-store',
+        mode: 'cors',
+        referrerPolicy: 'no-referrer'
+      }
+    );
     clearTimeout(t);
     if(!r.ok){
       let msg = 'HTTP ' + r.status;
