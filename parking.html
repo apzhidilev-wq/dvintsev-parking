@@ -2179,15 +2179,14 @@ async function doLogin(ev){
   let found = users.find(x=>x.u===u);
 
   // Сначала пробуем Supabase — он источник истины для аутентификации.
-  // Если SDK не загружен или нет сети, fallback на локальный PBKDF2.
+  // Используем raw fetch через прокси (sbSignInRaw) — supabase-js auth
+  // wrapper на iOS Safari + мобильном интернете капризничает.
+  // Если 8 сек нет ответа от облака — fallback на локальный PBKDF2.
   let cloudOk = false;
   if(SB){
-    try{
-      const { error } = await SB.auth.signInWithPassword({
-        email: sbEmail(u), password: p
-      });
-      cloudOk = !error;
-    }catch(_){ cloudOk = false; }
+    const r = await sbSignInRaw(sbEmail(u), p, 8000);
+    cloudOk = r.ok;
+    if(!r.ok) console.warn('Cloud login failed:', r.error);
   }
   // Локальная проверка
   const localOk = found ? await verifyPw(found, p) : false;
@@ -2731,6 +2730,48 @@ document.addEventListener('touchmove', ()=>{
   if(_sbStatusTouchTimer){ clearTimeout(_sbStatusTouchTimer); _sbStatusTouchTimer = null; }
 });
 
+// ─── Raw signIn через прокси (минуем supabase-js auth wrapper) ────
+// На iOS Safari + мобильный интернет supabase-js auth таймаутит на
+// первом запросе. Прямой fetch с явным timeout надёжнее.
+async function sbSignInRaw(email, password, timeoutMs){
+  const ac = new AbortController();
+  const t = setTimeout(()=>ac.abort(), timeoutMs || 8000);
+  try{
+    const r = await fetch(`${SB_URL}/auth/v1/token?grant_type=password`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SB_ANON_KEY,
+        'Authorization': 'Bearer ' + SB_ANON_KEY
+      },
+      body: JSON.stringify({ email, password }),
+      signal: ac.signal,
+      cache: 'no-store'
+    });
+    clearTimeout(t);
+    if(!r.ok){
+      let msg = 'HTTP ' + r.status;
+      try{ const j = await r.json(); if(j && j.error_description) msg = j.error_description; }catch(_){}
+      return { ok:false, error: msg };
+    }
+    const data = await r.json();
+    if(!data || !data.access_token) return { ok:false, error:'no token in response' };
+    // Передаём session в supabase-js — нужно для последующих SB.auth.getSession() и Realtime
+    if(SB){
+      try{
+        await SB.auth.setSession({
+          access_token: data.access_token,
+          refresh_token: data.refresh_token
+        });
+      }catch(e){ console.warn('sbSignInRaw setSession:', e.message); }
+    }
+    return { ok:true, user: data.user };
+  }catch(e){
+    clearTimeout(t);
+    return { ok:false, error: e.name === 'AbortError' ? 'timeout' : e.message };
+  }
+}
+
 async function sbInit(){
   try{
     if(typeof supabase === 'undefined'){
@@ -2752,13 +2793,14 @@ const sbEmail = (login)=> String(login).toLowerCase() + '@dvintsev.app';
 // Возвращает true если облачная сессия активна.
 async function sbAfterLocalLogin(login, password, name){
   if(!SB) return false;
-  // Сначала пробуем signIn
-  let { data, error } = await SB.auth.signInWithPassword({
-    email: sbEmail(login), password
-  });
-  if(error){
-    // Если не существует — signUp; trigger создаст profile
-    if(/invalid login|invalid credentials/i.test(error.message||'')){
+  // Сначала пробуем signIn через raw fetch
+  const r1 = await sbSignInRaw(sbEmail(login), password, 8000);
+  if(r1.ok) return true;
+  const errMsg = r1.error || '';
+  // Если юзер не существует в облаке — signUp (через supabase-js, signUp endpoint
+  // отдаёт маленький ответ и обычно проходит даже на капризной сети)
+  if(/invalid login|invalid credentials|invalid grant|invalid_grant/i.test(errMsg)){
+    try{
       const su = await SB.auth.signUp({
         email: sbEmail(login), password,
         options:{ data:{ login, name } }
@@ -2767,15 +2809,16 @@ async function sbAfterLocalLogin(login, password, name){
         console.warn('Supabase signUp failed:', su.error.message);
         return false;
       }
-      // signIn после signUp (если confirm email отключён)
-      const r2 = await SB.auth.signInWithPassword({
-        email: sbEmail(login), password
-      });
-      if(r2.error){ console.warn('Supabase signIn after signUp failed:', r2.error.message); return false; }
-    } else {
-      console.warn('Supabase signIn failed:', error.message);
+      // signIn после signUp
+      const r2 = await sbSignInRaw(sbEmail(login), password, 8000);
+      if(!r2.ok){ console.warn('Supabase signIn after signUp failed:', r2.error); return false; }
+    }catch(e){
+      console.warn('Supabase signUp ex:', e.message);
       return false;
     }
+  } else {
+    console.warn('Supabase signIn failed:', errMsg);
+    return false;
   }
   return true;
 }
