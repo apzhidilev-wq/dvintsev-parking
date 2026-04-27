@@ -1248,7 +1248,7 @@ html[data-theme="paper"] .um-list-item{background:#fffaf0}
     <div class="auth-err" id="authErr">Неверный логин или пароль</div>
     <label class="auth-remember"><input type="checkbox" id="authRemember" checked>Запомнить меня на 7 дней</label>
     <button type="submit" class="auth-btn">Войти</button>
-    <div id="authBuildTag" style="margin-top:14px;font-size:9.5px;color:var(--tx3);font-family:var(--mono);letter-spacing:.5px;text-align:center;opacity:.6">build 2026-04-27 · v11</div>
+    <div id="authBuildTag" style="margin-top:14px;font-size:9.5px;color:var(--tx3);font-family:var(--mono);letter-spacing:.5px;text-align:center;opacity:.6">build 2026-04-27 · v12</div>
   </form>
 </div>
 
@@ -3050,12 +3050,13 @@ async function sbInitialSync(){
   }
   sbStatus('sync');
   try{
-    // Узнаём, есть ли что-то в облаке. Не используем head:true (HEAD запрос) —
-    // делаем минимальный select на 1 запись и смотрим Content-Range header.
-    // Через sbRestFetch возвращается тело — нам достаточно его длины.
-    const probe = await sbRestFetch('parking_cells?select=cell_id&limit=1');
-    const cloudHasData = Array.isArray(probe) && probe.length > 0;
+    // Сразу делаем bulk-pull — он сам попробует получить все ячейки.
+    // Pull имеет ретраи и fallback на пагинацию, что надёжнее, чем
+    // отдельный probe-запрос (который иногда таймаутит на iPhone Safari +
+    // iCloud Private Relay из-за CORS preflight).
     const localCount = Object.values(PARKING).reduce((n,s)=>n+Object.keys(s).length, 0);
+    const pulled = await sbPullAllCells();
+    const cloudHasData = pulled > 0;
     if(!cloudHasData && localCount > 0){
       // Облако пустое — заливаем локальные данные (push требует SDK)
       if(SB){
@@ -3066,9 +3067,8 @@ async function sbInitialSync(){
         }
       }
     } else if(cloudHasData){
-      // Облако — источник истины
-      const pulled = await sbPullAllCells();
-      if(pulled >= 0 && pulled !== localCount){
+      // Pull уже выполнен выше — данные в PARKING. Просто toast.
+      if(pulled !== localCount){
         denyToast(`☁️ Получено из облака: ${pulled} ячеек`);
       }
     }
