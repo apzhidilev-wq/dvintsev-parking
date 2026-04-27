@@ -2621,23 +2621,72 @@ async function sbDiag(){
   try{
     const s = await SB.auth.getSession();
     lines.push('Session: ' + (s.data?.session ? 'YES' : 'NO'));
-    if(s.data?.session){
-      lines.push('User email: ' + (s.data.session.user?.email || '—'));
-      lines.push('User id: ' + (s.data.session.user?.id || '—'));
-      lines.push('Expires: ' + new Date(s.data.session.expires_at*1000).toLocaleString('ru-RU'));
-    }
-    if(s.error) lines.push('Session err: ' + s.error.message);
+    if(s.data?.session) lines.push('User email: ' + (s.data.session.user?.email || '—'));
   }catch(e){ lines.push('Session ex: ' + e.message); }
+  // Шаг 1 — count
   try{
     const r = await SB.from('parking_cells').select('*', {count:'exact', head:true});
     lines.push('Cloud count: ' + (r.count ?? '—'));
-    if(r.error) lines.push('Cloud err: ' + r.error.message);
-  }catch(e){ lines.push('Cloud ex: ' + e.message); }
-  const localCount = Object.values(PARKING).reduce((n,s)=>n+Object.keys(s).length, 0);
-  lines.push('Local cells: ' + localCount);
-  lines.push('User: ' + (CURRENT_USER ? CURRENT_USER.u : '—'));
-  lines.push('Pushed flag: ' + (localStorage.getItem('dvintsev_sb_pushed_v1') || '—'));
-  alert('🔍 Диагностика облака\n\n' + lines.join('\n'));
+    if(r.error) lines.push('Count err: ' + r.error.message);
+  }catch(e){ lines.push('Count ex: ' + e.message); }
+  // Шаг 2 — реальный SELECT данных (5 строк)
+  let sample = null;
+  try{
+    const r = await SB.from('parking_cells').select('*').range(0, 4);
+    sample = r.data;
+    lines.push('Sample size: ' + (r.data ? r.data.length : 'null'));
+    if(r.error) lines.push('Sample err: ' + r.error.message);
+    if(r.data && r.data[0]){
+      lines.push('Sample[0].sec=' + r.data[0].sec + ' id=' + r.data[0].cell_id);
+      lines.push('Sample[0].data type=' + typeof r.data[0].data);
+    }
+  }catch(e){ lines.push('Sample ex: ' + e.message); }
+  // Шаг 3 — попробуем вручную записать в PARKING из sample
+  if(sample && sample.length){
+    try{
+      for(const row of sample){
+        if(!PARKING[row.sec]) PARKING[row.sec] = {};
+        PARKING[row.sec][row.cell_id] = row.data;
+      }
+      const after = Object.values(PARKING).reduce((n,s)=>n+Object.keys(s).length, 0);
+      lines.push('After manual write: ' + after);
+    }catch(e){ lines.push('Manual write ex: ' + e.message); }
+  }
+  // Шаг 4 — полный pull через range
+  try{
+    const all = [];
+    let from = 0; const page = 1000;
+    while(true){
+      const r = await SB.from('parking_cells').select('*').range(from, from+page-1);
+      if(r.error){ lines.push('Pull err: '+r.error.message); break; }
+      all.push(...(r.data || []));
+      if(!r.data || r.data.length < page) break;
+      from += page;
+    }
+    lines.push('Full pull total: ' + all.length);
+    // Записываем ВСЕ
+    Object.keys(PARKING).forEach(k=>delete PARKING[k]);
+    for(const s of ['А','В','С','Н','ВНЕ']) PARKING[s] = {};
+    for(const row of all){
+      if(!PARKING[row.sec]) PARKING[row.sec] = {};
+      PARKING[row.sec][row.cell_id] = row.data;
+    }
+    const final = Object.values(PARKING).reduce((n,s)=>n+Object.keys(s).length, 0);
+    lines.push('PARKING after pull: ' + final);
+    try{ savePARKING(); lines.push('savePARKING: OK'); }catch(e){ lines.push('savePARKING ex: '+e.message); }
+    // Проверка LS
+    try{
+      const ls = localStorage.getItem('dvintsev_parking_v1');
+      lines.push('LS size: ' + (ls ? ls.length : 'null'));
+    }catch(e){ lines.push('LS ex: '+e.message); }
+    // Принудительный rebuild UI
+    try{ buildGrid(); lines.push('buildGrid: OK'); }catch(e){ lines.push('buildGrid ex: '+e.message); }
+    try{ buildVne(); lines.push('buildVne: OK'); }catch(e){ lines.push('buildVne ex: '+e.message); }
+    try{ if(typeof buildGround==='function'){ buildGround(); lines.push('buildGround: OK'); } }catch(e){ lines.push('buildGround ex: '+e.message); }
+    try{ updateStats(); lines.push('updateStats: OK'); }catch(e){ lines.push('updateStats ex: '+e.message); }
+    try{ if(typeof renderPlanShapes==='function'){ renderPlanShapes(); lines.push('renderShapes: OK'); } }catch(e){ lines.push('renderShapes ex: '+e.message); }
+  }catch(e){ lines.push('Full pull ex: '+e.message); }
+  alert('🔍 Диагностика + force-pull\n\n' + lines.join('\n'));
 }
 async function sbForcePush(){
   if(typeof sbPushAllCells !== 'function') return;
