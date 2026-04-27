@@ -2629,18 +2629,20 @@ async function sbDiag(){
     lines.push('Cloud count: ' + (r.count ?? '—'));
     if(r.error) lines.push('Count err: ' + r.error.message);
   }catch(e){ lines.push('Count ex: ' + e.message); }
-  // Шаг 2 — реальный SELECT данных (5 строк)
+  // Шаг 2a — supabase-js SELECT (5 строк)
   let sample = null;
   try{
     const r = await SB.from('parking_cells').select('*').range(0, 4);
     sample = r.data;
-    lines.push('Sample size: ' + (r.data ? r.data.length : 'null'));
-    if(r.error) lines.push('Sample err: ' + r.error.message);
-    if(r.data && r.data[0]){
-      lines.push('Sample[0].sec=' + r.data[0].sec + ' id=' + r.data[0].cell_id);
-      lines.push('Sample[0].data type=' + typeof r.data[0].data);
-    }
-  }catch(e){ lines.push('Sample ex: ' + e.message); }
+    lines.push('SDK sample: ' + (r.data ? r.data.length : 'null'));
+    if(r.error) lines.push('SDK err: ' + r.error.message);
+  }catch(e){ lines.push('SDK ex: ' + e.message); }
+  // Шаг 2b — raw fetch (обходит supabase-js)
+  try{
+    const data = await sbRestFetch('parking_cells?select=*', 0, 4);
+    lines.push('Raw fetch sample: ' + (data ? data.length : 'null'));
+    if(!sample && data) sample = data;
+  }catch(e){ lines.push('Raw fetch ex: ' + e.message); }
   // Шаг 3 — попробуем вручную записать в PARKING из sample
   if(sample && sample.length){
     try{
@@ -2652,15 +2654,19 @@ async function sbDiag(){
       lines.push('After manual write: ' + after);
     }catch(e){ lines.push('Manual write ex: ' + e.message); }
   }
-  // Шаг 4 — полный pull через range (page=200 для iOS Safari)
+  // Шаг 4 — полный pull через RAW FETCH (page=200)
   try{
     const all = [];
     let from = 0; const page = 200;
     while(true){
-      const r = await SB.from('parking_cells').select('*').range(from, from+page-1);
-      if(r.error){ lines.push('Pull err: '+r.error.message); break; }
-      all.push(...(r.data || []));
-      if(!r.data || r.data.length < page) break;
+      let data;
+      try{
+        data = await sbRestFetch('parking_cells?select=*', from, from+page-1);
+      }catch(e){
+        lines.push('Pull err at '+from+': '+e.message); break;
+      }
+      all.push(...(data || []));
+      if(!data || data.length < page) break;
       from += page;
     }
     lines.push('Full pull total: ' + all.length);
@@ -2824,6 +2830,26 @@ async function sbPushAllCells(){
   }catch(e){ console.warn('sbPushAllCells:', e.message); sbStatus('err'); return -1; }
 }
 
+// Прямой fetch к Supabase REST API — обходит supabase-js, который
+// на iOS Safari иногда падает с TypeError: Load failed для select-запросов.
+async function sbRestFetch(path, rangeFrom, rangeTo){
+  const url = `${SB_URL}/rest/v1/${path}`;
+  const session = (await SB.auth.getSession()).data?.session;
+  const headers = {
+    'apikey': SB_ANON_KEY,
+    'Authorization': 'Bearer ' + (session?.access_token || SB_ANON_KEY),
+    'Accept': 'application/json',
+    'Accept-Profile': 'public'
+  };
+  if(rangeFrom != null && rangeTo != null){
+    headers['Range-Unit'] = 'items';
+    headers['Range'] = `${rangeFrom}-${rangeTo}`;
+  }
+  const resp = await fetch(url, { method:'GET', headers, cache:'no-store' });
+  if(!resp.ok) throw new Error('HTTP '+resp.status+' '+resp.statusText);
+  return await resp.json();
+}
+
 // Подтягивает все ячейки из облака → перезаписывает PARKING.
 async function sbPullAllCells(){
   if(!SB) return -1;
@@ -2831,22 +2857,24 @@ async function sbPullAllCells(){
   try{
     const all = [];
     let from = 0;
-    // page=200 — iOS Safari душит большие ответы (TypeError: Load failed
-    // на 1000+ строк). 200 строк ≈ 100 КБ, проходит надёжно.
+    // page=200 — iOS Safari душит большие ответы; 200 строк ≈ 100 КБ.
     const page = 200;
     while(true){
-      let data, error, attempts = 0;
-      while(attempts < 3){
-        const r = await SB.from('parking_cells')
-          .select('*').range(from, from+page-1);
-        data = r.data; error = r.error;
-        if(!error) break;
-        attempts++;
-        await new Promise(res => setTimeout(res, 400 * attempts));
+      let data, lastErr;
+      for(let attempt = 0; attempt < 3; attempt++){
+        try{
+          data = await sbRestFetch('parking_cells?select=*', from, from+page-1);
+          lastErr = null;
+          break;
+        }catch(e){
+          lastErr = e;
+          await new Promise(res => setTimeout(res, 500 * (attempt+1)));
+        }
       }
-      if(error) throw error;
-      all.push(...data);
-      if(data.length < page) break;
+      if(lastErr) throw lastErr;
+      const got = data ? data.length : 0;
+      all.push(...(data || []));
+      if(got < page) break;
       from += page;
     }
     Object.keys(PARKING).forEach(k=>delete PARKING[k]);
