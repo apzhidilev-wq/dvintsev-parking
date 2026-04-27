@@ -2663,28 +2663,28 @@ async function sbDiag(){
       lines.push('After manual write: ' + after);
     }catch(e){ lines.push('Manual write ex: ' + e.message); }
   }
-  // Шаг 4 — полный pull (page=25, sleep 200мс, retry 4x)
+  // Шаг 4 — полный bulk-pull одним запросом (через CF-прокси работает)
+  let all = [];
   try{
-    const all = [];
+    const t0 = Date.now();
+    all = await sbRestFetch('parking_cells?select=*&limit=10000');
+    lines.push('Bulk pull: ' + all.length + ' rows in ' + (Date.now()-t0) + 'ms');
+  }catch(e){
+    lines.push('Bulk pull err: '+e.message+' — fallback paginated');
+    // Fallback на пагинацию (работало раньше)
     let offset = 0; const page = 25;
     while(true){
-      let data, lastErr;
-      for(let attempt = 0; attempt < 4; attempt++){
-        try{
-          data = await sbRestFetch('parking_cells?select=*', offset, page);
-          lastErr = null;
-          break;
-        }catch(e){
-          lastErr = e;
-          await new Promise(res => setTimeout(res, 800 * (attempt+1)));
-        }
-      }
-      if(lastErr){ lines.push('Pull err at '+offset+': '+lastErr.message); break; }
+      let data;
+      try{
+        data = await sbRestFetch('parking_cells?select=*', offset, page);
+      }catch(err){ lines.push('Page err at '+offset+': '+err.message); break; }
       all.push(...(data || []));
       if(!data || data.length < page) break;
       offset += page;
       await new Promise(res => setTimeout(res, 200));
     }
+  }
+  try{
     lines.push('Full pull total: ' + all.length);
     // Записываем ВСЕ
     Object.keys(PARKING).forEach(k=>delete PARKING[k]);
@@ -2872,37 +2872,28 @@ async function sbPullAllCells(){
   if(!SB) return -1;
   sbStatus('sync');
   try{
-    const all = [];
-    let offset = 0;
-    // page=25 — iOS Safari отваливает 3-й подряд запрос > ~50 КБ.
-    // 25 строк ≈ 12 КБ. С паузой 200мс между чанками — всё проходит.
-    const page = 25;
-    let partialErr = null;
-    while(true){
-      let data, lastErr;
-      for(let attempt = 0; attempt < 4; attempt++){
+    // Один запрос на всё: через CF-прокси DPI не режет ответы.
+    // Если прокси не настроен (SB_PROXY_URL пуст) и сидим на iOS без VPN —
+    // запрос может упасть; в этом случае fallback на пагинацию.
+    let all = [];
+    try{
+      all = await sbRestFetch('parking_cells?select=*&limit=10000');
+    }catch(e){
+      console.warn('Bulk pull failed, falling back to paginated:', e.message);
+      let offset = 0; const page = 25;
+      while(true){
+        let data;
         try{
           data = await sbRestFetch('parking_cells?select=*', offset, page);
-          lastErr = null;
+        }catch(err){
+          console.warn('Paginated pull failed at offset', offset, err.message);
           break;
-        }catch(e){
-          lastErr = e;
-          // Экспоненциальный backoff + длиннее, чтобы коннект iOS освежился
-          await new Promise(res => setTimeout(res, 800 * (attempt+1)));
         }
+        all.push(...(data || []));
+        if(!data || data.length < page) break;
+        offset += page;
+        await new Promise(res => setTimeout(res, 200));
       }
-      if(lastErr){ partialErr = lastErr; break; }
-      const got = data ? data.length : 0;
-      all.push(...(data || []));
-      if(got < page) break;
-      offset += page;
-      // Пауза между чанками — iOS Safari не любит непрерывный поток
-      await new Promise(res => setTimeout(res, 200));
-    }
-    // Если упали посередине — сохраняем то, что успели
-    if(partialErr){
-      console.warn('sbPullAllCells partial:', partialErr.message,
-                   'got', all.length, 'rows before failure');
     }
     Object.keys(PARKING).forEach(k=>delete PARKING[k]);
     for(const s of ['А','В','С','Н','ВНЕ']) PARKING[s] = {};
