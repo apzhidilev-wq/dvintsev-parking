@@ -11,9 +11,10 @@ Single-file веб-приложение для учёта парковочных
 - Аудит-лог изменений
 - Экспорт/импорт данных в JSON
 - QR-таблички с deep-link на ячейку
-- Pinch-zoom + touch-pan на мобильных
+- Pinch-zoom + touch-pan на мобильных (включая drawing/drag в режиме разметки)
 - Telegram-уведомления о событиях
 - 2 темы: тёмная и «Тёплая бумага»
+- Облачная синхронизация между устройствами через Supabase (Realtime)
 
 ## Безопасность
 
@@ -30,10 +31,44 @@ python3 -m http.server 8000
 
 ## Стек
 
-Чистый HTML/CSS/JS, без сборки. PDF.js через CDN. Все данные — в localStorage.
+Чистый HTML/CSS/JS, без сборки. PDF.js через CDN. Хранение: `localStorage` + Supabase (опционально).
 
 ## Файлы
 
 - `parking.html` — основное приложение
 - `scheme.pdf` — план подземного паркинга
 - `scheme_ground.pdf` — план наземного паркинга
+- `cloudflare-worker.js` — прокси для обхода блокировок Supabase в РФ (опционально)
+
+## Использование на iPhone в России
+
+Supabase хостится на AWS (eu-central-1). Российские мобильные операторы и провайдеры
+часто **обрезают TLS-ответы > 50 КБ** к зарубежным CDN из-за DPI-фильтрации.
+Симптом: страница открывается, авторизация проходит, но данные ячеек не загружаются
+(`TypeError: Load failed` в Safari).
+
+**Два варианта решения:**
+
+### A. Включить VPN на iPhone (быстро)
+
+Любой VPN (Happ, Outline, AmneziaVPN и др.) маршрутизирует трафик мимо
+DPI и приложение работает в штатном режиме.
+
+### B. Развернуть Cloudflare Worker как прокси (правильно)
+
+Cloudflare Workers не блокируется в РФ. Worker проксирует все запросы
+к Supabase (включая Realtime WebSocket), и iPhone-клиенты обращаются
+к нему вместо `*.supabase.co`. **Бесплатно** до 100 000 запросов/день.
+
+Полная инструкция — см. `cloudflare-worker.js` (комментарии в начале файла).
+
+Кратко:
+
+1. Зайти на [dash.cloudflare.com](https://dash.cloudflare.com) (создать бесплатный аккаунт).
+2. Workers & Pages → Create → Hello World.
+3. Заменить дефолтный код содержимым `cloudflare-worker.js`.
+4. Deploy. Worker получит адрес вида `dvintsev-proxy.<account>.workers.dev`.
+5. В `parking.html` найти `const SB_URL = ...`, заменить на адрес Worker.
+6. Закоммитить и запушить — GitHub Pages обновит страницу.
+
+После этого приложение будет работать на iPhone без VPN.
