@@ -1278,7 +1278,7 @@ html[data-theme="paper"] .um-list-item{background:#fffaf0}
   <div class="hdr-meta">
     <div class="hdr-clock" id="hdrClock">——:——</div>
     <div class="hdr-byline">Администратор</div>
-    <div id="sbStatus" style="font-size:9.5px;color:var(--tx3);font-family:var(--mono);letter-spacing:.4px;margin-top:2px;cursor:pointer" onclick="if(typeof sbPullAllCells==='function')sbPullAllCells()" title="Клик — обновить из облака">Локально</div>
+    <div id="sbStatus" style="font-size:9.5px;color:var(--tx3);font-family:var(--mono);letter-spacing:.4px;margin-top:2px;cursor:pointer" onclick="sbStatusClick(event)" title="Клик — pull из облака · Shift/Long-tap — push в облако">Локально</div>
     <div class="user-chip" id="userChip" onclick="toggleUserMenu(event)" style="display:none">
       <div class="user-chip-info">
         <div class="user-chip-name" id="ucName">—</div>
@@ -2591,6 +2591,40 @@ function sbStatus(state){
   el.textContent = m.text;
   el.title = `Статус облака: ${m.text}`;
 }
+
+// Клик по статусу облака:
+//   обычный клик          → pull (получить из облака)
+//   Shift+клик / Alt+клик → push (залить локальные данные в облако)
+//   long-tap (>500ms)     → push (для iPhone, где нет shift)
+let _sbStatusTouchTimer = null;
+function sbStatusClick(ev){
+  if(typeof sbPushAllCells !== 'function' || typeof sbPullAllCells !== 'function') return;
+  if(ev && (ev.shiftKey || ev.altKey || ev.metaKey)){
+    sbForcePush();
+    return;
+  }
+  sbPullAllCells();
+}
+async function sbForcePush(){
+  if(typeof sbPushAllCells !== 'function') return;
+  const localCount = Object.values(PARKING).reduce((n,s)=>n+Object.keys(s).length, 0);
+  if(!localCount){ if(typeof denyToast==='function') denyToast('Нет локальных данных для push'); return; }
+  if(!confirm(`Залить ${localCount} ячеек в облако? Существующие записи в облаке будут перезаписаны.`)) return;
+  const pushed = await sbPushAllCells();
+  if(pushed >= 0 && typeof denyToast === 'function') denyToast(`☁️ Залито: ${pushed} ячеек`);
+}
+// Long-tap для iPhone — push при удержании ≥500ms
+document.addEventListener('touchstart', e=>{
+  const t = e.target.closest && e.target.closest('#sbStatus');
+  if(!t) return;
+  _sbStatusTouchTimer = setTimeout(()=>{ _sbStatusTouchTimer = null; sbForcePush(); }, 600);
+}, {passive:true});
+document.addEventListener('touchend', ()=>{
+  if(_sbStatusTouchTimer){ clearTimeout(_sbStatusTouchTimer); _sbStatusTouchTimer = null; }
+});
+document.addEventListener('touchmove', ()=>{
+  if(_sbStatusTouchTimer){ clearTimeout(_sbStatusTouchTimer); _sbStatusTouchTimer = null; }
+});
 
 async function sbInit(){
   try{
