@@ -2751,7 +2751,14 @@ async function sbSignInRaw(email, password, timeoutMs){
     clearTimeout(t);
     if(!r.ok){
       let msg = 'HTTP ' + r.status;
-      try{ const j = await r.json(); if(j && j.error_description) msg = j.error_description; }catch(_){}
+      try{
+        const j = await r.json();
+        // Supabase Auth v2: {code, error_code, msg}
+        // Supabase Auth v1 (legacy): {error, error_description}
+        if(j){
+          msg = j.msg || j.error_description || j.error_code || j.error || msg;
+        }
+      }catch(_){}
       return { ok:false, error: msg };
     }
     const data = await r.json();
