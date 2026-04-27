@@ -2146,9 +2146,23 @@ async function doLogin(ev){
   const remember = document.getElementById('authRemember').checked;
   const err = document.getElementById('authErr');
   const users = await initUsers();
-  const found = users.find(x=>x.u===u);
-  const ok = found ? await verifyPw(found, p) : false;
-  if(!ok){
+  let found = users.find(x=>x.u===u);
+
+  // Сначала пробуем Supabase — он источник истины для аутентификации.
+  // Если SDK не загружен или нет сети, fallback на локальный PBKDF2.
+  let cloudOk = false;
+  if(SB){
+    try{
+      const { error } = await SB.auth.signInWithPassword({
+        email: sbEmail(u), password: p
+      });
+      cloudOk = !error;
+    }catch(_){ cloudOk = false; }
+  }
+  // Локальная проверка
+  const localOk = found ? await verifyPw(found, p) : false;
+
+  if(!cloudOk && !localOk){
     err.textContent = 'Неверный логин или пароль';
     err.classList.add('show');
     document.getElementById('authPass').value='';
@@ -2156,25 +2170,46 @@ async function doLogin(ev){
     return false;
   }
   err.classList.remove('show');
-  // Migrate legacy hash → PBKDF2-100k при успешном логине.
-  // Триггер: нет соли ИЛИ старый формат (без префикса "pbkdf2"/"sha256x").
-  const needsUpgrade = !found.salt || !/^(pbkdf2|sha256x)/.test(found.pwh||'');
-  if(needsUpgrade){
-    try{
+
+  // Если облако приняло пароль, а локальный хеш не совпадает —
+  // обновляем локальный хеш под актуальный пароль (sync с другим устройством).
+  if(cloudOk && !localOk){
+    if(!found){
+      // Юзера нет локально — создаём (нужно имя; берём логин если нет)
+      found = { u, name: u, role: 'viewer' };
+      await setUserPassword(found, p);
+      const all = getUsers(); all.push(found); saveUsers(all);
+    } else {
       await setUserPassword(found, p);
       const all = getUsers();
       const idx = all.findIndex(x=>x.u===found.u);
       if(idx>=0){ all[idx] = found; saveUsers(all); }
-    }catch(_){}
+    }
   }
+
+  // Migrate legacy hash → PBKDF2-100k при успешном локальном логине.
+  if(localOk){
+    const needsUpgrade = !found.salt || !/^(pbkdf2|sha256x)/.test(found.pwh||'');
+    if(needsUpgrade){
+      try{
+        await setUserPassword(found, p);
+        const all = getUsers();
+        const idx = all.findIndex(x=>x.u===found.u);
+        if(idx>=0){ all[idx] = found; saveUsers(all); }
+      }catch(_){}
+    }
+  }
+
   CURRENT_USER = { u:found.u, name:found.name, role:found.role };
   await setSession(CURRENT_USER, remember);
   enterApp();
-  // Параллельно: миграция/логин в Supabase + первичная синхронизация
-  if(typeof sbAfterLocalLogin === 'function'){
+  // Если облако ещё не активировано, попробуем доделать (signUp + sync)
+  if(!cloudOk && SB && typeof sbAfterLocalLogin === 'function'){
     sbAfterLocalLogin(found.u, p, found.name).then(ok=>{
       if(ok && typeof sbInitialSync === 'function') sbInitialSync();
     });
+  } else if(cloudOk && typeof sbInitialSync === 'function'){
+    sbInitialSync();
   }
   if(typeof handleDeepLink==='function') handleDeepLink();
   return false;
