@@ -1248,7 +1248,7 @@ html[data-theme="paper"] .um-list-item{background:#fffaf0}
     <div class="auth-err" id="authErr">Неверный логин или пароль</div>
     <label class="auth-remember"><input type="checkbox" id="authRemember" checked>Запомнить меня на 7 дней</label>
     <button type="submit" class="auth-btn">Войти</button>
-    <div id="authBuildTag" style="margin-top:14px;font-size:9.5px;color:var(--tx3);font-family:var(--mono);letter-spacing:.5px;text-align:center;opacity:.6">build 2026-04-27.21:30 · v8</div>
+    <div id="authBuildTag" style="margin-top:14px;font-size:9.5px;color:var(--tx3);font-family:var(--mono);letter-spacing:.5px;text-align:center;opacity:.6">build 2026-04-27.22:00 · v9 (debug)</div>
   </form>
 </div>
 
@@ -2176,24 +2176,31 @@ async function setSession(user, remember){
 
 async function doLogin(ev){
   ev && ev.preventDefault();
+  try{
+    return await _doLoginInner(ev);
+  }catch(e){
+    alert('LOGIN EXCEPTION:\n' + (e && e.stack ? e.stack : e && e.message ? e.message : String(e)));
+    return false;
+  }
+}
+async function _doLoginInner(ev){
   const u = document.getElementById('authUser').value.trim().toLowerCase();
   const p = document.getElementById('authPass').value;
   const remember = document.getElementById('authRemember').checked;
   const err = document.getElementById('authErr');
+  alert('LOGIN START\nuser='+u+'\nlen(p)='+p.length+'\nSB='+(!!SB)+'\nSB_URL='+SB_URL);
   const users = await initUsers();
   let found = users.find(x=>x.u===u);
 
-  // Сначала пробуем Supabase — он источник истины для аутентификации.
-  // Raw fetch через прокси НЕ зависит от supabase-js SDK — даже если
-  // SDK не загрузился (CDN недоступен, мобильный оператор режет JS),
-  // auth-call пройдёт.
-  // 8 сек timeout, далее fallback на локальный PBKDF2.
   let cloudOk = false;
+  const t0 = Date.now();
   const cloudResp = await sbSignInRaw(sbEmail(u), p, 8000);
   cloudOk = cloudResp.ok;
+  alert('AFTER CLOUD\nms='+(Date.now()-t0)+'\nok='+cloudResp.ok+'\nerr='+(cloudResp.error||'-'));
   if(!cloudResp.ok) console.warn('Cloud login failed:', cloudResp.error);
   // Локальная проверка
   const localOk = found ? await verifyPw(found, p) : false;
+  alert('AFTER LOCAL\nfound='+(!!found)+'\nlocalOk='+localOk+'\ncloudOk='+cloudOk);
 
   if(!cloudOk && !localOk){
     // Показываем реальную причину провала — облако и локально оба зафейлились
