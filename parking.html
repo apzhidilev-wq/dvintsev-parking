@@ -2654,20 +2654,27 @@ async function sbDiag(){
       lines.push('After manual write: ' + after);
     }catch(e){ lines.push('Manual write ex: ' + e.message); }
   }
-  // Шаг 4 — полный pull через RAW FETCH с ?limit=&offset= (page=50)
+  // Шаг 4 — полный pull (page=25, sleep 200мс, retry 4x)
   try{
     const all = [];
-    let offset = 0; const page = 50;
+    let offset = 0; const page = 25;
     while(true){
-      let data;
-      try{
-        data = await sbRestFetch('parking_cells?select=*', offset, page);
-      }catch(e){
-        lines.push('Pull err at '+offset+': '+e.message); break;
+      let data, lastErr;
+      for(let attempt = 0; attempt < 4; attempt++){
+        try{
+          data = await sbRestFetch('parking_cells?select=*', offset, page);
+          lastErr = null;
+          break;
+        }catch(e){
+          lastErr = e;
+          await new Promise(res => setTimeout(res, 800 * (attempt+1)));
+        }
       }
+      if(lastErr){ lines.push('Pull err at '+offset+': '+lastErr.message); break; }
       all.push(...(data || []));
       if(!data || data.length < page) break;
       offset += page;
+      await new Promise(res => setTimeout(res, 200));
     }
     lines.push('Full pull total: ' + all.length);
     // Записываем ВСЕ
@@ -2858,25 +2865,35 @@ async function sbPullAllCells(){
   try{
     const all = [];
     let offset = 0;
-    // page=50 — iOS Safari душит ответы > ~100 КБ. 50 строк ≈ 25 КБ.
-    const page = 50;
+    // page=25 — iOS Safari отваливает 3-й подряд запрос > ~50 КБ.
+    // 25 строк ≈ 12 КБ. С паузой 200мс между чанками — всё проходит.
+    const page = 25;
+    let partialErr = null;
     while(true){
       let data, lastErr;
-      for(let attempt = 0; attempt < 3; attempt++){
+      for(let attempt = 0; attempt < 4; attempt++){
         try{
           data = await sbRestFetch('parking_cells?select=*', offset, page);
           lastErr = null;
           break;
         }catch(e){
           lastErr = e;
-          await new Promise(res => setTimeout(res, 500 * (attempt+1)));
+          // Экспоненциальный backoff + длиннее, чтобы коннект iOS освежился
+          await new Promise(res => setTimeout(res, 800 * (attempt+1)));
         }
       }
-      if(lastErr) throw lastErr;
+      if(lastErr){ partialErr = lastErr; break; }
       const got = data ? data.length : 0;
       all.push(...(data || []));
       if(got < page) break;
       offset += page;
+      // Пауза между чанками — iOS Safari не любит непрерывный поток
+      await new Promise(res => setTimeout(res, 200));
+    }
+    // Если упали посередине — сохраняем то, что успели
+    if(partialErr){
+      console.warn('sbPullAllCells partial:', partialErr.message,
+                   'got', all.length, 'rows before failure');
     }
     Object.keys(PARKING).forEach(k=>delete PARKING[k]);
     for(const s of ['А','В','С','Н','ВНЕ']) PARKING[s] = {};
