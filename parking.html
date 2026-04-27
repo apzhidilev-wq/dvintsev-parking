@@ -2596,14 +2596,48 @@ function sbStatus(state){
 //   обычный клик          → pull (получить из облака)
 //   Shift+клик / Alt+клик → push (залить локальные данные в облако)
 //   long-tap (>500ms)     → push (для iPhone, где нет shift)
+//   двойной клик/тап      → диагностика
 let _sbStatusTouchTimer = null;
+let _sbStatusLastTap = 0;
 function sbStatusClick(ev){
   if(typeof sbPushAllCells !== 'function' || typeof sbPullAllCells !== 'function') return;
   if(ev && (ev.shiftKey || ev.altKey || ev.metaKey)){
     sbForcePush();
     return;
   }
+  // Двойной тап (на iPhone нет shift) → диагностика
+  const now = Date.now();
+  if(now - _sbStatusLastTap < 500){
+    _sbStatusLastTap = 0;
+    sbDiag();
+    return;
+  }
+  _sbStatusLastTap = now;
   sbPullAllCells();
+}
+async function sbDiag(){
+  if(!SB){ alert('Supabase не инициализирован'); return; }
+  let lines = [];
+  try{
+    const s = await SB.auth.getSession();
+    lines.push('Session: ' + (s.data?.session ? 'YES' : 'NO'));
+    if(s.data?.session){
+      lines.push('User email: ' + (s.data.session.user?.email || '—'));
+      lines.push('User id: ' + (s.data.session.user?.id || '—'));
+      lines.push('Expires: ' + new Date(s.data.session.expires_at*1000).toLocaleString('ru-RU'));
+    }
+    if(s.error) lines.push('Session err: ' + s.error.message);
+  }catch(e){ lines.push('Session ex: ' + e.message); }
+  try{
+    const r = await SB.from('parking_cells').select('*', {count:'exact', head:true});
+    lines.push('Cloud count: ' + (r.count ?? '—'));
+    if(r.error) lines.push('Cloud err: ' + r.error.message);
+  }catch(e){ lines.push('Cloud ex: ' + e.message); }
+  const localCount = Object.values(PARKING).reduce((n,s)=>n+Object.keys(s).length, 0);
+  lines.push('Local cells: ' + localCount);
+  lines.push('User: ' + (CURRENT_USER ? CURRENT_USER.u : '—'));
+  lines.push('Pushed flag: ' + (localStorage.getItem('dvintsev_sb_pushed_v1') || '—'));
+  alert('🔍 Диагностика облака\n\n' + lines.join('\n'));
 }
 async function sbForcePush(){
   if(typeof sbPushAllCells !== 'function') return;
@@ -2773,9 +2807,35 @@ async function sbPullAllCells(){
   }catch(e){ console.warn('sbPullAllCells:', e.message); sbStatus('err'); return -1; }
 }
 
+// Ждём, пока в Supabase появится активная сессия (после signInWithPassword
+// она применяется асинхронно — особенно на iOS Safari с persistSession).
+// Возвращает session или null после таймаута.
+async function sbWaitForSession(timeoutMs = 4000){
+  if(!SB) return null;
+  const t0 = Date.now();
+  while(Date.now() - t0 < timeoutMs){
+    try{
+      const { data } = await SB.auth.getSession();
+      if(data && data.session) return data.session;
+    }catch(_){}
+    await new Promise(r => setTimeout(r, 150));
+  }
+  return null;
+}
+
 // Вызывается после логина: решает push или pull.
 async function sbInitialSync(){
   if(!SB) return;
+  // RLS требует авторизации — без активной сессии SELECT вернёт 0 строк.
+  // На iOS Safari sessionPersist может задерживаться, поэтому ждём.
+  const session = await sbWaitForSession();
+  if(!session){
+    console.warn('sbInitialSync: нет активной Supabase-сессии — синк отменён');
+    sbStatus('err');
+    if(typeof denyToast === 'function')
+      denyToast('⚠️ Нет облачной сессии — данные не подтянулись. Попробуйте перезайти.');
+    return;
+  }
   try{
     const { count, error } = await SB.from('parking_cells')
       .select('*', { count:'exact', head:true });
