@@ -1248,7 +1248,7 @@ html[data-theme="paper"] .um-list-item{background:#fffaf0}
     <div class="auth-err" id="authErr">Неверный логин или пароль</div>
     <label class="auth-remember"><input type="checkbox" id="authRemember" checked>Запомнить меня на 7 дней</label>
     <button type="submit" class="auth-btn">Войти</button>
-    <div id="authBuildTag" style="margin-top:14px;font-size:9.5px;color:var(--tx3);font-family:var(--mono);letter-spacing:.5px;text-align:center;opacity:.6">build 2026-04-27 · v12</div>
+    <div id="authBuildTag" style="margin-top:14px;font-size:9.5px;color:var(--tx3);font-family:var(--mono);letter-spacing:.5px;text-align:center;opacity:.6">build 2026-04-27 · v13</div>
   </form>
 </div>
 
@@ -2942,10 +2942,6 @@ async function sbPushAllCells(){
 // ВАЖНО: используем ?limit=&offset= вместо Range header — последний на
 // iOS Safari трактуется как partial-download (для видео/audio) и обрывается.
 async function sbRestFetch(path, offset, limit){
-  let url = `${SB_URL}/rest/v1/${path}`;
-  if(offset != null && limit != null){
-    url += (url.includes('?') ? '&' : '?') + `limit=${limit}&offset=${offset}`;
-  }
   // Берём токен: сначала из supabase-js (если загружен), потом из SB_RAW_TOKEN
   let accessToken = null;
   if(SB){
@@ -2957,13 +2953,22 @@ async function sbRestFetch(path, offset, limit){
   if(!accessToken && SB_RAW_TOKEN){
     accessToken = SB_RAW_TOKEN.access_token;
   }
-  const headers = {
-    'apikey': SB_ANON_KEY,
-    'Authorization': 'Bearer ' + (accessToken || SB_ANON_KEY),
-    'Accept': 'application/json',
-    'Accept-Profile': 'public'
-  };
-  const resp = await fetch(url, { method:'GET', headers, cache:'no-store' });
+  // Передаём apikey и token через query string (Worker перепишет в headers).
+  // Это превращает запрос в CORS-simple — без preflight, что критично
+  // для iPhone Safari + iCloud Private Relay.
+  let url = `${SB_URL}/rest/v1/${path}`;
+  url += (url.includes('?') ? '&' : '?') +
+         `_apikey=${encodeURIComponent(SB_ANON_KEY)}&` +
+         `_token=${encodeURIComponent(accessToken || SB_ANON_KEY)}`;
+  if(offset != null && limit != null){
+    url += `&limit=${limit}&offset=${offset}`;
+  }
+  const resp = await fetch(url, {
+    method: 'GET',
+    cache: 'no-store',
+    credentials: 'omit',
+    referrerPolicy: 'no-referrer'
+  });
   if(!resp.ok) throw new Error('HTTP '+resp.status+' '+resp.statusText);
   return await resp.json();
 }

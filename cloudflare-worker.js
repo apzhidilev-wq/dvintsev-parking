@@ -62,6 +62,18 @@ export default {
       return new Response('Forbidden origin: ' + origin, { status: 403 });
     }
 
+    // ─── Special-case: query-param→header перевод (для simple-cors) ───
+    // iPhone Safari через iCloud Private Relay тормозит CORS preflight.
+    // Чтобы избежать preflight, клиент может передать auth-токены через
+    // query string, и Worker перепишет их в нужные заголовки.
+    //   ?_apikey=... → apikey: ...
+    //   ?_token=...  → Authorization: Bearer ...
+    // Эти query params удаляются перед проксированием в Supabase.
+    const xApikey = url.searchParams.get('_apikey');
+    const xToken = url.searchParams.get('_token');
+    if (xApikey) url.searchParams.delete('_apikey');
+    if (xToken) url.searchParams.delete('_token');
+
     // Подменяем хост: дальше всё как у Supabase
     const upstreamUrl = `https://${SUPABASE_HOST}${url.pathname}${url.search}`;
 
@@ -74,6 +86,9 @@ export default {
     // Копируем заголовки запроса, заменив Host
     const upstreamHeaders = new Headers(request.headers);
     upstreamHeaders.set('Host', SUPABASE_HOST);
+    // Если auth передан через query — перенесём в headers (приоритет query)
+    if (xApikey) upstreamHeaders.set('apikey', xApikey);
+    if (xToken) upstreamHeaders.set('Authorization', 'Bearer ' + xToken);
     // Убираем CF-специфичные заголовки, которые Supabase не ждёт
     upstreamHeaders.delete('cf-connecting-ip');
     upstreamHeaders.delete('cf-ipcountry');
