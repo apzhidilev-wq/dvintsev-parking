@@ -2179,15 +2179,14 @@ async function doLogin(ev){
   let found = users.find(x=>x.u===u);
 
   // Сначала пробуем Supabase — он источник истины для аутентификации.
-  // Используем raw fetch через прокси (sbSignInRaw) — supabase-js auth
-  // wrapper на iOS Safari + мобильном интернете капризничает.
-  // Если 8 сек нет ответа от облака — fallback на локальный PBKDF2.
+  // Raw fetch через прокси НЕ зависит от supabase-js SDK — даже если
+  // SDK не загрузился (CDN недоступен, мобильный оператор режет JS),
+  // auth-call пройдёт.
+  // 8 сек timeout, далее fallback на локальный PBKDF2.
   let cloudOk = false;
-  if(SB){
-    const r = await sbSignInRaw(sbEmail(u), p, 8000);
-    cloudOk = r.ok;
-    if(!r.ok) console.warn('Cloud login failed:', r.error);
-  }
+  const cloudResp = await sbSignInRaw(sbEmail(u), p, 8000);
+  cloudOk = cloudResp.ok;
+  if(!cloudResp.ok) console.warn('Cloud login failed:', cloudResp.error);
   // Локальная проверка
   const localOk = found ? await verifyPw(found, p) : false;
 
@@ -2232,13 +2231,15 @@ async function doLogin(ev){
   CURRENT_USER = { u:found.u, name:found.name, role:found.role };
   await setSession(CURRENT_USER, remember);
   enterApp();
-  // Если облако ещё не активировано, попробуем доделать (signUp + sync)
-  if(!cloudOk && SB && typeof sbAfterLocalLogin === 'function'){
+  // Sync с облаком после логина:
+  //   - если облако приняло пароль → сразу инициализируем (pull/push)
+  //   - если только локально OK → пробуем доделать через signUp в фоне
+  if(cloudOk){
+    if(typeof sbInitialSync === 'function') sbInitialSync();
+  } else if(typeof sbAfterLocalLogin === 'function'){
     sbAfterLocalLogin(found.u, p, found.name).then(ok=>{
       if(ok && typeof sbInitialSync === 'function') sbInitialSync();
     });
-  } else if(cloudOk && typeof sbInitialSync === 'function'){
-    sbInitialSync();
   }
   if(typeof handleDeepLink==='function') handleDeepLink();
   return false;
@@ -2730,9 +2731,27 @@ document.addEventListener('touchmove', ()=>{
   if(_sbStatusTouchTimer){ clearTimeout(_sbStatusTouchTimer); _sbStatusTouchTimer = null; }
 });
 
+// In-memory копия токена — используется, когда supabase-js клиент (SB)
+// не загрузился (например, CDN недоступен). sbRestFetch берёт его как fallback.
+let SB_RAW_TOKEN = null;
+const SB_RAW_TOKEN_KEY = 'dvintsev_sb_raw_token_v1';
+try{
+  const saved = localStorage.getItem(SB_RAW_TOKEN_KEY);
+  if(saved){
+    const parsed = JSON.parse(saved);
+    // Проверяем, что токен не истёк
+    if(parsed && parsed.expires_at && parsed.expires_at * 1000 > Date.now()){
+      SB_RAW_TOKEN = parsed;
+    } else {
+      localStorage.removeItem(SB_RAW_TOKEN_KEY);
+    }
+  }
+}catch(_){}
+
 // ─── Raw signIn через прокси (минуем supabase-js auth wrapper) ────
 // На iOS Safari + мобильный интернет supabase-js auth таймаутит на
-// первом запросе. Прямой fetch с явным timeout надёжнее.
+// первом запросе, и сам SDK с CDN может не загрузиться. Прямой fetch
+// с явным timeout не зависит ни от SDK, ни от warm-up коннекта.
 async function sbSignInRaw(email, password, timeoutMs){
   const ac = new AbortController();
   const t = setTimeout(()=>ac.abort(), timeoutMs || 8000);
@@ -2763,7 +2782,16 @@ async function sbSignInRaw(email, password, timeoutMs){
     }
     const data = await r.json();
     if(!data || !data.access_token) return { ok:false, error:'no token in response' };
-    // Передаём session в supabase-js — нужно для последующих SB.auth.getSession() и Realtime
+    // Сохраняем токен в memory + localStorage — sbRestFetch будет
+    // использовать его как fallback, если SB.auth.getSession недоступен
+    SB_RAW_TOKEN = {
+      access_token: data.access_token,
+      refresh_token: data.refresh_token,
+      expires_at: data.expires_at || (Math.floor(Date.now()/1000) + (data.expires_in || 3600)),
+      user: data.user
+    };
+    try{ localStorage.setItem(SB_RAW_TOKEN_KEY, JSON.stringify(SB_RAW_TOKEN)); }catch(_){}
+    // Если SB загружен — передаём session туда же (для Realtime)
     if(SB){
       try{
         await SB.auth.setSession({
@@ -2905,10 +2933,20 @@ async function sbRestFetch(path, offset, limit){
   if(offset != null && limit != null){
     url += (url.includes('?') ? '&' : '?') + `limit=${limit}&offset=${offset}`;
   }
-  const session = (await SB.auth.getSession()).data?.session;
+  // Берём токен: сначала из supabase-js (если загружен), потом из SB_RAW_TOKEN
+  let accessToken = null;
+  if(SB){
+    try{
+      const session = (await SB.auth.getSession()).data?.session;
+      if(session) accessToken = session.access_token;
+    }catch(_){}
+  }
+  if(!accessToken && SB_RAW_TOKEN){
+    accessToken = SB_RAW_TOKEN.access_token;
+  }
   const headers = {
     'apikey': SB_ANON_KEY,
-    'Authorization': 'Bearer ' + (session?.access_token || SB_ANON_KEY),
+    'Authorization': 'Bearer ' + (accessToken || SB_ANON_KEY),
     'Accept': 'application/json',
     'Accept-Profile': 'public'
   };
@@ -2919,7 +2957,8 @@ async function sbRestFetch(path, offset, limit){
 
 // Подтягивает все ячейки из облака → перезаписывает PARKING.
 async function sbPullAllCells(){
-  if(!SB) return -1;
+  // НЕ зависит от SDK — sbRestFetch использует raw fetch + SB_RAW_TOKEN
+  if(!SB && !SB_RAW_TOKEN) return -1;
   sbStatus('sync');
   try{
     // Один запрос на всё: через CF-прокси DPI не режет ответы.
@@ -2979,38 +3018,49 @@ async function sbWaitForSession(timeoutMs = 4000){
 }
 
 // Вызывается после логина: решает push или pull.
+// НЕ зависит от supabase-js SDK — использует raw fetch и SB_RAW_TOKEN.
 async function sbInitialSync(){
-  if(!SB) return;
-  // RLS требует авторизации — без активной сессии SELECT вернёт 0 строк.
-  // На iOS Safari sessionPersist может задерживаться, поэтому ждём.
-  const session = await sbWaitForSession();
-  if(!session){
-    console.warn('sbInitialSync: нет активной Supabase-сессии — синк отменён');
+  // Проверяем наличие auth — либо в supabase-js, либо в SB_RAW_TOKEN
+  let hasAuth = !!SB_RAW_TOKEN;
+  if(!hasAuth && SB){
+    try{
+      const session = await sbWaitForSession();
+      hasAuth = !!session;
+    }catch(_){}
+  }
+  if(!hasAuth){
+    console.warn('sbInitialSync: нет auth — синк отменён');
     sbStatus('err');
     if(typeof denyToast === 'function')
       denyToast('⚠️ Нет облачной сессии — данные не подтянулись. Попробуйте перезайти.');
     return;
   }
+  sbStatus('sync');
   try{
-    const { count, error } = await SB.from('parking_cells')
-      .select('*', { count:'exact', head:true });
-    if(error) throw error;
+    // Узнаём, есть ли что-то в облаке. Не используем head:true (HEAD запрос) —
+    // делаем минимальный select на 1 запись и смотрим Content-Range header.
+    // Через sbRestFetch возвращается тело — нам достаточно его длины.
+    const probe = await sbRestFetch('parking_cells?select=cell_id&limit=1');
+    const cloudHasData = Array.isArray(probe) && probe.length > 0;
     const localCount = Object.values(PARKING).reduce((n,s)=>n+Object.keys(s).length, 0);
-    if((count||0) === 0 && localCount > 0){
-      // Облако пустое — заливаем локальные данные
-      const pushed = await sbPushAllCells();
-      if(pushed >= 0){
-        localStorage.setItem(SB_INITIAL_PUSHED_KEY, '1');
-        denyToast(`☁️ Залито в облако: ${pushed} ячеек`);
+    if(!cloudHasData && localCount > 0){
+      // Облако пустое — заливаем локальные данные (push требует SDK)
+      if(SB){
+        const pushed = await sbPushAllCells();
+        if(pushed >= 0){
+          localStorage.setItem(SB_INITIAL_PUSHED_KEY, '1');
+          denyToast(`☁️ Залито в облако: ${pushed} ячеек`);
+        }
       }
-    } else if((count||0) > 0){
+    } else if(cloudHasData){
       // Облако — источник истины
       const pulled = await sbPullAllCells();
       if(pulled >= 0 && pulled !== localCount){
         denyToast(`☁️ Получено из облака: ${pulled} ячеек`);
       }
     }
-    sbSubscribeRealtime();
+    if(typeof sbSubscribeRealtime === 'function') sbSubscribeRealtime();
+    sbStatus('online');
   }catch(e){
     console.warn('sbInitialSync:', e.message);
     sbStatus('err');
