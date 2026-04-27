@@ -1248,6 +1248,7 @@ html[data-theme="paper"] .um-list-item{background:#fffaf0}
   <div class="hdr-meta">
     <div class="hdr-clock" id="hdrClock">——:——</div>
     <div class="hdr-byline">Администратор</div>
+    <div id="sbStatus" style="font-size:9.5px;color:var(--tx3);font-family:var(--mono);letter-spacing:.4px;margin-top:2px;cursor:pointer" onclick="if(typeof sbPullAllCells==='function')sbPullAllCells()" title="Клик — обновить из облака">Локально</div>
     <div class="user-chip" id="userChip" onclick="toggleUserMenu(event)" style="display:none">
       <div class="user-chip-info">
         <div class="user-chip-name" id="ucName">—</div>
@@ -2169,6 +2170,12 @@ async function doLogin(ev){
   CURRENT_USER = { u:found.u, name:found.name, role:found.role };
   await setSession(CURRENT_USER, remember);
   enterApp();
+  // Параллельно: миграция/логин в Supabase + первичная синхронизация
+  if(typeof sbAfterLocalLogin === 'function'){
+    sbAfterLocalLogin(found.u, p, found.name).then(ok=>{
+      if(ok && typeof sbInitialSync === 'function') sbInitialSync();
+    });
+  }
   if(typeof handleDeepLink==='function') handleDeepLink();
   return false;
 }
@@ -2176,6 +2183,7 @@ async function doLogin(ev){
 function doLogout(ev){
   ev && ev.stopPropagation();
   localStorage.removeItem(SESSION_KEY);
+  if(typeof sbSignOut === 'function') sbSignOut();
   CURRENT_USER = null;
   document.getElementById('userMenu').classList.remove('open');
   document.getElementById('userChip').style.display='none';
@@ -2485,15 +2493,258 @@ async function doChangePw(){
   denyToast('Пароль изменён');
 }
 
+// ═══════════════════════════════════════════════════════════════
+// SUPABASE CLOUD SYNC — Postgres + Realtime backend
+// ═══════════════════════════════════════════════════════════════
+const SB_URL = 'https://swxssesgfojoklrsnago.supabase.co';
+const SB_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN3eHNzZXNnZm9qb2tscnNuYWdvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyNzY2NTUsImV4cCI6MjA5Mjg1MjY1NX0.8IyieP7nNKxFRrUqMrHXJ98soHoG0DAvaxkQfqXy2r4';
+const SB_INITIAL_PUSHED_KEY = 'dvintsev_sb_pushed_v1';
+let SB = null;
+let SB_RT_CHANNEL = null;
+let SB_LAST_LOCAL_WRITE_TS = 0; // чтобы skip realtime эхо собственных правок
+
+function sbStatus(state){
+  const el = document.getElementById('sbStatus');
+  if(!el) return;
+  const map = {
+    idle:    { dot:'#7c6cb4', text:'Локально' },
+    online:  { dot:'#78b342', text:'Облако ●' },
+    sync:    { dot:'#e8a73a', text:'Синк…' },
+    err:     { dot:'#e0553d', text:'Облако ✗' },
+    offline: { dot:'#7c6cb4', text:'Offline' }
+  };
+  const m = map[state] || map.idle;
+  el.style.color = m.dot;
+  el.textContent = m.text;
+  el.title = `Статус облака: ${m.text}`;
+}
+
+async function sbInit(){
+  try{
+    if(typeof supabase === 'undefined'){
+      await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js');
+    }
+    SB = supabase.createClient(SB_URL, SB_ANON_KEY, {
+      auth: { persistSession:true, autoRefreshToken:true, storageKey:'dvintsev_sb_auth' }
+    });
+    sbStatus('idle');
+  }catch(e){
+    console.warn('Supabase init failed:', e);
+    sbStatus('offline');
+  }
+}
+
+const sbEmail = (login)=> String(login).toLowerCase() + '@dvintsev.app';
+
+// При успешном локальном логине — мигрируем/логинимся в Supabase.
+// Возвращает true если облачная сессия активна.
+async function sbAfterLocalLogin(login, password, name){
+  if(!SB) return false;
+  // Сначала пробуем signIn
+  let { data, error } = await SB.auth.signInWithPassword({
+    email: sbEmail(login), password
+  });
+  if(error){
+    // Если не существует — signUp; trigger создаст profile
+    if(/invalid login|invalid credentials/i.test(error.message||'')){
+      const su = await SB.auth.signUp({
+        email: sbEmail(login), password,
+        options:{ data:{ login, name } }
+      });
+      if(su.error){
+        console.warn('Supabase signUp failed:', su.error.message);
+        return false;
+      }
+      // signIn после signUp (если confirm email отключён)
+      const r2 = await SB.auth.signInWithPassword({
+        email: sbEmail(login), password
+      });
+      if(r2.error){ console.warn('Supabase signIn after signUp failed:', r2.error.message); return false; }
+    } else {
+      console.warn('Supabase signIn failed:', error.message);
+      return false;
+    }
+  }
+  return true;
+}
+
+async function sbSignOut(){
+  if(!SB) return;
+  try{ await SB.auth.signOut(); }catch(_){}
+}
+
+// Запись одной ячейки в облако. Не блокирует UI.
+async function sbWriteCell(sec, id, cellData){
+  if(!SB) return;
+  SB_LAST_LOCAL_WRITE_TS = Date.now();
+  try{
+    sbStatus('sync');
+    const { error } = await SB.from('parking_cells').upsert({
+      sec, cell_id: id, data: cellData,
+      updated_by: CURRENT_USER ? CURRENT_USER.u : null
+    }, { onConflict: 'sec,cell_id' });
+    if(error) throw error;
+    sbStatus('online');
+  }catch(e){ console.warn('sbWriteCell:', e.message); sbStatus('err'); }
+}
+
+async function sbDeleteCell(sec, id){
+  if(!SB) return;
+  SB_LAST_LOCAL_WRITE_TS = Date.now();
+  try{
+    sbStatus('sync');
+    const { error } = await SB.from('parking_cells').delete().match({ sec, cell_id: id });
+    if(error) throw error;
+    sbStatus('online');
+  }catch(e){ console.warn('sbDeleteCell:', e.message); sbStatus('err'); }
+}
+
+async function sbWriteAudit(ev){
+  if(!SB || !ev) return;
+  try{
+    await SB.from('audit_log').insert({
+      ts: new Date(ev.ts || Date.now()).toISOString(),
+      user_login: ev.user, user_name: ev.name, role: ev.role,
+      action: ev.action, sec: ev.sec, cell_id: ev.id != null ? String(ev.id) : null,
+      changes: ev.changes || null, summary: ev.summary || null, extra: ev.extra || null
+    });
+  }catch(e){ console.warn('sbWriteAudit:', e.message); }
+}
+
+// Заливает все локальные ячейки в облако (one-time на первой миграции).
+async function sbPushAllCells(){
+  if(!SB) return -1;
+  sbStatus('sync');
+  try{
+    const rows = [];
+    for(const sec of Object.keys(PARKING)){
+      for(const id of Object.keys(PARKING[sec])){
+        rows.push({ sec, cell_id:id, data: PARKING[sec][id],
+          updated_by: CURRENT_USER ? CURRENT_USER.u : null });
+      }
+    }
+    const batch = 200;
+    for(let i=0; i<rows.length; i+=batch){
+      const { error } = await SB.from('parking_cells')
+        .upsert(rows.slice(i, i+batch), { onConflict:'sec,cell_id' });
+      if(error) throw error;
+    }
+    sbStatus('online');
+    return rows.length;
+  }catch(e){ console.warn('sbPushAllCells:', e.message); sbStatus('err'); return -1; }
+}
+
+// Подтягивает все ячейки из облака → перезаписывает PARKING.
+async function sbPullAllCells(){
+  if(!SB) return -1;
+  sbStatus('sync');
+  try{
+    const all = [];
+    let from = 0; const page = 1000;
+    while(true){
+      const { data, error } = await SB.from('parking_cells')
+        .select('*').range(from, from+page-1);
+      if(error) throw error;
+      all.push(...data);
+      if(data.length < page) break;
+      from += page;
+    }
+    Object.keys(PARKING).forEach(k=>delete PARKING[k]);
+    for(const s of ['А','В','С','Н','ВНЕ']) PARKING[s] = {};
+    for(const row of all){
+      if(!PARKING[row.sec]) PARKING[row.sec] = {};
+      PARKING[row.sec][row.cell_id] = row.data;
+    }
+    savePARKING();
+    try{ buildGrid(); }catch(_){}
+    try{ buildVne(); }catch(_){}
+    try{ if(typeof buildGround==='function') buildGround(); }catch(_){}
+    try{ updateStats(); }catch(_){}
+    try{ if(typeof renderPlanShapes==='function') renderPlanShapes(); }catch(_){}
+    sbStatus('online');
+    return all.length;
+  }catch(e){ console.warn('sbPullAllCells:', e.message); sbStatus('err'); return -1; }
+}
+
+// Вызывается после логина: решает push или pull.
+async function sbInitialSync(){
+  if(!SB) return;
+  try{
+    const { count, error } = await SB.from('parking_cells')
+      .select('*', { count:'exact', head:true });
+    if(error) throw error;
+    const localCount = Object.values(PARKING).reduce((n,s)=>n+Object.keys(s).length, 0);
+    if((count||0) === 0 && localCount > 0){
+      // Облако пустое — заливаем локальные данные
+      const pushed = await sbPushAllCells();
+      if(pushed >= 0){
+        localStorage.setItem(SB_INITIAL_PUSHED_KEY, '1');
+        denyToast(`☁️ Залито в облако: ${pushed} ячеек`);
+      }
+    } else if((count||0) > 0){
+      // Облако — источник истины
+      const pulled = await sbPullAllCells();
+      if(pulled >= 0 && pulled !== localCount){
+        denyToast(`☁️ Получено из облака: ${pulled} ячеек`);
+      }
+    }
+    sbSubscribeRealtime();
+  }catch(e){
+    console.warn('sbInitialSync:', e.message);
+    sbStatus('err');
+  }
+}
+
+function sbSubscribeRealtime(){
+  if(!SB || SB_RT_CHANNEL) return;
+  SB_RT_CHANNEL = SB.channel('parking-cells-rt')
+    .on('postgres_changes',
+      { event:'*', schema:'public', table:'parking_cells' },
+      (payload)=>{
+        // Скипаем эхо своих правок (в течение 2 секунд после локальной записи)
+        if(Date.now() - SB_LAST_LOCAL_WRITE_TS < 2000){
+          const updBy = payload.new ? payload.new.updated_by : payload.old?.updated_by;
+          if(updBy === CURRENT_USER?.u) return;
+        }
+        if(payload.eventType === 'DELETE' && payload.old){
+          const { sec, cell_id } = payload.old;
+          if(PARKING[sec]) delete PARKING[sec][cell_id];
+        } else if(payload.new){
+          const { sec, cell_id, data } = payload.new;
+          if(!PARKING[sec]) PARKING[sec] = {};
+          PARKING[sec][cell_id] = data;
+        }
+        savePARKING();
+        try{ buildGrid(); }catch(_){}
+        try{ buildVne(); }catch(_){}
+        try{ if(typeof buildGround==='function') buildGround(); }catch(_){}
+        try{ updateStats(); }catch(_){}
+        try{ if(typeof renderPlanShapes==='function') renderPlanShapes(); }catch(_){}
+      })
+    .subscribe((status)=>{
+      if(status === 'SUBSCRIBED') sbStatus('online');
+      else if(status === 'CHANNEL_ERROR') sbStatus('err');
+    });
+}
+
 // ─── BOOT ────────────────────────────────────────────────────────
 (async ()=>{
   initTouchMode();
+  sbInit(); // не await — работает параллельно
   await initUsers();
   const s = restoreSession();
   const sigOk = s ? await verifySessionSig(s) : false;
   if(s && sigOk){
     CURRENT_USER = { u:s.u, name:s.name, role:s.role };
     enterApp();
+    // Supabase сессия persistent — если ещё валидна, подключим realtime + sync
+    setTimeout(()=>{
+      if(SB && typeof sbInitialSync==='function'){
+        SB.auth.getSession().then(r=>{
+          if(r.data && r.data.session) sbInitialSync();
+        });
+      }
+    }, 500);
     handleDeepLink();
   } else {
     if(s) localStorage.removeItem(SESSION_KEY); // невалидная подпись → выкидываем
@@ -2710,6 +2961,8 @@ function logAudit(action, sec, id, before, after, extra){
   log.push(ev);
   if(log.length > AUDIT_MAX) log = log.slice(-AUDIT_MAX);
   try{ localStorage.setItem(AUDIT_KEY, JSON.stringify(log)); }catch(e){ console.warn('audit save failed', e); }
+  // Дублируем событие в облако (для общей истории всех устройств)
+  if(typeof sbWriteAudit === 'function') sbWriteAudit(ev);
 }
 
 function buildAuditSummary(action, changes, extra){
@@ -4896,6 +5149,8 @@ function saveEdit(){
   }catch(_){}
 
   savePARKING();
+  // Облачная синхронизация
+  if(typeof sbWriteCell === 'function') sbWriteCell(sec, id, PARKING[sec][id]);
   updateStats();
   if(typeof renderPlanShapes==='function') renderPlanShapes();
   closeModal();
@@ -4975,6 +5230,7 @@ function doCreateNewCell(){
   try{ logAudit('create', sec, id, null, {...PARKING[sec][id]}); }catch(e){ console.warn('audit', e); }
   try{ if(typeof notifyEvent==='function') notifyEvent('create', sec, id, `Тип: ${tp}, зона: ${zn||'—'}`); }catch(_){}
   savePARKING();
+  if(typeof sbWriteCell === 'function') sbWriteCell(sec, id, PARKING[sec][id]);
   document.getElementById('newCellModal').classList.remove('open');
   try{ buildGrid(); }catch(_){}
   try{ buildVne(); }catch(_){}
@@ -4999,6 +5255,7 @@ function deleteCellFully(){
     }
   }catch(_){}
   savePARKING();
+  if(typeof sbDeleteCell === 'function') sbDeleteCell(sec, id);
   closeModal();
   try{ buildGrid(); }catch(_){}
   try{ buildVne(); }catch(_){}
