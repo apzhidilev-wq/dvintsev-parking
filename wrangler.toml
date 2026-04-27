@@ -1,0 +1,4 @@
+name = "dvintsev-proxy"
+main = "cloudflare-worker.js"
+compatibility_date = "2026-04-27"
+account_id = "4fa6c2cdfdbd6c85ba26627832d7dfe4"

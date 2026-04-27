@@ -6,3 +6,5 @@ uploads/
 screenshots/
 *.b64.txt
 *PII*.json
+.wrangler/
+.dev.vars
