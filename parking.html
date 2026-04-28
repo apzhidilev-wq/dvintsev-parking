@@ -1248,7 +1248,7 @@ html[data-theme="paper"] .um-list-item{background:#fffaf0}
     <div class="auth-err" id="authErr">Неверный логин или пароль</div>
     <label class="auth-remember"><input type="checkbox" id="authRemember" checked>Запомнить меня на 7 дней</label>
     <button type="submit" class="auth-btn">Войти</button>
-    <div id="authBuildTag" style="margin-top:14px;font-size:9.5px;color:var(--tx3);font-family:var(--mono);letter-spacing:.5px;text-align:center;opacity:.6">build 2026-04-27 · v13</div>
+    <div id="authBuildTag" style="margin-top:14px;font-size:9.5px;color:var(--tx3);font-family:var(--mono);letter-spacing:.5px;text-align:center;opacity:.6">build 2026-04-28 · v14</div>
   </form>
 </div>
 
@@ -2079,23 +2079,10 @@ async function setUserPassword(user, password){
   user.salt = genSalt();
   user.pwh  = await hashPw(password, user.salt);
 }
-// При первом запуске (когда users в localStorage отсутствуют) генерируем
-// случайные пароли и показываем их пользователю одноразовой модалкой —
-// чтобы дефолтные пароли не утекли через исходник.
-const DEFAULT_USERS_SEED = [
-  { u:'admin',    name:'Администратор', role:'admin'    },
-  { u:'operator', name:'Оператор',      role:'operator' },
-  { u:'guest',    name:'Гость',         role:'viewer'   }
-];
-function genInitialPassword(){
-  const a = new Uint8Array(9);
-  if(window.crypto && crypto.getRandomValues){ crypto.getRandomValues(a); }
-  else { for(let i=0;i<9;i++) a[i] = Math.floor(Math.random()*256); }
-  // base32-like, без двусмысленных символов
-  const ALPHA = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let s=''; for(let i=0;i<a.length;i++) s += ALPHA[a[i]%ALPHA.length];
-  return s.slice(0,4)+'-'+s.slice(4,8); // например "K7Q3-MX9P"
-}
+// users в localStorage — это ЛОКАЛЬНЫЙ КЭШ облачных аккаунтов.
+// Записи появляются только после успешного облачного логина (см. doLogin).
+// Никакой первоначальной генерации — авторитет пользователей в Supabase.
+// Любые попытки войти на свежем устройстве идут через облако.
 const USERS_KEY = 'dvintsev_users_v1';
 const SESSION_KEY = 'dvintsev_session_v1';
 let CURRENT_USER = null; // { u, name, role }
@@ -2103,30 +2090,8 @@ let CURRENT_USER = null; // { u, name, role }
 async function initUsers(){
   let users = null;
   try{ users = JSON.parse(localStorage.getItem(USERS_KEY)||'null'); }catch(e){}
-  if(!users || !Array.isArray(users) || users.length===0){
-    users = [];
-    const generated = [];
-    for(const s of DEFAULT_USERS_SEED){
-      const rec = { u:s.u, name:s.name, role:s.role };
-      const pw = genInitialPassword();
-      await setUserPassword(rec, pw);
-      users.push(rec);
-      generated.push({ u:s.u, role:s.role, pw });
-    }
-    localStorage.setItem(USERS_KEY, JSON.stringify(users));
-    // Покажем сгенерированные пароли — единственный раз. Сохрани и смени!
-    setTimeout(()=>showFirstRunPasswords(generated), 200);
-  }
+  if(!users || !Array.isArray(users)) users = [];
   return users;
-}
-function showFirstRunPasswords(list){
-  const lines = list.map(u=>`  ${u.u} (${u.role}): ${u.pw}`).join('\n');
-  alert(
-    'ПЕРВЫЙ ЗАПУСК. Сгенерированы временные пароли:\n\n' +
-    lines + '\n\n' +
-    '⚠️ ЗАПИШИТЕ ИХ СЕЙЧАС — больше они не появятся.\n' +
-    '⚠️ После первого входа смените пароли через юзер-меню → «Сменить пароль».'
-  );
 }
 function getUsers(){
   try{ return JSON.parse(localStorage.getItem(USERS_KEY)||'[]'); }catch(e){ return []; }
