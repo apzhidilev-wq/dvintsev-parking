@@ -161,7 +161,8 @@ body{font-family:var(--sans);
 .hdr{position:relative;background:
   radial-gradient(800px 200px at 20% -60%, var(--acc-glow), transparent 60%),
   linear-gradient(180deg,#17130e 0%,#0f0d0a 100%);
-  border-bottom:1px solid var(--bd);padding:0 22px;min-height:72px;
+  border-bottom:1px solid var(--bd);padding:env(safe-area-inset-top) 22px 0;
+  min-height:calc(72px + env(safe-area-inset-top));
   display:flex;align-items:stretch;gap:0;flex-shrink:0;z-index:50;
   box-shadow:0 1px 0 rgba(255,255,255,.03) inset, 0 8px 28px rgba(0,0,0,.45)}
 .hdr::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;
