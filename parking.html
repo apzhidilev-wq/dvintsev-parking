@@ -990,14 +990,14 @@ html[data-theme="paper"] .stabs{
 /* EDIT MODAL */
 .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:200;
   display:none;align-items:center;justify-content:center;
-  padding-top:max(env(safe-area-inset-top),20px);
-  padding-bottom:max(env(safe-area-inset-bottom),20px);
   backdrop-filter:blur(8px)}
 .modal-bg.open{display:flex;animation:fadeIn .2s ease}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 .modal{background:linear-gradient(180deg,var(--surf),var(--bg));
   border:1px solid var(--bd);border-radius:var(--r-lg);
-  padding:28px;min-width:360px;max-width:520px;width:90%;max-height:90vh;
+  padding:28px;min-width:360px;max-width:520px;width:90%;
+  max-height:calc(90vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  margin-top:env(safe-area-inset-top);margin-bottom:env(safe-area-inset-bottom);
   overflow-y:auto;box-shadow:var(--shadow-lg),0 0 0 1px rgba(255,106,0,.2);
   position:relative;animation:slideUp .3s cubic-bezier(.16,1,.3,1)}
 @keyframes slideUp{from{transform:translateY(16px);opacity:0}to{transform:translateY(0);opacity:1}}
@@ -5903,26 +5903,30 @@ function openEdit(sec,id){
   // Кнопка «📍 Показать на схеме» — только если у ячейки есть разметка
   const planBtn = document.getElementById('ePlanBtn');
   if(planBtn) planBtn.style.display = cell.geom ? '' : 'none';
-  // Замочек блокировки и баннер «заблокировано»
-  const lockBtn = document.getElementById('eLockBtn');
-  if(lockBtn){
-    lockBtn.textContent = cell.locked ? '🔒' : '🔓';
-    lockBtn.title = cell.locked
-      ? 'Снять блокировку (нужен пароль admin)'
-      : 'Заблокировать ячейку (нужен пароль admin)';
+  // Замочек блокировки + role-conflict UI. Любой сбой здесь не должен
+  // помешать модалке открыться, поэтому всё под try-catch.
+  try{
+    const lockBtn = document.getElementById('eLockBtn');
+    if(lockBtn){
+      lockBtn.textContent = cell.locked ? '🔒' : '🔓';
+      lockBtn.title = cell.locked
+        ? 'Снять блокировку (нужен пароль admin)'
+        : 'Заблокировать ячейку (нужен пароль admin)';
+    }
+    const lockBanner = document.getElementById('eLockBanner');
+    if(lockBanner) lockBanner.style.display = cell.locked ? 'block' : 'none';
+    const editable = (typeof canWriteCell === 'function') ? canWriteCell(cell) : true;
+    ['eCompany','eOwner','ePlate','eCar','eDims','eType'].forEach(fid=>{
+      const el = document.getElementById(fid);
+      if(el) el.disabled = !editable;
+    });
+    const saveBtn = document.querySelector('#editModal .mbtn-save');
+    if(saveBtn) saveBtn.style.display = editable ? '' : 'none';
+    const clearBtn = document.querySelector('#editModal .mbtn-del:not(.admin-only)');
+    if(clearBtn) clearBtn.style.display = editable ? '' : 'none';
+  } catch(e){
+    console.warn('openEdit role-UI:', e && e.message);
   }
-  const lockBanner = document.getElementById('eLockBanner');
-  if(lockBanner) lockBanner.style.display = cell.locked ? 'block' : 'none';
-  // Если operator открыл admin-овую или locked — disable инпуты
-  const editable = canWriteCell(cell);
-  ['eCompany','eOwner','ePlate','eCar','eDims','eType'].forEach(id=>{
-    const el = document.getElementById(id);
-    if(el) el.disabled = !editable;
-  });
-  const saveBtn = document.querySelector('#editModal .mbtn-save');
-  if(saveBtn) saveBtn.style.display = editable ? '' : 'none';
-  const clearBtn = document.querySelector('#editModal .mbtn-del:not(.admin-only)');
-  if(clearBtn) clearBtn.style.display = editable ? '' : 'none';
   document.getElementById('editModal').classList.add('open');
 }
 
