@@ -2580,7 +2580,9 @@ let SB = null;
 let SB_RT_CHANNEL = null;
 let SB_LAST_LOCAL_WRITE_TS = 0; // чтобы skip realtime эхо собственных правок
 
+let _sbLastState = 'idle';
 function sbStatus(state){
+  _sbLastState = state || 'idle';
   const el = document.getElementById('sbStatus');
   if(!el) return;
   const map = {
@@ -2592,8 +2594,18 @@ function sbStatus(state){
   };
   const m = map[state] || map.idle;
   el.style.color = m.dot;
-  el.textContent = m.text;
-  el.title = `Статус облака: ${m.text}`;
+  // Если есть несохранённые правки — показываем счётчик в скобках
+  let pending = 0;
+  try{ pending = (typeof outboxSize === 'function') ? outboxSize() : 0; }catch(_){}
+  el.textContent = pending > 0 ? `${m.text} (${pending}↻)` : m.text;
+  el.title = pending > 0
+    ? `${m.text} · ${pending} несохранённых правок ждут отправки`
+    : `Статус облака: ${m.text}`;
+}
+
+// Перерисовать статус после изменения outbox.
+function updateOutboxIndicator(){
+  sbStatus(_sbLastState);
 }
 
 // Клик по статусу облака:
@@ -2958,6 +2970,14 @@ function setupOutboxFlushTriggers(){
     if(!document.hidden) setTimeout(flushOutbox, 300);
   });
   setInterval(()=>{ if(outboxSize()) flushOutbox(); }, 30000);
+  // Предупреждаем пользователя при закрытии вкладки с непустым outbox
+  window.addEventListener('beforeunload', (e)=>{
+    if(outboxSize() > 0){
+      e.preventDefault();
+      e.returnValue = 'Есть несохранённые правки. Закрыть страницу?';
+      return e.returnValue;
+    }
+  });
 }
 setupOutboxFlushTriggers();
 
