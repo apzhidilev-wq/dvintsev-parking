@@ -1523,9 +1523,8 @@ html[data-theme="paper"] .um-list-item{background:#fffaf0}
     <h3 style="display:flex;align-items:center;gap:10px">
       ✏️ Редактировать ячейку
       <span class="modal-id-badge" id="editIdBadge"></span>
-      <button id="eLockBtn" class="admin-only" onclick="openLockModal()" style="margin-left:auto;background:transparent;border:1px solid var(--bd);color:var(--tx2);font-size:18px;padding:4px 10px;border-radius:var(--r-sm);cursor:pointer" title="Заблокировать/разблокировать ячейку (admin)">🔓</button>
     </h3>
-    <div id="eLockBanner" style="display:none;background:rgba(224,85,61,.15);border:1px solid var(--red);color:var(--red);padding:8px 12px;border-radius:var(--r-sm);font-size:11px;font-family:var(--mono);margin:0 0 12px;letter-spacing:.4px">🔒 Ячейка заблокирована администратором</div>
+    <div id="eLockBanner" style="display:none;background:rgba(224,85,61,.15);border:1px solid var(--red);color:var(--red);padding:8px 12px;border-radius:var(--r-sm);font-size:11px;font-family:var(--mono);margin:0 0 12px;letter-spacing:.4px;align-items:center;gap:8px">🔒 Ячейка заблокирована администратором</div>
     <input type="hidden" id="editSec">
     <input type="hidden" id="editId">
     <div class="mfield">
@@ -1562,6 +1561,7 @@ html[data-theme="paper"] .um-list-item{background:#fffaf0}
     <div class="mbtn-row">
       <button class="mbtn-save" onclick="saveEdit()">💾 Сохранить</button>
       <button class="mbtn-del" onclick="clearCell()">🗑 Очистить</button>
+      <button id="eLockBtn" class="admin-only mbtn-cancel" onclick="openLockModal()" title="Заблокировать/разблокировать ячейку (admin)" style="font-size:16px;padding:8px 14px">🔓</button>
       <button class="mbtn-del admin-only" onclick="deleteCellFully()" id="eDelBtn" style="background:rgba(224,85,61,.25);border-color:var(--red);color:var(--red)">🗑 Удалить ячейку</button>
       <button class="mbtn-cancel" onclick="closeModal()">Отмена</button>
     </div>
