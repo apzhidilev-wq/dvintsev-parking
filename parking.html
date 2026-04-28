@@ -984,6 +984,8 @@ html[data-theme="paper"] .stabs{
 /* EDIT MODAL */
 .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:200;
   display:none;align-items:center;justify-content:center;
+  padding-top:max(env(safe-area-inset-top),20px);
+  padding-bottom:max(env(safe-area-inset-bottom),20px);
   backdrop-filter:blur(8px)}
 .modal-bg.open{display:flex;animation:fadeIn .2s ease}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
