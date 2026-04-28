@@ -2298,6 +2298,32 @@ document.addEventListener('click',(e)=>{
 // role guard
 function canEdit(){ return CURRENT_USER && (CURRENT_USER.role==='admin' || CURRENT_USER.role==='operator'); }
 function canAdmin(){ return CURRENT_USER && CURRENT_USER.role==='admin'; }
+
+// ─── РОЛЕВАЯ МОДЕЛЬ КОНФЛИКТОВ ──────────────────────────────────
+// Приоритет: admin > operator > viewer.
+// Если последняя правка была admin'а — operator её перезаписать НЕ может.
+// admin может перезаписывать всё. Если ячейка явно заблокирована
+// (cell.locked === true) — её может править только admin.
+// Старые ячейки без lastEditRole — считаем «всем доступными» (миграция).
+function canWriteCell(cell){
+  if(!CURRENT_USER) return false;
+  if(CURRENT_USER.role === 'viewer') return false;
+  if(!cell) return canEdit();
+  if(cell.locked && CURRENT_USER.role !== 'admin') return false;
+  if(CURRENT_USER.role === 'admin') return true;
+  // operator: блокируется только если последняя правка была admin'а
+  if(cell.lastEditRole === 'admin') return false;
+  return true;
+}
+
+// Применяет мета-поля редактирования к ячейке. Вызывать перед записью.
+function stampCellEdit(cell){
+  if(!cell || !CURRENT_USER) return cell;
+  cell.lastEditRole = CURRENT_USER.role;
+  cell.lastEditBy   = CURRENT_USER.u;
+  cell.lastEditAt   = new Date().toISOString();
+  return cell;
+}
 function denyToast(msg){
   const el = document.createElement('div');
   el.textContent = msg || 'Недостаточно прав';
@@ -5514,6 +5540,17 @@ function saveEdit(){
   const id=document.getElementById('editId').value;
   const __auditBefore = (PARKING[sec] && PARKING[sec][id]) ? {...PARKING[sec][id]} : null;
 
+  // Ролевая защита: operator не перезаписывает admin'а; locked → только admin
+  if(__auditBefore && !canWriteCell(__auditBefore)){
+    if(__auditBefore.locked){
+      denyToast('🔒 Ячейка заблокирована администратором');
+    }else{
+      denyToast('Правка отклонена: ячейку редактировал администратор');
+    }
+    closeModal();
+    return;
+  }
+
   if(!PARKING[sec])PARKING[sec]={};
   if(!PARKING[sec][id])PARKING[sec][id]={};
   
@@ -5532,7 +5569,8 @@ function saveEdit(){
   PARKING[sec][id].tp=tp;
   PARKING[sec][id].oc=!!(co&&!co.includes('Имущество'));
   PARKING[sec][id].zone=sec;
-  
+  stampCellEdit(PARKING[sec][id]);
+
   // Update cell display
   const cell=PARKING[sec][id];
   const el=document.getElementById('c-'+sec+'-'+id);
@@ -5655,6 +5693,7 @@ function doCreateNewCell(){
   if(!PARKING[sec]) PARKING[sec] = {};
   if(PARKING[sec][id]){ show('Ячейка с таким ID уже есть в секции '+sec); return; }
   PARKING[sec][id] = {tp, co:'', ow:'', pl:'', cr:'', dm:'', oc:false, zone:zn};
+  stampCellEdit(PARKING[sec][id]);
   try{ logAudit('create', sec, id, null, {...PARKING[sec][id]}); }catch(e){ console.warn('audit', e); }
   try{ if(typeof notifyEvent==='function') notifyEvent('create', sec, id, `Тип: ${tp}, зона: ${zn||'—'}`); }catch(_){}
   savePARKING();
@@ -5672,6 +5711,8 @@ function deleteCellFully(){
   const sec = document.getElementById('editSec').value;
   const id  = document.getElementById('editId').value;
   if(!sec || !id || !PARKING[sec]?.[id]){ denyToast('Ячейка не найдена'); return; }
+  // admin может удалить любую (canWriteCell для admin всегда true), но
+  // явная проверка на locked не нужна — admin её снять умеет.
   if(!confirm(`Удалить ячейку «${sec} · ${id}» полностью? Это удалит запись из данных и разметку со схемы.`)) return;
   const __auditBefore = {...PARKING[sec][id]};
   delete PARKING[sec][id];
