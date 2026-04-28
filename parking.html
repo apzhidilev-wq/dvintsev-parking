@@ -2867,30 +2867,122 @@ async function sbSignOut(){
   try{ await SB.auth.signOut(); }catch(_){}
 }
 
-// Запись одной ячейки в облако. Не блокирует UI.
-async function sbWriteCell(sec, id, cellData){
+// ─── OUTBOX ────────────────────────────────────────────────────
+// Очередь незавершённых правок в localStorage. Если запись в Supabase
+// упала (нет сети, прокси moргнул, токен истёк) — операция остаётся
+// в очереди и автоматически отправляется при возврате связи.
+// Дедуп: на одну ячейку (sec,id) храним только последнюю операцию —
+// финальное состояние и есть то, что нужно засинкать.
+const OUTBOX_KEY = 'dvintsev_outbox_v1';
+
+function loadOutbox(){
+  try{ return JSON.parse(localStorage.getItem(OUTBOX_KEY) || '[]'); }
+  catch(_){ return []; }
+}
+function saveOutbox(arr){
+  try{ localStorage.setItem(OUTBOX_KEY, JSON.stringify(arr)); }
+  catch(_){ }
+  try{ if(typeof updateOutboxIndicator==='function') updateOutboxIndicator(); }catch(_){}
+}
+function outboxSize(){ return loadOutbox().length; }
+
+function enqueueOutbox(op){
+  const arr = loadOutbox();
+  const filtered = arr.filter(x => !(x.sec===op.sec && x.id===op.id));
+  filtered.push(op);
+  saveOutbox(filtered);
+}
+
+let _flushInProgress = false;
+async function flushOutbox(){
+  if(_flushInProgress) return;
   if(!SB) return;
-  SB_LAST_LOCAL_WRITE_TS = Date.now();
+  if(typeof navigator !== 'undefined' && navigator.onLine === false) return;
+  _flushInProgress = true;
   try{
+    let arr = loadOutbox();
+    if(!arr.length) return;
     sbStatus('sync');
-    const { error } = await SB.from('parking_cells').upsert({
-      sec, cell_id: id, data: cellData,
-      updated_by: CURRENT_USER ? CURRENT_USER.u : null
-    }, { onConflict: 'sec,cell_id' });
-    if(error) throw error;
+    while(arr.length){
+      const op = arr[0];
+      try{
+        // Серверный role-conflict check: если на сервере уже стоит
+        // правка admin'а, а наш op от operator — молча дропаем.
+        if(op.kind === 'upsert' && op.userRole && op.userRole !== 'admin'){
+          try{
+            const { data: rows } = await SB.from('parking_cells')
+              .select('data').match({ sec: op.sec, cell_id: op.id });
+            if(rows && rows.length){
+              const remote = rows[0].data || {};
+              if(remote.lastEditRole === 'admin' && (remote.lastEditAt || '') > (op.data?.lastEditAt || '')){
+                console.warn('Outbox: admin overwrote, dropping op for', op.sec, op.id);
+                arr.shift(); saveOutbox(arr);
+                continue;
+              }
+            }
+          }catch(_){ /* при ошибке проверки — пытаемся записать */ }
+        }
+        if(op.kind === 'upsert'){
+          SB_LAST_LOCAL_WRITE_TS = Date.now();
+          const { error } = await SB.from('parking_cells').upsert({
+            sec: op.sec, cell_id: op.id, data: op.data,
+            updated_by: op.user
+          }, { onConflict: 'sec,cell_id' });
+          if(error) throw error;
+        } else if(op.kind === 'delete'){
+          SB_LAST_LOCAL_WRITE_TS = Date.now();
+          const { error } = await SB.from('parking_cells').delete()
+            .match({ sec: op.sec, cell_id: op.id });
+          if(error) throw error;
+        }
+        arr.shift();
+        saveOutbox(arr);
+      }catch(e){
+        console.warn('flushOutbox failed for', op, e.message);
+        sbStatus('err');
+        return; // прерываемся, повторим позже
+      }
+    }
     sbStatus('online');
-  }catch(e){ console.warn('sbWriteCell:', e.message); sbStatus('err'); }
+  } finally {
+    _flushInProgress = false;
+  }
+}
+
+// Триггеры авто-flush: возврат сети, фокус на вкладке, периодически.
+function setupOutboxFlushTriggers(){
+  if(window.__outboxTriggersInstalled) return;
+  window.__outboxTriggersInstalled = true;
+  window.addEventListener('online', ()=>{ setTimeout(flushOutbox, 500); });
+  document.addEventListener('visibilitychange', ()=>{
+    if(!document.hidden) setTimeout(flushOutbox, 300);
+  });
+  setInterval(()=>{ if(outboxSize()) flushOutbox(); }, 30000);
+}
+setupOutboxFlushTriggers();
+
+// Запись одной ячейки в облако. Не блокирует UI.
+// Сначала ставим в outbox, потом сразу пытаемся flush — если сеть
+// есть, то отправится за один тик; если нет — переживёт перезагрузку.
+async function sbWriteCell(sec, id, cellData){
+  enqueueOutbox({
+    kind: 'upsert', sec, id,
+    data: cellData,
+    user: CURRENT_USER ? CURRENT_USER.u : null,
+    userRole: CURRENT_USER ? CURRENT_USER.role : null,
+    ts: Date.now()
+  });
+  flushOutbox();
 }
 
 async function sbDeleteCell(sec, id){
-  if(!SB) return;
-  SB_LAST_LOCAL_WRITE_TS = Date.now();
-  try{
-    sbStatus('sync');
-    const { error } = await SB.from('parking_cells').delete().match({ sec, cell_id: id });
-    if(error) throw error;
-    sbStatus('online');
-  }catch(e){ console.warn('sbDeleteCell:', e.message); sbStatus('err'); }
+  enqueueOutbox({
+    kind: 'delete', sec, id,
+    user: CURRENT_USER ? CURRENT_USER.u : null,
+    userRole: CURRENT_USER ? CURRENT_USER.role : null,
+    ts: Date.now()
+  });
+  flushOutbox();
 }
 
 async function sbWriteAudit(ev){
@@ -3069,6 +3161,10 @@ async function sbInitialSync(){
       }
     }
     if(typeof sbSubscribeRealtime === 'function') sbSubscribeRealtime();
+    // После успешного pull/push — сливаем накопленные офлайн-правки
+    if(outboxSize() > 0){
+      flushOutbox();
+    }
     sbStatus('online');
   }catch(e){
     console.warn('sbInitialSync:', e.message);
