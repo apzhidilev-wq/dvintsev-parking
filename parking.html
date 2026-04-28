@@ -3056,6 +3056,23 @@ async function sbRestFetch(path, offset, limit){
   return await resp.json();
 }
 
+// Решает, нужно ли применить remote-версию ячейки поверх локальной.
+// false → оставляем локальную (она свежее или ждёт отправки в outbox).
+function shouldApplyRemoteCell(sec, id, remoteData){
+  // 1. Если для этой ячейки есть операция в outbox — наш локальный
+  // черновик новее remote'а; перезаписывать нельзя.
+  try{
+    const outbox = loadOutbox();
+    if(outbox.some(op => op.sec === sec && op.id === id)) return false;
+  }catch(_){}
+  // 2. Если локальная правка свежее remote-правки по lastEditAt — оставляем.
+  const local = PARKING[sec]?.[id];
+  if(local && local.lastEditAt && remoteData && remoteData.lastEditAt){
+    if(local.lastEditAt > remoteData.lastEditAt) return false;
+  }
+  return true;
+}
+
 // Подтягивает все ячейки из облака → перезаписывает PARKING.
 async function sbPullAllCells(){
   // НЕ зависит от SDK — sbRestFetch использует raw fetch + SB_RAW_TOKEN
@@ -3085,12 +3102,37 @@ async function sbPullAllCells(){
         await new Promise(res => setTimeout(res, 200));
       }
     }
+    // Сохраняем локальные ячейки, которые свежее remote-версии или лежат
+    // в outbox — их перезаписывать нельзя (потеря несохранённых правок).
+    const preserved = {};
+    for(const sec of Object.keys(PARKING)){
+      for(const id of Object.keys(PARKING[sec])){
+        preserved[sec+''+id] = PARKING[sec][id];
+      }
+    }
     Object.keys(PARKING).forEach(k=>delete PARKING[k]);
     for(const s of ['А','В','С','Н','ВНЕ']) PARKING[s] = {};
     for(const row of all){
       if(!PARKING[row.sec]) PARKING[row.sec] = {};
-      PARKING[row.sec][row.cell_id] = row.data;
+      const localCell = preserved[row.sec+''+row.cell_id];
+      if(localCell && !shouldApplyRemoteCell(row.sec, row.cell_id, row.data)){
+        PARKING[row.sec][row.cell_id] = localCell;
+      } else {
+        PARKING[row.sec][row.cell_id] = row.data;
+      }
     }
+    // Локальные ячейки, отсутствующие в remote (созданы офлайн),
+    // тоже сохраняем — они уйдут через outbox.
+    try{
+      const outbox = loadOutbox();
+      for(const op of outbox){
+        if(op.kind === 'upsert' && !PARKING[op.sec]?.[op.id]){
+          if(!PARKING[op.sec]) PARKING[op.sec] = {};
+          const localCell = preserved[op.sec+''+op.id];
+          if(localCell) PARKING[op.sec][op.id] = localCell;
+        }
+      }
+    }catch(_){}
     savePARKING();
     try{ buildGrid(); }catch(_){}
     try{ buildVne(); }catch(_){}
@@ -3185,9 +3227,15 @@ function sbSubscribeRealtime(){
         }
         if(payload.eventType === 'DELETE' && payload.old){
           const { sec, cell_id } = payload.old;
+          // Не удаляем, если локально ждём upsert этой ячейки в outbox
+          try{
+            const outbox = loadOutbox();
+            if(outbox.some(op => op.sec===sec && op.id===cell_id && op.kind==='upsert')) return;
+          }catch(_){}
           if(PARKING[sec]) delete PARKING[sec][cell_id];
         } else if(payload.new){
           const { sec, cell_id, data } = payload.new;
+          if(!shouldApplyRemoteCell(sec, cell_id, data)) return;
           if(!PARKING[sec]) PARKING[sec] = {};
           PARKING[sec][cell_id] = data;
         }
