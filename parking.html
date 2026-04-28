@@ -1514,10 +1514,12 @@ html[data-theme="paper"] .um-list-item{background:#fffaf0}
 <!-- EDIT MODAL -->
 <div class="modal-bg" id="editModal">
   <div class="modal">
-    <h3>
+    <h3 style="display:flex;align-items:center;gap:10px">
       ✏️ Редактировать ячейку
       <span class="modal-id-badge" id="editIdBadge"></span>
+      <button id="eLockBtn" class="admin-only" onclick="openLockModal()" style="margin-left:auto;background:transparent;border:1px solid var(--bd);color:var(--tx2);font-size:18px;padding:4px 10px;border-radius:var(--r-sm);cursor:pointer" title="Заблокировать/разблокировать ячейку (admin)">🔓</button>
     </h3>
+    <div id="eLockBanner" style="display:none;background:rgba(224,85,61,.15);border:1px solid var(--red);color:var(--red);padding:8px 12px;border-radius:var(--r-sm);font-size:11px;font-family:var(--mono);margin:0 0 12px;letter-spacing:.4px">🔒 Ячейка заблокирована администратором</div>
     <input type="hidden" id="editSec">
     <input type="hidden" id="editId">
     <div class="mfield">
@@ -1559,6 +1561,25 @@ html[data-theme="paper"] .um-list-item{background:#fffaf0}
     </div>
     <div style="text-align:right;margin-top:8px">
       <button id="ePlanBtn" onclick="goToPlanFromEdit()" style="display:none;background:transparent;border:1px dashed var(--bd);color:var(--tx2);font-size:11px;padding:5px 12px;border-radius:var(--r-sm);cursor:pointer;font-family:var(--mono)" onmouseover="this.style.color='var(--acc)';this.style.borderColor='var(--acc)'" onmouseout="this.style.color='var(--tx2)';this.style.borderColor='var(--bd)'">📍 Показать на схеме</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ LOCK PASSWORD MODAL ═══════════════════ -->
+<div class="modal-bg" id="lockPwdModal">
+  <div class="modal" style="max-width:420px">
+    <h3 id="lockPwdTitle">🔒 Подтвердите пароль администратора</h3>
+    <div style="font-size:12px;color:var(--tx2);margin-bottom:12px;line-height:1.5" id="lockPwdMsg">
+      Для блокировки ячейки введите ваш пароль администратора.
+    </div>
+    <div class="mfield">
+      <label>Пароль</label>
+      <input type="password" id="lockPwdInput" autocomplete="current-password" onkeydown="if(event.key==='Enter') confirmLockToggle()">
+    </div>
+    <div id="lockPwdErr" style="display:none;color:var(--red);font-size:11px;font-family:var(--mono);margin-bottom:8px"></div>
+    <div class="mbtn-row">
+      <button class="mbtn-save" onclick="confirmLockToggle()">Подтвердить</button>
+      <button class="mbtn-cancel" onclick="closeLockModal()">Отмена</button>
     </div>
   </div>
 </div>
@@ -3959,10 +3980,11 @@ function buildSectionGrid(sec){
       const carS=(c.cr||c.co||'').substring(0,14);
       const tpS=c.tp==='Высокая'?'В':c.tp==='Низкая'?'Н':c.tp?c.tp.substring(0,2):'';
       const noGeom=!c.geom;
-      html+=`<div class="cell ${cellColor(c)}${noGeom?' no-geom':''}" id="c-${sec}-${n}" data-s="${sec}" data-id="${n}"
+      const lockMark = c.locked ? '<span class="lock-mark" style="position:absolute;top:2px;right:3px;font-size:10px;line-height:1">🔒</span>' : '';
+      html+=`<div class="cell ${cellColor(c)}${noGeom?' no-geom':''}${c.locked?' is-locked':''}" id="c-${sec}-${n}" data-s="${sec}" data-id="${n}" style="position:relative"
         onclick="openEdit('${sec}','${n}')" onmouseenter="showTT(event,'${sec}','${n}')" onmouseleave="hideTT()"
         ${noGeom?'title="Не размечена на схеме"':''}>
-        <div class="cnum">${n}${noGeom?'<span class="no-geom-mark">⌀</span>':''}</div><div class="ccar">${esc(carS)}</div><div class="ctp">${esc(tpS)}</div></div>`;
+        ${lockMark}<div class="cnum">${n}${noGeom?'<span class="no-geom-mark">⌀</span>':''}</div><div class="ccar">${esc(carS)}</div><div class="ctp">${esc(tpS)}</div></div>`;
     });
     html+='</div></div>';
   }
@@ -3993,7 +4015,10 @@ function buildGround(){
     const coS=(c.co||'').substring(0,18);
     const crS=(c.cr||'').substring(0,20);
     const isRem=c.ow==='удалено';
-    el.innerHTML=`<div class="gnum">${isRem?'✖':'📍'} ${esc(id)}${noGeom?' <span class="no-geom-mark">⌀</span>':''}</div>
+    el.style.position = 'relative';
+    if(c.locked) el.classList.add('is-locked');
+    const lockMark = c.locked ? '<span class="lock-mark" style="position:absolute;top:3px;right:4px;font-size:10px">🔒</span>' : '';
+    el.innerHTML=`${lockMark}<div class="gnum">${isRem?'✖':'📍'} ${esc(id)}${noGeom?' <span class="no-geom-mark">⌀</span>':''}</div>
       <div class="gco">${isRem?'<span style="color:var(--pur)">Удалено</span>':(esc(coS)||(c.oc?'—':'<span style="color:var(--green)">Свободно</span>'))}</div>
       <div class="gcar">${esc(crS)}</div>`;
     el.addEventListener('mouseenter',e=>showTT(e,'Н',id));
@@ -4049,10 +4074,12 @@ function buildVne(){
                     cell.tp==='склад'?'color:#92400e;background:rgba(146,64,14,.2)':
                     'color:var(--tx2);background:var(--surf3)';
       const noGeom=!cell.geom;
-      const cls='vne-spot '+(cell.oc?'vocc':cell.tp==='Законсервированные'?'vzak':cell.tp==='склад'?'vsklad':'')+(noGeom?' no-geom':'');
+      const cls='vne-spot '+(cell.oc?'vocc':cell.tp==='Законсервированные'?'vzak':cell.tp==='склад'?'vsklad':'')+(noGeom?' no-geom':'')+(cell.locked?' is-locked':'');
+      const lockMarkVne = cell.locked ? '<span class="lock-mark" style="font-size:10px">🔒</span>' : '';
       html+=`<div class="${cls}" id="c-ВНЕ-${esc(rawId)}" onclick="openEdit('ВНЕ',${attrJs(rawId)})" onmouseenter="showTT(event,'ВНЕ',${attrJs(rawId)})" onmouseleave="hideTT()" ${noGeom?'title="Не размечена на схеме"':''}>
         <div style="display:flex;align-items:center;gap:4px">
           <span class="vne-id">${esc(dispId)}</span>
+          ${lockMarkVne}
           ${noGeom?'<span class="no-geom-mark">⌀</span>':''}
           ${tpLabel?`<span class="vne-tp" style="${tpColor}">${tpLabel}</span>`:''}
         </div>
@@ -5693,6 +5720,26 @@ function openEdit(sec,id){
   // Кнопка «📍 Показать на схеме» — только если у ячейки есть разметка
   const planBtn = document.getElementById('ePlanBtn');
   if(planBtn) planBtn.style.display = cell.geom ? '' : 'none';
+  // Замочек блокировки и баннер «заблокировано»
+  const lockBtn = document.getElementById('eLockBtn');
+  if(lockBtn){
+    lockBtn.textContent = cell.locked ? '🔒' : '🔓';
+    lockBtn.title = cell.locked
+      ? 'Снять блокировку (нужен пароль admin)'
+      : 'Заблокировать ячейку (нужен пароль admin)';
+  }
+  const lockBanner = document.getElementById('eLockBanner');
+  if(lockBanner) lockBanner.style.display = cell.locked ? 'block' : 'none';
+  // Если operator открыл admin-овую или locked — disable инпуты
+  const editable = canWriteCell(cell);
+  ['eCompany','eOwner','ePlate','eCar','eDims','eType'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.disabled = !editable;
+  });
+  const saveBtn = document.querySelector('#editModal .mbtn-save');
+  if(saveBtn) saveBtn.style.display = editable ? '' : 'none';
+  const clearBtn = document.querySelector('#editModal .mbtn-del:not(.admin-only)');
+  if(clearBtn) clearBtn.style.display = editable ? '' : 'none';
   document.getElementById('editModal').classList.add('open');
 }
 
@@ -5811,12 +5858,97 @@ function clearCell(){
   if(!canEdit()){ denyToast('Очистка недоступна'); return; }
   const sec=document.getElementById('editSec').value;
   const id=document.getElementById('editId').value;
+  const cell = PARKING[sec]?.[id];
+  if(cell && !canWriteCell(cell)){
+    denyToast(cell.locked ? '🔒 Ячейка заблокирована' : 'Правка отклонена');
+    return;
+  }
   ['eCompany','eOwner','ePlate','eCar','eDims'].forEach(f=>document.getElementById(f).value='');
   document.getElementById('eType').value=(PARKING[sec]?.[id]?.tp)||'Высокая';
   if(confirm('Очистить все данные по этой ячейке?')){
     window.__auditOverrideAction = 'clear';
     try{ saveEdit(); } finally { window.__auditOverrideAction = null; }
   }
+}
+
+// ─── ЗАМОЧЕК БЛОКИРОВКИ ЯЧЕЙКИ (только admin) ─────────────────
+function openLockModal(){
+  if(!canAdmin()){ denyToast('Только администратор'); return; }
+  const sec = document.getElementById('editSec').value;
+  const id  = document.getElementById('editId').value;
+  const cell = PARKING[sec]?.[id];
+  if(!cell){ denyToast('Ячейка не найдена'); return; }
+  const willLock = !cell.locked;
+  document.getElementById('lockPwdTitle').textContent =
+    willLock ? '🔒 Заблокировать ячейку' : '🔓 Снять блокировку';
+  document.getElementById('lockPwdMsg').textContent = willLock
+    ? `Введите пароль администратора, чтобы заблокировать ячейку «${sec} · ${id}». После этого ячейку сможет править только администратор.`
+    : `Введите пароль администратора, чтобы снять блокировку с ячейки «${sec} · ${id}».`;
+  document.getElementById('lockPwdInput').value = '';
+  document.getElementById('lockPwdErr').style.display = 'none';
+  document.getElementById('lockPwdModal').classList.add('open');
+  setTimeout(()=>document.getElementById('lockPwdInput').focus(), 80);
+}
+function closeLockModal(){
+  document.getElementById('lockPwdModal').classList.remove('open');
+}
+async function confirmLockToggle(){
+  if(!canAdmin()){ denyToast('Только администратор'); return; }
+  const sec = document.getElementById('editSec').value;
+  const id  = document.getElementById('editId').value;
+  const cell = PARKING[sec]?.[id];
+  if(!cell){ denyToast('Ячейка не найдена'); closeLockModal(); return; }
+  const pwd = document.getElementById('lockPwdInput').value;
+  const errEl = document.getElementById('lockPwdErr');
+  errEl.style.display = 'none';
+  if(!pwd){ errEl.textContent = 'Введите пароль'; errEl.style.display='block'; return; }
+  // Проверяем пароль через локальный hash + (если есть сеть) Supabase
+  let ok = false;
+  try{
+    if(typeof verifyUserPassword === 'function'){
+      ok = await verifyUserPassword(CURRENT_USER.u, pwd);
+    }
+  }catch(_){}
+  if(!ok && typeof sbSignInRaw === 'function'){
+    try{
+      const r = await sbSignInRaw(sbEmail(CURRENT_USER.u), pwd, 8000);
+      if(r && r.ok) ok = true;
+    }catch(_){}
+  }
+  if(!ok){
+    errEl.textContent = 'Неверный пароль';
+    errEl.style.display = 'block';
+    return;
+  }
+  // Меняем флаг locked
+  const before = {...cell};
+  cell.locked = !cell.locked;
+  stampCellEdit(cell);
+  savePARKING();
+  try{ logAudit(cell.locked ? 'lock' : 'unlock', sec, id, before, {...cell}); }catch(_){}
+  if(typeof sbWriteCell === 'function') sbWriteCell(sec, id, cell);
+  // Обновляем UI editModal
+  const lockBtn = document.getElementById('eLockBtn');
+  if(lockBtn) lockBtn.textContent = cell.locked ? '🔒' : '🔓';
+  const banner = document.getElementById('eLockBanner');
+  if(banner) banner.style.display = cell.locked ? 'block' : 'none';
+  closeLockModal();
+  denyToast(cell.locked ? '🔒 Ячейка заблокирована' : '🔓 Блокировка снята');
+  try{ buildGrid(); }catch(_){}
+  try{ buildVne(); }catch(_){}
+  try{ if(typeof buildGround==='function') buildGround(); }catch(_){}
+}
+
+// Вспомогательно: проверка локального пароля через PBKDF2 hash из users
+async function verifyUserPassword(login, password){
+  try{
+    const users = JSON.parse(localStorage.getItem(USERS_KEY) || '[]');
+    const u = users.find(x => x.u === login);
+    if(!u || !u.s || !u.h) return false;
+    if(typeof hashPw !== 'function') return false;
+    const h = await hashPw(password, u.s);
+    return h === u.h;
+  }catch(_){ return false; }
 }
 
 function openNewCellModal(sec){
