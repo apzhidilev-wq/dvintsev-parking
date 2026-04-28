@@ -2225,8 +2225,20 @@ async function doLogin(ev){
   // обновляем локальный хеш под актуальный пароль (sync с другим устройством).
   if(cloudOk && !localOk){
     if(!found){
-      // Юзера нет локально — создаём (нужно имя; берём логин если нет)
-      found = { u, name: u, role: 'viewer' };
+      // Юзера нет локально (новое устройство). Определяем роль:
+      //   1. Из user_metadata.role в Supabase Auth ответе (если задано)
+      //   2. По логину: admin → admin, operator → operator
+      //   3. Иначе — viewer
+      let inferredRole = 'viewer';
+      const meta = cloudResp.user && (cloudResp.user.user_metadata || cloudResp.user.app_metadata);
+      if(meta && typeof meta.role === 'string' && ['admin','operator','viewer'].includes(meta.role)){
+        inferredRole = meta.role;
+      } else if(u === 'admin'){
+        inferredRole = 'admin';
+      } else if(u === 'operator'){
+        inferredRole = 'operator';
+      }
+      found = { u, name: u, role: inferredRole };
       await setUserPassword(found, p);
       const all = getUsers(); all.push(found); saveUsers(all);
     } else {
