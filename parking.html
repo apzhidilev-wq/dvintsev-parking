@@ -869,10 +869,34 @@ html[data-theme="paper"] .stabs{
 .blk-hdr-num{color:var(--acc);font-weight:800}
 .blk-hdr-stat{font-size:10px;color:var(--tx3);font-weight:600}
 .cgrid{display:grid;grid-template-columns:1fr 1fr;gap:3px;padding:5px}
-.cell{border-radius:5px;padding:5px 6px;cursor:pointer;transition:all .15s;
+.cell{border-radius:5px;padding:5px 6px;cursor:pointer;
   border:1px solid transparent;min-height:40px;
   display:flex;flex-direction:column;justify-content:space-between;
-  position:relative;overflow:hidden}
+  position:relative;overflow:hidden;
+  /* Linear-style: only GPU-properties (Stage 3/5) */
+  transition:border-color var(--dur-fast) var(--ease-out),
+             background-color var(--dur-fast) var(--ease-out),
+             box-shadow var(--dur-fast) var(--ease-out);
+  animation:cellEnter 320ms var(--ease-out) backwards}
+@keyframes cellEnter{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
+/* Stagger inside each .cgrid (max 8 cells per block) — caps at 175ms total */
+.cgrid .cell:nth-child(1){animation-delay:0ms}
+.cgrid .cell:nth-child(2){animation-delay:25ms}
+.cgrid .cell:nth-child(3){animation-delay:50ms}
+.cgrid .cell:nth-child(4){animation-delay:75ms}
+.cgrid .cell:nth-child(5){animation-delay:100ms}
+.cgrid .cell:nth-child(6){animation-delay:125ms}
+.cgrid .cell:nth-child(7){animation-delay:150ms}
+.cgrid .cell:nth-child(8){animation-delay:175ms}
+/* Cursor-aware orange glow (Linear-style). --mx/--my updated via JS pointermove. */
+.cell::after{content:'';position:absolute;inset:0;border-radius:inherit;
+  background:radial-gradient(180px circle at var(--mx,50%) var(--my,50%),
+             rgba(255,106,0,.10) 0%, transparent 60%);
+  opacity:0;pointer-events:none;
+  transition:opacity var(--dur-fast) var(--ease-out)}
+@media (hover:hover) and (pointer:fine){
+  .cell:hover::after{opacity:1}
+}
 .cnum{font-size:10.5px;font-weight:800;color:rgba(232,226,216,.55);
   font-family:var(--mono);letter-spacing:.3px}
 .ccar{font-size:10px;color:rgba(232,226,216,.75);line-height:1.2;
@@ -882,16 +906,22 @@ html[data-theme="paper"] .stabs{
 /* Унифицированная палитра — те же цвета что и на схеме (см. .shape-*) */
 .cf{background:linear-gradient(135deg,rgba(120,179,66,.10),rgba(120,179,66,.03));
   border-color:rgba(120,179,66,.35)}
+@media (hover:hover) and (pointer:fine){
 .cf:hover{background:linear-gradient(135deg,rgba(120,179,66,.18),rgba(120,179,66,.06));
-  border-color:rgba(120,179,66,.55);transform:scale(1.02)}
+  border-color:rgba(120,179,66,.7);box-shadow:var(--shadow-sm)}
+}
 .co{background:linear-gradient(135deg,rgba(224,85,61,.14),rgba(224,85,61,.06));
   border-color:rgba(224,85,61,.45)}
+@media (hover:hover) and (pointer:fine){
 .co:hover{background:linear-gradient(135deg,rgba(224,85,61,.22),rgba(224,85,61,.1));
-  border-color:rgba(224,85,61,.65);transform:scale(1.02)}
+  border-color:rgba(224,85,61,.8);box-shadow:var(--shadow-sm)}
+}
 .cr{background:linear-gradient(135deg,rgba(232,167,58,.12),rgba(232,167,58,.04));
   border-color:rgba(232,167,58,.4)}
+@media (hover:hover) and (pointer:fine){
 .cr:hover{background:linear-gradient(135deg,rgba(232,167,58,.2),rgba(232,167,58,.08));
-  border-color:rgba(232,167,58,.6);transform:scale(1.02)}
+  border-color:rgba(232,167,58,.8);box-shadow:var(--shadow-sm)}
+}
 .ca{background:linear-gradient(135deg,rgba(120,179,66,.3),rgba(120,179,66,.15)) !important;
   border-color:var(--green) !important;animation:pg 2s infinite;
   box-shadow:inset 0 0 0 1px rgba(120,179,66,.4)}
@@ -901,12 +931,16 @@ html[data-theme="paper"] .stabs{
 .ci{background:rgba(100,90,75,.08);border-color:rgba(100,90,75,.2) !important;opacity:.5}
 .cz{background:linear-gradient(135deg,rgba(124,108,180,.14),rgba(124,108,180,.04));
   border-color:rgba(124,108,180,.45)}
+@media (hover:hover) and (pointer:fine){
 .cz:hover{background:linear-gradient(135deg,rgba(124,108,180,.22),rgba(124,108,180,.08));
-  border-color:rgba(124,108,180,.6);transform:scale(1.02)}
+  border-color:rgba(124,108,180,.75);box-shadow:var(--shadow-sm)}
+}
 .cs-lab{background:linear-gradient(135deg,rgba(201,124,46,.14),rgba(201,124,46,.04));
   border-color:rgba(201,124,46,.45)}
+@media (hover:hover) and (pointer:fine){
 .cs-lab:hover{background:linear-gradient(135deg,rgba(201,124,46,.22),rgba(201,124,46,.08));
-  border-color:rgba(201,124,46,.6);transform:scale(1.02)}
+  border-color:rgba(201,124,46,.75);box-shadow:var(--shadow-sm)}
+}
 /* Индикатор «не размечена на схеме» — пунктирная рамка + значок ⌀ */
 .cell.no-geom,.gspot.no-geom,.vne-spot.no-geom{
   border-style:dashed !important;border-color:rgba(255,106,0,.45) !important}
@@ -920,12 +954,24 @@ html[data-theme="paper"] .stabs{
 .ggrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
 .gspot{background:linear-gradient(135deg,rgba(120,179,66,.10),rgba(120,179,66,.03));
   border:1px solid rgba(120,179,66,.35);border-radius:var(--r);
-  padding:13px 14px;cursor:pointer;transition:all .18s;
+  padding:13px 14px;cursor:pointer;
   border-left:3px solid rgba(120,179,66,.5);
-  box-shadow:var(--shadow-sm);position:relative;overflow:hidden}
-.gspot:hover{border-color:rgba(120,179,66,.55);border-left-color:var(--green);
-  transform:translateY(-2px);box-shadow:var(--shadow-md);
+  box-shadow:var(--shadow-sm);position:relative;overflow:hidden;
+  /* Linear-style: GPU-only properties (Stage 3/5) */
+  transition:border-color var(--dur-fast) var(--ease-out),
+             background-color var(--dur-fast) var(--ease-out),
+             box-shadow var(--dur-fast) var(--ease-out)}
+.gspot::after{content:'';position:absolute;inset:0;border-radius:inherit;
+  background:radial-gradient(220px circle at var(--mx,50%) var(--my,50%),
+             rgba(255,106,0,.08) 0%, transparent 60%);
+  opacity:0;pointer-events:none;
+  transition:opacity var(--dur-fast) var(--ease-out)}
+@media (hover:hover) and (pointer:fine){
+.gspot:hover{border-color:rgba(120,179,66,.7);border-left-color:var(--green);
+  box-shadow:var(--shadow-md);
   background:linear-gradient(135deg,rgba(120,179,66,.18),rgba(120,179,66,.06))}
+.gspot:hover::after{opacity:1}
+}
 .gspot.gocc{background:linear-gradient(135deg,rgba(224,85,61,.12),rgba(224,85,61,.04));
   border-color:rgba(224,85,61,.45);border-left-color:var(--red)}
 .gspot.gocc:hover{background:linear-gradient(135deg,rgba(224,85,61,.2),rgba(224,85,61,.08));
@@ -946,12 +992,24 @@ html[data-theme="paper"] .stabs{
 .vne-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}
 .vne-spot{background:linear-gradient(135deg,rgba(120,179,66,.10),rgba(120,179,66,.03));
   border:1px solid rgba(120,179,66,.35);border-radius:var(--r);
-  padding:12px 14px;cursor:pointer;transition:all .18s;
+  padding:12px 14px;cursor:pointer;
   border-left:3px solid rgba(120,179,66,.5);
-  box-shadow:var(--shadow-sm);position:relative}
-.vne-spot:hover{border-color:rgba(120,179,66,.55);border-left-color:var(--green);
-  transform:translateY(-2px);box-shadow:var(--shadow-md);
+  box-shadow:var(--shadow-sm);position:relative;overflow:hidden;
+  /* Linear-style: GPU-only properties (Stage 3/5) */
+  transition:border-color var(--dur-fast) var(--ease-out),
+             background-color var(--dur-fast) var(--ease-out),
+             box-shadow var(--dur-fast) var(--ease-out)}
+.vne-spot::after{content:'';position:absolute;inset:0;border-radius:inherit;
+  background:radial-gradient(220px circle at var(--mx,50%) var(--my,50%),
+             rgba(255,106,0,.08) 0%, transparent 60%);
+  opacity:0;pointer-events:none;
+  transition:opacity var(--dur-fast) var(--ease-out)}
+@media (hover:hover) and (pointer:fine){
+.vne-spot:hover{border-color:rgba(120,179,66,.7);border-left-color:var(--green);
+  box-shadow:var(--shadow-md);
   background:linear-gradient(135deg,rgba(120,179,66,.18),rgba(120,179,66,.06))}
+.vne-spot:hover::after{opacity:1}
+}
 .vne-spot.vocc{background:linear-gradient(135deg,rgba(224,85,61,.12),rgba(224,85,61,.04));
   border-color:rgba(224,85,61,.45);border-left-color:var(--red)}
 .vne-spot.vocc:hover{background:linear-gradient(135deg,rgba(224,85,61,.2),rgba(224,85,61,.08))}
@@ -4203,6 +4261,21 @@ function buildGrid(){
     wrap.appendChild(div);
   });
 }
+
+// Linear-style radial glow follows cursor on .cell / .gspot / .vne-spot.
+// Uses event delegation on document — one handler total, no per-cell binding.
+// CSS reads --mx/--my from inline style on the hovered card.
+(function setupCellRadialGlow(){
+  if(window.__cellRadialGlowInstalled) return;
+  window.__cellRadialGlowInstalled=true;
+  document.addEventListener('pointermove',(e)=>{
+    const c=e.target.closest && e.target.closest('.cell, .gspot, .vne-spot');
+    if(!c) return;
+    const r=c.getBoundingClientRect();
+    c.style.setProperty('--mx',((e.clientX-r.left)/r.width*100)+'%');
+    c.style.setProperty('--my',((e.clientY-r.top)/r.height*100)+'%');
+  },{passive:true});
+})();
 
 function buildSectionGrid(sec){
   const d=PARKING[sec]||{};
