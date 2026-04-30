@@ -1,0 +1,914 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Light Palette Preview · БЦ Двинцев</title>
+<style>
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', system-ui, sans-serif;
+  font-feature-settings: 'tnum' 1, 'ss01' 1, 'cv11' 1;
+  -webkit-font-smoothing: antialiased;
+  background: #FAFAFA;
+  color: #1D1D1F;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.page {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 40px 28px 80px;
+}
+.page-hero { margin-bottom: 36px; }
+.kicker {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 10.5px;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  color: #007AFF;
+  font-weight: 700;
+}
+.page-hero h1 {
+  font-size: 38px;
+  font-weight: 700;
+  letter-spacing: -1.1px;
+  margin: 8px 0 0;
+  color: #1D1D1F;
+}
+.page-hero p {
+  margin: 12px 0 0;
+  color: #6E6E73;
+  font-size: 15px;
+  max-width: 720px;
+}
+.row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 32px;
+  margin-bottom: 48px;
+}
+.pcard {
+  border-radius: 22px;
+  overflow: hidden;
+  border: 1px solid rgba(0,0,0,0.08);
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 12px 40px -12px rgba(0,0,0,0.08);
+}
+.pcard-meta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 24px;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  background: linear-gradient(180deg, #FCFCFD, #fff);
+  flex-wrap: wrap;
+}
+.pcard-meta h2 {
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: -0.4px;
+  margin: 0;
+  color: #1D1D1F;
+}
+.pcard-meta .label {
+  display: inline-block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: rgba(0,0,0,0.05);
+  color: #424245;
+}
+.pcard-meta .meta-desc {
+  flex: 1;
+  font-size: 13px;
+  color: #6E6E73;
+  min-width: 240px;
+}
+.swatches { display: flex; gap: 5px; margin-left: auto; }
+.sw {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255,255,255,0.85);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.10), inset 0 0 0 1px rgba(0,0,0,0.04);
+}
+
+/* ─── DEMO BLOCK INSIDE EACH PALETTE ───────────────────────────────── */
+.demo {
+  --bg: var(--p-bg);
+  --surf: var(--p-surf);
+  --surf2: var(--p-surf2);
+  --bd: var(--p-bd);
+  --bd2: var(--p-bd2);
+  --tx: var(--p-tx);
+  --tx2: var(--p-tx2);
+  --tx3: var(--p-tx3);
+  --acc: var(--p-acc);
+  --acc2: var(--p-acc2);
+  --acc-bg: var(--p-acc-bg);
+  --green: var(--p-green);
+  --red: var(--p-red);
+  --yel: var(--p-yel);
+  --pur: var(--p-pur);
+  --shadow-soft: var(--p-shadow-soft);
+  --shadow-card: var(--p-shadow-card);
+  --shadow-modal: var(--p-shadow-modal);
+  background: var(--bg);
+  color: var(--tx);
+  font-family: var(--p-font, -apple-system, BlinkMacSystemFont, 'Inter', system-ui, sans-serif);
+}
+
+/* HEADER */
+.dh {
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--bd);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--surf);
+  backdrop-filter: blur(20px);
+}
+.dh-mark {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--acc), var(--acc2));
+  color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: -0.3px;
+  box-shadow: 0 4px 12px var(--acc-bg), inset 0 0 0 1px rgba(255,255,255,0.2);
+}
+.dh-text { display: flex; flex-direction: column; gap: 2px; }
+.dh-kicker {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9.5px;
+  letter-spacing: 1.3px;
+  text-transform: uppercase;
+  color: var(--acc);
+  font-weight: 700;
+}
+.dh-title {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+  color: var(--tx);
+}
+.dh-spacer { flex: 1; }
+.dh-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--surf2);
+  border: 1px solid var(--bd);
+  border-radius: 10px;
+  width: 280px;
+  color: var(--tx3);
+  font-size: 12.5px;
+}
+.dh-search .icon { color: var(--tx3); }
+.dh-search kbd {
+  margin-left: auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  padding: 2px 6px;
+  background: var(--bg);
+  border: 1px solid var(--bd);
+  border-radius: 5px;
+  color: var(--tx2);
+}
+.dh-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px 5px 12px;
+  background: var(--surf2);
+  border: 1px solid var(--bd);
+  border-radius: 999px;
+  font-size: 12px;
+}
+.dh-chip-name { color: var(--tx); font-weight: 600; letter-spacing: -0.1px; }
+.dh-chip-role {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  padding: 3px 7px;
+  border-radius: 5px;
+  background: var(--acc-bg);
+  color: var(--acc);
+  font-weight: 700;
+}
+.dh-av {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--acc), var(--acc2));
+  color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10.5px;
+  font-weight: 800;
+  font-family: 'JetBrains Mono', monospace;
+  box-shadow: 0 2px 6px var(--acc-bg);
+}
+
+/* STATS BAR — KPI tiles */
+.dstats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--bd);
+  border-bottom: 1px solid var(--bd);
+}
+.dstat {
+  background: var(--bg);
+  padding: 16px 18px;
+  position: relative;
+}
+.dstat-k {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--tx3);
+  font-weight: 700;
+}
+.dstat-v {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-feature-settings: 'tnum' 1;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.8px;
+  margin-top: 6px;
+  color: var(--tx);
+  line-height: 1;
+}
+.dstat-v .total {
+  color: var(--tx3);
+  font-size: 14px;
+  font-weight: 600;
+  margin-left: 4px;
+}
+.dstat-trend {
+  font-size: 11px;
+  color: var(--green);
+  font-weight: 600;
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.dstat-trend.down { color: var(--red); }
+.dstat-bar {
+  height: 3px;
+  background: var(--surf2);
+  border-radius: 99px;
+  overflow: hidden;
+  margin-top: 10px;
+}
+.dstat-bar > i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--acc), var(--acc2));
+  border-radius: 99px;
+}
+
+/* CONTENT — 2 cols: cards | side */
+.dbody {
+  display: grid;
+  grid-template-columns: 1.55fr 1fr;
+  gap: 0;
+}
+.dcards-wrap {
+  padding: 22px 22px 24px;
+  border-right: 1px solid var(--bd);
+  background: var(--bg);
+}
+.dcards-h {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.dcards-h .lbl {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--tx);
+  letter-spacing: -0.2px;
+}
+.dcards-h .sub {
+  font-size: 11.5px;
+  color: var(--tx2);
+}
+.dcards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+.dcard {
+  border-radius: 10px;
+  border: 1px solid;
+  padding: 10px 12px;
+  min-height: 64px;
+  font-family: 'JetBrains Mono', monospace;
+  position: relative;
+  overflow: hidden;
+  background: #fff;
+}
+.dcard .num {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--tx);
+  letter-spacing: -0.3px;
+}
+.dcard .car {
+  font-size: 10px;
+  color: var(--tx2);
+  line-height: 1.35;
+  margin-top: 4px;
+  font-weight: 500;
+  letter-spacing: 0.1px;
+}
+.dcard .tp {
+  position: absolute;
+  top: 7px; right: 9px;
+  font-size: 8.5px;
+  color: var(--tx3);
+  letter-spacing: 0.4px;
+  font-weight: 700;
+}
+.cf-occ {
+  background: color-mix(in oklch, var(--red) 8%, var(--bg));
+  border-color: color-mix(in oklch, var(--red) 24%, var(--bd));
+}
+.cf-occ .car { color: color-mix(in oklch, var(--red) 70%, var(--tx2)); }
+.cf-free {
+  background: color-mix(in oklch, var(--green) 6%, var(--bg));
+  border-color: color-mix(in oklch, var(--green) 22%, var(--bd));
+}
+.cf-res {
+  background: color-mix(in oklch, var(--yel) 8%, var(--bg));
+  border-color: color-mix(in oklch, var(--yel) 26%, var(--bd));
+}
+.cf-imp {
+  background: color-mix(in oklch, var(--tx3) 5%, var(--bg));
+  border-color: var(--bd);
+}
+.cf-imp .car, .cf-imp .num { color: var(--tx3); }
+
+/* SIDE — modal preview + buttons + toast */
+.dside {
+  padding: 22px 22px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: var(--surf);
+}
+.dside-h {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--tx2);
+}
+.dmodal {
+  background: #fff;
+  border: 1px solid var(--bd);
+  border-radius: 14px;
+  padding: 18px;
+  position: relative;
+  box-shadow: var(--shadow-modal);
+}
+.dmodal h4 {
+  margin: 0 0 4px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--tx);
+  letter-spacing: -0.2px;
+}
+.dmodal .sub {
+  font-size: 12px;
+  color: var(--tx2);
+  margin-bottom: 14px;
+}
+.dmodal-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.dmf {
+  background: var(--surf2);
+  border: 1px solid var(--bd);
+  border-radius: 9px;
+  padding: 9px 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--tx);
+}
+.dmf .lab {
+  font-size: 9.5px;
+  color: var(--tx3);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  display: block;
+  margin-bottom: 3px;
+  font-weight: 700;
+}
+.dbtns {
+  display: flex;
+  gap: 8px;
+}
+.dbtn {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: -0.1px;
+  padding: 9px 16px;
+  border-radius: 9px;
+  border: 1px solid var(--bd2);
+  background: var(--surf2);
+  color: var(--tx);
+  cursor: pointer;
+  font-family: inherit;
+}
+.dbtn-primary {
+  background: var(--acc);
+  border-color: var(--acc);
+  color: #fff;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.08), 0 4px 12px var(--acc-bg);
+}
+
+/* TOAST */
+.dtoast {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 13px 14px 13px 16px;
+  background: #fff;
+  border: 1px solid var(--bd);
+  border-radius: 14px;
+  box-shadow: var(--shadow-card);
+}
+.dtoast .ico {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  background: color-mix(in oklch, var(--green) 16%, white);
+  color: var(--green);
+  flex-shrink: 0;
+}
+.dtoast .ttl {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--tx);
+  margin: 0;
+  letter-spacing: -0.1px;
+}
+.dtoast .dsc {
+  font-size: 11.5px;
+  color: var(--tx2);
+  margin-top: 2px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   PALETTE A — APOLLO LIGHT (deep navy text + iOS blue accent)
+   ─── Pure white surfaces, Apple-grade greys, iOS Blue accent
+   ═══════════════════════════════════════════════════════════════════ */
+.pal-apollo {
+  --p-bg: #FFFFFF;
+  --p-surf: #FAFAFA;
+  --p-surf2: #F2F2F7;
+  --p-bd: rgba(60, 60, 67, 0.10);
+  --p-bd2: rgba(60, 60, 67, 0.20);
+  --p-tx: #1D1D1F;
+  --p-tx2: #6E6E73;
+  --p-tx3: #8E8E93;
+  --p-acc: #007AFF;
+  --p-acc2: #4DA2FF;
+  --p-acc-bg: rgba(0, 122, 255, 0.12);
+  --p-green: #34C759;
+  --p-red: #FF3B30;
+  --p-yel: #FF9500;
+  --p-pur: #AF52DE;
+  --p-shadow-soft: 0 1px 2px rgba(0,0,0,0.04);
+  --p-shadow-card: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --p-shadow-modal: 0 4px 12px rgba(0,0,0,0.08), 0 12px 32px -8px rgba(0,0,0,0.10);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   PALETTE B — LINEAR LIGHT (soft white + deep indigo text + indigo)
+   ─── Cool ink atmosphere translated to light
+   ═══════════════════════════════════════════════════════════════════ */
+.pal-linear {
+  --p-bg: #FCFCFD;
+  --p-surf: #F8F9FA;
+  --p-surf2: #F1F2F4;
+  --p-bd: rgba(13, 16, 30, 0.10);
+  --p-bd2: rgba(13, 16, 30, 0.16);
+  --p-tx: #0D101E;
+  --p-tx2: #5A5F73;
+  --p-tx3: #8B8FA3;
+  --p-acc: #5E6AD2;
+  --p-acc2: #7C84E8;
+  --p-acc-bg: rgba(94,106,210,0.10);
+  --p-green: #00874A;
+  --p-red: #C03038;
+  --p-yel: #B25E10;
+  --p-pur: #6E56CF;
+  --p-shadow-soft: 0 1px 2px rgba(13,16,30,0.04);
+  --p-shadow-card: 0 1px 3px rgba(13,16,30,0.06), 0 1px 2px rgba(13,16,30,0.04);
+  --p-shadow-modal: 0 4px 12px rgba(13,16,30,0.06), 0 12px 32px -8px rgba(13,16,30,0.08);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   PALETTE C — WARM PREMIUM (off-white cream + deep teal accent)
+   ─── Boutique-hotel vibe, теплее белого, без orange
+   ═══════════════════════════════════════════════════════════════════ */
+.pal-warm {
+  --p-bg: #FAF9F6;
+  --p-surf: #F4F2EC;
+  --p-surf2: #ECEAE3;
+  --p-bd: rgba(48, 36, 24, 0.10);
+  --p-bd2: rgba(48, 36, 24, 0.18);
+  --p-tx: #1F1A14;
+  --p-tx2: #6B6258;
+  --p-tx3: #9A9087;
+  --p-acc: #047A6B;
+  --p-acc2: #2E9A8B;
+  --p-acc-bg: rgba(4, 122, 107, 0.10);
+  --p-green: #047A6B;
+  --p-red: #B8442A;
+  --p-yel: #B57D1A;
+  --p-pur: #6E56CF;
+  --p-shadow-soft: 0 1px 2px rgba(90,60,20,0.06);
+  --p-shadow-card: 0 1px 3px rgba(90,60,20,0.07), 0 1px 2px rgba(90,60,20,0.05);
+  --p-shadow-modal: 0 4px 12px rgba(90,60,20,0.10), 0 12px 32px -8px rgba(90,60,20,0.12);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   PALETTE D — VERCEL MONO LIGHT (pure white + soft greys + black accent)
+   ─── Maximally minimal. Чёрный — единственный «brand» цвет
+   ═══════════════════════════════════════════════════════════════════ */
+.pal-mono {
+  --p-bg: #FFFFFF;
+  --p-surf: #FAFAFA;
+  --p-surf2: #F4F4F5;
+  --p-bd: rgba(0,0,0,0.08);
+  --p-bd2: rgba(0,0,0,0.16);
+  --p-tx: #0A0A0A;
+  --p-tx2: #525252;
+  --p-tx3: #A1A1AA;
+  --p-acc: #0A0A0A;
+  --p-acc2: #404040;
+  --p-acc-bg: rgba(0,0,0,0.08);
+  --p-green: #15803D;
+  --p-red: #B91C1C;
+  --p-yel: #B45309;
+  --p-pur: #6D28D9;
+  --p-shadow-soft: 0 1px 2px rgba(0,0,0,0.04);
+  --p-shadow-card: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.04);
+  --p-shadow-modal: 0 4px 12px rgba(0,0,0,0.06), 0 12px 32px -8px rgba(0,0,0,0.08);
+}
+.pal-mono .dh-mark { background: linear-gradient(135deg, #0A0A0A, #404040); }
+.pal-mono .dh-av { background: linear-gradient(135deg, #0A0A0A, #404040); }
+
+/* ─── decor ───────────────────────────────────────────────────────── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 800px 400px at 90% -10%, rgba(0, 122, 255, 0.04), transparent 60%),
+    radial-gradient(ellipse 600px 300px at 0% 100%, rgba(94, 106, 210, 0.03), transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+.page { position: relative; z-index: 1; }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+<header class="page-hero">
+  <div class="kicker">БЦ Двинцев · Light palette</div>
+  <h1>4 серьёзные светлые палитры</h1>
+  <p>
+    Все 4 — premium, светлая основа (как в основном использовании). Один и тот же UI окрашен по-разному.
+    Каждая палитра имеет полную систему: 4 уровня поверхности, 3 уровня текста, 4 семантических цвета,
+    3-уровневые тени. Выберите одну — применю в production parking.html.
+  </p>
+</header>
+
+<div class="row">
+
+  <!-- A: APOLLO LIGHT -->
+  <div class="pcard">
+    <div class="pcard-meta">
+      <h2>A · Apollo Light</h2>
+      <span class="label">premium native iOS</span>
+      <span class="meta-desc">Pure white + Apple greys + iOS Blue. Native-feel прямо как Settings.app.</span>
+      <div class="swatches">
+        <div class="sw" style="background:#FFFFFF"></div>
+        <div class="sw" style="background:#F2F2F7"></div>
+        <div class="sw" style="background:#007AFF"></div>
+        <div class="sw" style="background:#34C759"></div>
+        <div class="sw" style="background:#FF3B30"></div>
+      </div>
+    </div>
+    <div class="demo pal-apollo">
+      <div class="dh">
+        <div class="dh-mark">Д</div>
+        <div class="dh-text"><span class="dh-kicker">БЦ Двинцев · паркинг</span><span class="dh-title">Учёт парковки</span></div>
+        <div class="dh-spacer"></div>
+        <div class="dh-search">
+          <span class="icon">⌕</span>
+          <span>Поиск ячейки или компании</span>
+          <kbd>⌘K</kbd>
+        </div>
+        <div class="dh-chip">
+          <span class="dh-chip-name">Александр</span>
+          <span class="dh-chip-role">admin</span>
+          <span class="dh-av">AD</span>
+        </div>
+      </div>
+      <div class="dstats">
+        <div class="dstat"><div class="dstat-k">Блок А</div><div class="dstat-v">51<span class="total">/168</span></div><div class="dstat-trend">↑ 70% занято</div><div class="dstat-bar"><i style="width:70%"></i></div></div>
+        <div class="dstat"><div class="dstat-k">Блок В</div><div class="dstat-v">48<span class="total">/144</span></div><div class="dstat-trend">↑ 67% занято</div><div class="dstat-bar"><i style="width:67%"></i></div></div>
+        <div class="dstat"><div class="dstat-k">Блок С</div><div class="dstat-v">100<span class="total">/192</span></div><div class="dstat-trend down">↓ 48% занято</div><div class="dstat-bar"><i style="width:48%"></i></div></div>
+        <div class="dstat"><div class="dstat-k">Наземная</div><div class="dstat-v">10<span class="total">/98</span></div><div class="dstat-trend">↑ 90% занято</div><div class="dstat-bar"><i style="width:90%"></i></div></div>
+      </div>
+      <div class="dbody">
+        <div class="dcards-wrap">
+          <div class="dcards-h"><span class="lbl">Секция А · Блоки</span><span class="sub">117 / 168 (70% занято)</span></div>
+          <div class="dcards">
+            <div class="dcard cf-occ"><div class="tp">В</div><div class="num">1</div><div class="car">Infinity M35</div></div>
+            <div class="dcard cf-free"><div class="tp">Н</div><div class="num">2</div></div>
+            <div class="dcard cf-occ"><div class="tp">В</div><div class="num">3</div><div class="car">Renault Ark</div></div>
+            <div class="dcard cf-occ"><div class="tp">В</div><div class="num">4</div><div class="car">Skoda Kodiaq</div></div>
+            <div class="dcard cf-imp"><div class="tp">В</div><div class="num">5</div><div class="car">Имущество</div></div>
+            <div class="dcard cf-occ"><div class="tp">В</div><div class="num">6</div><div class="car">Porsche Macan</div></div>
+            <div class="dcard cf-occ"><div class="tp">Н</div><div class="num">7</div><div class="car">Samsung</div></div>
+            <div class="dcard cf-imp"><div class="tp">В</div><div class="num">8</div><div class="car">Имущество</div></div>
+          </div>
+        </div>
+        <div class="dside">
+          <div class="dside-h">Редактирование ячейки</div>
+          <div class="dmodal">
+            <h4>А · 1 — Infinity M35</h4>
+            <div class="sub">Подземная Klaus, тип «Высокая»</div>
+            <div class="dmodal-fields">
+              <div class="dmf"><span class="lab">Компания</span>СБЕР СЕРВИС</div>
+              <div class="dmf"><span class="lab">Гос.номер</span>А 000 АА 777</div>
+            </div>
+            <div class="dbtns">
+              <button class="dbtn dbtn-primary">Сохранить</button>
+              <button class="dbtn">Отмена</button>
+            </div>
+          </div>
+          <div class="dside-h">Toast</div>
+          <div class="dtoast">
+            <div class="ico">✓</div>
+            <div><p class="ttl">Ячейка сохранена</p><p class="dsc">А · 5 — СБЕР СЕРВИС</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- B: LINEAR LIGHT -->
+  <div class="pcard">
+    <div class="pcard-meta">
+      <h2>B · Linear Light</h2>
+      <span class="label">premium tech tool</span>
+      <span class="meta-desc">Cool soft white + deep ink text + indigo accent. Vercel/Linear feel.</span>
+      <div class="swatches">
+        <div class="sw" style="background:#FCFCFD"></div>
+        <div class="sw" style="background:#F1F2F4"></div>
+        <div class="sw" style="background:#5E6AD2"></div>
+        <div class="sw" style="background:#00874A"></div>
+        <div class="sw" style="background:#C03038"></div>
+      </div>
+    </div>
+    <div class="demo pal-linear">
+      <div class="dh">
+        <div class="dh-mark">Д</div>
+        <div class="dh-text"><span class="dh-kicker">БЦ Двинцев · паркинг</span><span class="dh-title">Учёт парковки</span></div>
+        <div class="dh-spacer"></div>
+        <div class="dh-search">
+          <span class="icon">⌕</span>
+          <span>Поиск ячейки или компании</span>
+          <kbd>⌘K</kbd>
+        </div>
+        <div class="dh-chip">
+          <span class="dh-chip-name">Александр</span>
+          <span class="dh-chip-role">admin</span>
+          <span class="dh-av">AD</span>
+        </div>
+      </div>
+      <div class="dstats">
+        <div class="dstat"><div class="dstat-k">Блок А</div><div class="dstat-v">51<span class="total">/168</span></div><div class="dstat-trend">↑ 70% занято</div><div class="dstat-bar"><i style="width:70%"></i></div></div>
+        <div class="dstat"><div class="dstat-k">Блок В</div><div class="dstat-v">48<span class="total">/144</span></div><div class="dstat-trend">↑ 67% занято</div><div class="dstat-bar"><i style="width:67%"></i></div></div>
+        <div class="dstat"><div class="dstat-k">Блок С</div><div class="dstat-v">100<span class="total">/192</span></div><div class="dstat-trend down">↓ 48% занято</div><div class="dstat-bar"><i style="width:48%"></i></div></div>
+        <div class="dstat"><div class="dstat-k">Наземная</div><div class="dstat-v">10<span class="total">/98</span></div><div class="dstat-trend">↑ 90% занято</div><div class="dstat-bar"><i style="width:90%"></i></div></div>
+      </div>
+      <div class="dbody">
+        <div class="dcards-wrap">
+          <div class="dcards-h"><span class="lbl">Секция А · Блоки</span><span class="sub">117 / 168 (70% занято)</span></div>
+          <div class="dcards">
+            <div class="dcard cf-occ"><div class="tp">В</div><div class="num">1</div><div class="car">Infinity M35</div></div>
+            <div class="dcard cf-free"><div class="tp">Н</div><div class="num">2</div></div>
+            <div class="dcard cf-occ"><div class="tp">В</div><div class="num">3</div><div class="car">Renault Ark</div></div>
+            <div class="dcard cf-occ"><div class="tp">В</div><div class="num">4</div><div class="car">Skoda Kodiaq</div></div>
+            <div class="dcard cf-imp"><div class="tp">В</div><div class="num">5</div><div class="car">Имущество</div></div>
+            <div class="dcard cf-occ"><div class="tp">В</div><div class="num">6</div><div class="car">Porsche Macan</div></div>
+            <div class="dcard cf-occ"><div class="tp">Н</div><div class="num">7</div><div class="car">Samsung</div></div>
+            <div class="dcard cf-imp"><div class="tp">В</div><div class="num">8</div><div class="car">Имущество</div></div>
+          </div>
+        </div>
+        <div class="dside">
+          <div class="dside-h">Редактирование ячейки</div>
+          <div class="dmodal">
+            <h4>А · 1 — Infinity M35</h4>
+            <div class="sub">Подземная Klaus, тип «Высокая»</div>
+            <div class="dmodal-fields">
+              <div class="dmf"><span class="lab">Компания</span>СБЕР СЕРВИС</div>
+              <div class="dmf"><span class="lab">Гос.номер</span>А 000 АА 777</div>
+            </div>
+            <div class="dbtns">
+              <button class="dbtn dbtn-primary">Сохранить</button>
+              <button class="dbtn">Отмена</button>
+            </div>
+          </div>
+          <div class="dside-h">Toast</div>
+          <div class="dtoast">
+            <div class="ico">✓</div>
+            <div><p class="ttl">Ячейка сохранена</p><p class="dsc">А · 5 — СБЕР СЕРВИС</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- C: WARM PREMIUM -->
+  <div class="pcard">
+    <div class="pcard-meta">
+      <h2>C · Warm Premium</h2>
+      <span class="label">boutique hotel</span>
+      <span class="meta-desc">Off-white cream + deep teal accent. Тёплый, без oranges, как премиальный отель.</span>
+      <div class="swatches">
+        <div class="sw" style="background:#FAF9F6"></div>
+        <div class="sw" style="background:#ECEAE3"></div>
+        <div class="sw" style="background:#047A6B"></div>
+        <div class="sw" style="background:#B57D1A"></div>
+        <div class="sw" style="background:#B8442A"></div>
+      </div>
+    </div>
+    <div class="demo pal-warm">
+      <div class="dh">
+        <div class="dh-mark">Д</div>
+        <div class="dh-text"><span class="dh-kicker">БЦ Двинцев · паркинг</span><span class="dh-title">Учёт парковки</span></div>
+        <div class="dh-spacer"></div>
+        <div class="dh-search">
+          <span class="icon">⌕</span>
+          <span>Поиск ячейки или компании</span>
+          <kbd>⌘K</kbd>
+        </div>
+        <div class="dh-chip">
+          <span class="dh-chip-name">Александр</span>
+          <span class="dh-chip-role">admin</span>
+          <span class="dh-av">AD</span>
+        </div>
+      </div>
+      <div class="dstats">
+        <div class="dstat"><div class="dstat-k">Блок А</div><div class="dstat-v">51<span class="total">/168</span></div><div class="dstat-trend">↑ 70% занято</div><div class="dstat-bar"><i style="width:70%"></i></div></div>
+        <div class="dstat"><div class="dstat-k">Блок В</div><div class="dstat-v">48<span class="total">/144</span></div><div class="dstat-trend">↑ 67% занято</div><div class="dstat-bar"><i style="width:67%"></i></div></div>
+        <div class="dstat"><div class="dstat-k">Блок С</div><div class="dstat-v">100<span class="total">/192</span></div><div class="dstat-trend down">↓ 48% занято</div><div class="dstat-bar"><i style="width:48%"></i></div></div>
+        <div class="dstat"><div class="dstat-k">Наземная</div><div class="dstat-v">10<span class="total">/98</span></div><div class="dstat-trend">↑ 90% занято</div><div class="dstat-bar"><i style="width:90%"></i></div></div>
+      </div>
+      <div class="dbody">
+        <div class="dcards-wrap">
+          <div class="dcards-h"><span class="lbl">Секция А · Блоки</span><span class="sub">117 / 168 (70% занято)</span></div>
+          <div class="dcards">
+            <div class="dcard cf-occ"><div class="tp">В</div><div class="num">1</div><div class="car">Infinity M35</div></div>
+            <div class="dcard cf-free"><div class="tp">Н</div><div class="num">2</div></div>
+            <div class="dcard cf-occ"><div class="tp">В</div><div class="num">3</div><div class="car">Renault Ark</div></div>
+            <div class="dcard cf-occ"><div class="tp">В</div><div class="num">4</div><div class="car">Skoda Kodiaq</div></div>
+            <div class="dcard cf-imp"><div class="tp">В</div><div class="num">5</div><div class="car">Имущество</div></div>
+            <div class="dcard cf-occ"><div class="tp">В</div><div class="num">6</div><div class="car">Porsche Macan</div></div>
+            <div class="dcard cf-occ"><div class="tp">Н</div><div class="num">7</div><div class="car">Samsung</div></div>
+            <div class="dcard cf-imp"><div class="tp">В</div><div class="num">8</div><div class="car">Имущество</div></div>
+          </div>
+        </div>
+        <div class="dside">
+          <div class="dside-h">Редактирование ячейки</div>
+          <div class="dmodal">
+            <h4>А · 1 — Infinity M35</h4>
+            <div class="sub">Подземная Klaus, тип «Высокая»</div>
+            <div class="dmodal-fields">
+              <div class="dmf"><span class="lab">Компания</span>СБЕР СЕРВИС</div>
+              <div class="dmf"><span class="lab">Гос.номер</span>А 000 АА 777</div>
+            </div>
+            <div class="dbtns">
+              <button class="dbtn dbtn-primary">Сохранить</button>
+              <button class="dbtn">Отмена</button>
+            </div>
+          </div>
+          <div class="dside-h">Toast</div>
+          <div class="dtoast">
+            <div class="ico">✓</div>
+            <div><p class="ttl">Ячейка сохранена</p><p class="dsc">А · 5 — СБЕР СЕРВИС</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- D: VERCEL MONO LIGHT -->
+  <div class="pcard">
+    <div class="pcard-meta">
+      <h2>D · Vercel Mono Light</h2>
+      <span class="label">timeless minimal</span>
+      <span class="meta-desc">Pure white + neutral greys. Чёрный — единственный «brand» цвет. Бесконечно элегантно.</span>
+      <div class="swatches">
+        <div class="sw" style="background:#FFFFFF"></div>
+        <div class="sw" style="background:#F4F4F5"></div>
+        <div class="sw" style="background:#0A0A0A"></div>
+        <div class="sw" style="background:#15803D"></div>
+        <div class="sw" style="background:#B91C1C"></div>
+      </div>
+    </div>
+    <div class="demo pal-mono">
+      <div class="dh">
+        <div class="dh-mark">Д</div>
+        <div class="dh-text"><span class="dh-kicker">БЦ Двинцев · паркинг</span><span class="dh-title">Учёт парковки</span></div>
+        <div class="dh-spacer"></div>
+        <div class="dh-search">
+          <span class="icon">⌕</span>
+          <span>Поиск ячейки или компании</span>
+          <kbd>⌘K</kbd>
+        </div>
+        <div class="dh-chip">
+          <span class="dh-chip-name">Александр</span>
+          <span class="dh-chip-role">admin</span>
+          <span class="dh-av">AD</span>
+        </div>
+      </div>
+      <div class="dstats">
+        <div class="dstat"><div class="dstat-k">Блок А</div><div class="dstat-v">51<span class="total">/168</span></div><div class="dstat-trend">↑ 70% занято</div><div class="dstat-bar"><i style="width:70%"></i></div></div>
+        <div class="dstat"><div class="dstat-k">Блок В</div><div class="dstat-v">48<span class="total">/144</span></div><div class="dstat-trend">↑ 67% занято</div><div class="dstat-bar"><i style="width:67%"></i></div></div>
+        <div class="dstat"><div class="dstat-k">Блок С</div><div class="dstat-v">100<span class="total">/192</span></div><div class="dstat-trend down">↓ 48% занято</div><div class="dstat-bar"><i style="width:48%"></i></div></div>
+        <div class="dstat"><div class="dstat-k">Наземная</div><div class="dstat-v">10<span class="total">/98</span></div><div class="dstat-trend">↑ 90% занято</div><div class="dstat-bar"><i style="width:90%"></i></div></div>
+      </div>
+      <div class="dbody">
+        <div class="dcards-wrap">
+          <div class="dcards-h"><span class="lbl">Секция А · Блоки</span><span class="sub">117 / 168 (70% занято)</span></div>
+          <div class="dcards">
+            <div class="dcard cf-occ"><div class="tp">В</div><div class="num">1</div><div class="car">Infinity M35</div></div>
+            <div class="dcard cf-free"><div class="tp">Н</div><div class="num">2</div></div>
+            <div class="dcard cf-occ"><div class="tp">В</div><div class="num">3</div><div class="car">Renault Ark</div></div>
+            <div class="dcard cf-occ"><div class="tp">В</div><div class="num">4</div><div class="car">Skoda Kodiaq</div></div>
+            <div class="dcard cf-imp"><div class="tp">В</div><div class="num">5</div><div class="car">Имущество</div></div>
+            <div class="dcard cf-occ"><div class="tp">В</div><div class="num">6</div><div class="car">Porsche Macan</div></div>
+            <div class="dcard cf-occ"><div class="tp">Н</div><div class="num">7</div><div class="car">Samsung</div></div>
+            <div class="dcard cf-imp"><div class="tp">В</div><div class="num">8</div><div class="car">Имущество</div></div>
+          </div>
+        </div>
+        <div class="dside">
+          <div class="dside-h">Редактирование ячейки</div>
+          <div class="dmodal">
+            <h4>А · 1 — Infinity M35</h4>
+            <div class="sub">Подземная Klaus, тип «Высокая»</div>
+            <div class="dmodal-fields">
+              <div class="dmf"><span class="lab">Компания</span>СБЕР СЕРВИС</div>
+              <div class="dmf"><span class="lab">Гос.номер</span>А 000 АА 777</div>
+            </div>
+            <div class="dbtns">
+              <button class="dbtn dbtn-primary">Сохранить</button>
+              <button class="dbtn">Отмена</button>
+            </div>
+          </div>
+          <div class="dside-h">Toast</div>
+          <div class="dtoast">
+            <div class="ico">✓</div>
+            <div><p class="ttl">Ячейка сохранена</p><p class="dsc">А · 5 — СБЕР СЕРВИС</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</div><!-- /.page -->
+</body>
+</html>
