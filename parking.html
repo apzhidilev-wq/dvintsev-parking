@@ -38,9 +38,11 @@
   --dur-base:    220ms;
   --dur-slow:    280ms;
   --dur-exit:    180ms;
-  --mono:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;
-  --sans:'Space Grotesk','Inter',-apple-system,BlinkMacSystemFont,sans-serif;
-  --display:'Bebas Neue','Space Grotesk',sans-serif;
+  /* === iOS-FIRST TYPOGRAPHY ===
+     Native SF Pro on Apple (no FOUT, no download), Segoe UI/Roboto fallbacks. */
+  --mono:ui-monospace,'SF Mono',SFMono-Regular,Menlo,Monaco,Consolas,'JetBrains Mono',monospace;
+  --sans:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Roboto,system-ui,sans-serif;
+  --display:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',Roboto,system-ui,sans-serif;
 }
 
 /* === GLOBAL BEHAVIOR (Stage 1/5) === */
@@ -210,8 +212,8 @@ body{font-family:var(--sans);
   display:flex;align-items:center;gap:8px}
 .hdr-kicker::after{content:'';flex:1;height:1px;
   background:linear-gradient(90deg,var(--acc-glow),transparent);min-width:30px}
-.hdr-title{font-family:'Bebas Neue',var(--display);font-size:26px;font-weight:400;
-  letter-spacing:1.2px;color:var(--tx);line-height:1;text-transform:uppercase}
+.hdr-title{font-family:var(--display);font-size:24px;font-weight:700;
+  letter-spacing:-.4px;color:var(--tx);line-height:1.05}
 
 .hdr-stats{flex:1;display:flex;gap:0;align-items:stretch;
   padding:0 4px;position:relative;z-index:1;overflow:hidden}
@@ -1192,9 +1194,9 @@ html[data-theme="paper"] .auth-overlay{
 .auth-kicker{font-family:var(--mono);font-size:10px;font-weight:700;
   color:var(--acc);text-align:center;letter-spacing:2px;text-transform:uppercase;
   margin-bottom:4px}
-.auth-title{font-family:var(--display),'Bebas Neue';font-size:30px;
-  letter-spacing:1.2px;color:var(--tx);text-align:center;text-transform:uppercase;
-  line-height:1;margin-bottom:6px}
+.auth-title{font-family:var(--display);font-size:28px;font-weight:700;
+  letter-spacing:-.6px;color:var(--tx);text-align:center;
+  line-height:1.05;margin-bottom:6px}
 .auth-sub{font-size:12px;color:var(--tx2);text-align:center;margin-bottom:26px;
   font-family:var(--mono);letter-spacing:.3px}
 .auth-field{margin-bottom:14px}
@@ -1343,8 +1345,7 @@ html[data-theme="paper"] .um-list-item{background:var(--surf2)}
   background:rgba(var(--acc-rgb),.05)}
 
 </style>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700;800&family=Bebas+Neue&display=swap" rel="stylesheet">
+<!-- iOS-first typography: SF Pro on Apple, Segoe UI / Roboto fallbacks. No Google Fonts request. -->
 </head>
 <body>
 
