@@ -627,10 +627,11 @@ html[data-theme="paper"] #msearchInput{ background:var(--surf2) }
 label{display:block;font-size:11px;color:var(--tx2);margin-bottom:5px;margin-top:10px;
   font-weight:600;letter-spacing:.3px;text-transform:uppercase;font-family:var(--mono)}
 label:first-of-type{margin-top:0}
-select,input[type=text]{width:100%;background:var(--bg);border:1px solid var(--bd);
+select,input[type=text],input[type=password],input[type=email],input[type=number],input[type=tel]{
+  width:100%;background:var(--bg);border:1px solid var(--bd);
   color:var(--tx);padding:10px 12px;border-radius:var(--r-sm);font-size:13.5px;outline:none;
   transition:all .15s;font-family:inherit}
-select:focus,input:focus{border-color:var(--acc);box-shadow:var(--glow);background:#100d0a}
+select:focus,input:focus{border-color:var(--acc);box-shadow:var(--glow);background:var(--bg)}
 option{background:var(--surf);color:var(--tx)}
 
 /* Car chips (selected car display) */
