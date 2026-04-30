@@ -54,6 +54,45 @@
   }
 }
 
+/* ═══════════ SONNER-STYLE TOASTS (Stage 4/5) ═══════════ */
+.dv-toaster{position:fixed;bottom:max(env(safe-area-inset-bottom),16px);
+  right:max(env(safe-area-inset-right),16px);
+  display:flex;flex-direction:column-reverse;gap:8px;
+  z-index:10000;pointer-events:none;max-width:calc(100vw - 32px)}
+.dv-toast{pointer-events:auto;min-width:280px;max-width:380px;
+  padding:11px 14px;background:var(--surf2);border:1px solid var(--bd2);
+  border-radius:var(--r-md);box-shadow:var(--shadow-lg),var(--shadow-inset);
+  font-family:var(--sans);font-size:13px;color:var(--tx);
+  display:flex;align-items:flex-start;gap:10px;position:relative;
+  transform:translateY(0);opacity:1;
+  transition:transform var(--dur-base) var(--ease-out),
+             opacity var(--dur-exit) var(--ease-out)}
+.dv-toast[data-state="entering"],
+.dv-toast[data-state="exiting"]{transform:translateY(110%);opacity:0}
+.dv-toast .dv-tico{flex-shrink:0;width:18px;height:18px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;font-family:var(--mono);margin-top:1px}
+.dv-toast.t-success .dv-tico{background:rgba(120,179,66,.20);color:var(--green)}
+.dv-toast.t-info    .dv-tico{background:rgba(124,108,180,.22);color:#a89fd6}
+.dv-toast.t-error   .dv-tico{background:rgba(224,85,61,.20); color:var(--red)}
+.dv-toast.t-action  .dv-tico{background:rgba(232,167,58,.22);color:var(--yel)}
+.dv-toast .dv-tbody{flex:1;min-width:0;line-height:1.45}
+.dv-toast .dv-ttitle{font-weight:600;color:var(--tx);margin:0;
+  word-wrap:break-word;overflow-wrap:break-word}
+.dv-toast .dv-tdesc{font-size:11.5px;color:var(--tx2);margin:2px 0 0;
+  line-height:1.4;word-wrap:break-word}
+.dv-toast .dv-taction{font-family:var(--mono);font-size:10.5px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.5px;
+  background:transparent;border:1px solid var(--bd2);color:var(--tx);
+  padding:4px 10px;border-radius:var(--r-xs);cursor:pointer;
+  margin-left:auto;align-self:center;flex-shrink:0;
+  transition:border-color var(--dur-fast) var(--ease-out),
+             color var(--dur-fast) var(--ease-out)}
+.dv-toast .dv-taction:hover{border-color:var(--acc);color:var(--acc)}
+.dv-toast .dv-taction:active{transform:scale(0.96)}
+html[data-theme="paper"] .dv-toast{background:#fffaf0;color:var(--tx)}
+html[data-theme="paper"] .dv-toast .dv-tdesc{color:var(--tx2)}
+
 /* ═══════════ THEME: WARM PAPER (light) ═══════════ */
 html[data-theme="paper"]{
   --bg:#f4ece0;--surf:#fbf5ea;--surf2:#ede3d1;--surf3:#e2d6c0;
@@ -2500,12 +2539,114 @@ function stampCellEdit(cell){
   cell.lastEditAt   = new Date().toISOString();
   return cell;
 }
+// ═══════════ SONNER-STYLE TOASTS (Stage 4/5) ═══════════
+// New API: dvToast.success(title, desc?), .info, .error, .action(title, desc, label, fn)
+// Legacy denyToast(msg) still works — heuristically classified into type.
+const dvToast = (function(){
+  const ICONS={success:'✓',info:'i',error:'✗',action:'↶'};
+  const STACK_MAX=3, AUTO_DISMISS_MS=4000;
+  function root(){
+    let r=document.getElementById('dvToaster');
+    if(!r){
+      r=document.createElement('div');
+      r.className='dv-toaster';r.id='dvToaster';
+      document.body.appendChild(r);
+    }
+    return r;
+  }
+  function show(type, title, desc, opts){
+    opts=opts||{};
+    const r=root();
+    const t=document.createElement('div');
+    t.className='dv-toast t-'+(type||'info');
+    t.dataset.state='entering';
+    const ico=ICONS[type]||'·';
+    const safe=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>(
+      {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    t.innerHTML=
+      '<div class="dv-tico">'+ico+'</div>'+
+      '<div class="dv-tbody">'+
+        '<div class="dv-ttitle">'+safe(title)+'</div>'+
+        (desc?'<div class="dv-tdesc">'+safe(desc)+'</div>':'')+
+      '</div>'+
+      (opts.actionLabel?'<button class="dv-taction" type="button">'+safe(opts.actionLabel)+'</button>':'');
+    r.appendChild(t);
+    // Cap stack — drop oldest extras.
+    while(r.children.length>STACK_MAX) dismiss(r.firstElementChild);
+    // Action handler.
+    if(opts.actionFn){
+      t.querySelector('.dv-taction').addEventListener('click',()=>{
+        try{ opts.actionFn(); }catch(_){}
+        dismiss(t);
+      });
+    }
+    // Enter — flip data-state on next frame so CSS transition runs.
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      t.dataset.state='visible';
+    }));
+    // Auto-dismiss.
+    const timer=setTimeout(()=>dismiss(t), opts.duration||AUTO_DISMISS_MS);
+    t._timer=timer;
+    // Pause on hover (desktop).
+    t.addEventListener('mouseenter',()=>clearTimeout(t._timer));
+    t.addEventListener('mouseleave',()=>{
+      t._timer=setTimeout(()=>dismiss(t), 1500);
+    });
+    // Swipe-to-dismiss (touch).
+    let sx=0, dx=0, t0=0, dragging=false;
+    t.addEventListener('touchstart',(e)=>{
+      if(!e.touches[0]) return;
+      sx=e.touches[0].clientX;t0=Date.now();dragging=true;
+      t.style.transition='none';
+    },{passive:true});
+    t.addEventListener('touchmove',(e)=>{
+      if(!dragging||!e.touches[0]) return;
+      dx=e.touches[0].clientX-sx;
+      if(dx>0) t.style.transform='translateX('+dx+'px)';
+    },{passive:true});
+    t.addEventListener('touchend',()=>{
+      if(!dragging) return;
+      dragging=false;
+      const dur=Math.max(1,Date.now()-t0);
+      const vel=Math.abs(dx)/dur;
+      t.style.transition='';
+      if(dx>80 || vel>0.4){ dismiss(t); }
+      else{ t.style.transform=''; }
+    });
+    // Haptic.
+    try{
+      if(navigator.vibrate){
+        navigator.vibrate(type==='error'?[8,30,8]:8);
+      }
+    }catch(_){}
+    return t;
+  }
+  function dismiss(t){
+    if(!t || t.dataset.state==='exiting') return;
+    if(t._timer) clearTimeout(t._timer);
+    t.dataset.state='exiting';
+    setTimeout(()=>{ if(t.parentNode) t.parentNode.removeChild(t); },220);
+  }
+  return {
+    show,dismiss,
+    success:(title,desc)=>show('success',title,desc),
+    info:   (title,desc)=>show('info',   title,desc),
+    error:  (title,desc)=>show('error',  title,desc),
+    action: (title,desc,label,fn,opts)=>
+      show('action',title,desc,Object.assign({actionLabel:label,actionFn:fn},opts||{}))
+  };
+})();
+
+// Legacy adapter — keeps 80+ existing call sites working with new visuals.
+// Heuristically classifies the message into success/info/error.
 function denyToast(msg){
-  const el = document.createElement('div');
-  el.textContent = msg || 'Недостаточно прав';
-  el.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a0f08;color:#ffaa5a;padding:12px 22px;border-radius:10px;font-family:"JetBrains Mono",monospace;font-size:12px;font-weight:700;letter-spacing:.6px;border:1px solid #ff6a00;box-shadow:0 10px 30px rgba(255,106,0,.3);z-index:10000;text-transform:uppercase';
-  document.body.appendChild(el);
-  setTimeout(()=>el.remove(), 2400);
+  const m=String(msg||'Недостаточно прав');
+  let type='info';
+  if(/^[✓☁🟢💾📦]|залит|сохран|готов|восстановлен|снят|обновл/iu.test(m)) type='success';
+  else if(/^[⚠️⛔❌🔒❗]|ошибк|fail|неверн|недоступ|отклон|нет прав|только адмi|только администр/iu.test(m)) type='error';
+  // Strip leading symbol+space — already represented by the icon circle.
+  const clean=m.replace(/^[\p{Emoji}•☁️]\s*/u,'').trim();
+  dvToast.show(type, clean || m);
 }
 
 // ─── USER MANAGEMENT UI ──────────────────────────────────────────
