@@ -1370,10 +1370,11 @@ html[data-role="viewer"] .readonly-banner{display:flex}
 .um-list{display:flex;flex-direction:column;gap:8px;margin-top:12px;
   max-height:340px;overflow-y:auto;padding-right:4px}
 .um-list-item{display:flex;align-items:center;gap:12px;padding:10px 12px;
-  background:var(--surf2);border:1px solid var(--bd);border-radius:var(--r);
+  background:var(--bg);border:1px solid var(--bd);border-radius:var(--r);
+  box-shadow:var(--shadow-xs);
   transition:all .15s}
 html[data-theme="paper"] .um-list-item{background:var(--surf2)}
-.um-list-item:hover{border-color:var(--bd2)}
+.um-list-item:hover{border-color:var(--bd2);box-shadow:var(--shadow-sm)}
 .um-li-av{width:32px;height:32px;border-radius:50%;flex-shrink:0;
   display:flex;align-items:center;justify-content:center;
   font-family:var(--mono);font-size:11px;font-weight:800;color:var(--bg);
@@ -1382,12 +1383,12 @@ html[data-theme="paper"] .um-list-item{background:var(--surf2)}
 .um-li-av.av-vw{background:linear-gradient(135deg,var(--tx3),var(--bd2));color:var(--tx)}
 .um-li-body{flex:1;min-width:0}
 .um-li-n{font-size:13px;font-weight:700;color:var(--tx);line-height:1.2}
-.um-li-u{font-size:11px;color:var(--tx3);font-family:var(--mono);margin-top:2px;letter-spacing:.3px}
+.um-li-u{font-size:11px;color:var(--tx2);font-family:var(--mono);margin-top:2px;letter-spacing:.3px}
 .um-li-role{padding:3px 9px;border-radius:999px;font-size:9px;font-weight:700;
   font-family:var(--mono);letter-spacing:.8px;text-transform:uppercase;border:1px solid}
 .um-li-role.role-admin{color:var(--acc);background:rgba(var(--acc-rgb),.12);border-color:rgba(var(--acc-rgb),.4)}
 .um-li-role.role-operator{color:var(--green);background:rgba(120,179,66,.12);border-color:rgba(120,179,66,.4)}
-.um-li-role.role-viewer{color:var(--tx3);background:rgba(110,100,88,.15);border-color:rgba(110,100,88,.35)}
+.um-li-role.role-viewer{color:var(--tx2);background:rgba(110,100,88,.15);border-color:rgba(110,100,88,.4)}
 .um-li-act{display:flex;gap:4px}
 .um-li-btn{width:28px;height:28px;border-radius:var(--r-sm);border:1px solid var(--bd);
   background:transparent;color:var(--tx2);cursor:pointer;
