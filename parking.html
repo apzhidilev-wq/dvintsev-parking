@@ -7054,9 +7054,15 @@ function importJSON(ev){
     else{html.removeAttribute('data-theme');if(lbl)lbl.textContent='ТЁМНАЯ';
       const icon=document.getElementById('themeBtnIcon');if(icon)icon.innerHTML=iconMoon;}
   }
-  // Migrate legacy: 'dark' → light (default). Old 'paper' stays as Dark.
+  // One-time migration after Apollo palette switch.
+  // Both legacy values ('dark' = warm orange, 'paper' = warm cream)
+  // map to Apollo Light (new default). Migration runs once per browser.
   let stored=localStorage.getItem(KEY);
-  if(stored==='dark') stored='light';
+  if((stored==='dark' || stored==='paper') && !localStorage.getItem(KEY+'-apollo-migrated')){
+    stored='light';
+    localStorage.setItem(KEY,'light');
+    localStorage.setItem(KEY+'-apollo-migrated','1');
+  }
   apply(stored||'light');
   window.toggleTheme=function(){
     const cur=html.getAttribute('data-theme')||'light';
