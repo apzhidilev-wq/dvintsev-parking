@@ -17,14 +17,41 @@
   --ora:#ff8a33;--pur:#d9a26a;--teal:#d48a4d;
   /* Section chromatic (tuned within warm palette) */
   --ca:#ff6a00;--cb:#e8a73a;--cc:#c97c2e;--cg:#9ab54b;--cv:#e0553d;
+  --shadow-xs:0 1px 2px rgba(0,0,0,.45);
   --shadow-sm:0 1px 3px rgba(0,0,0,.55);
   --shadow-md:0 6px 20px rgba(0,0,0,.55), 0 1px 2px rgba(0,0,0,.5);
   --shadow-lg:0 18px 50px rgba(0,0,0,.7), 0 2px 8px rgba(0,0,0,.5);
+  --shadow-acc:0 4px 14px var(--acc-glow), 0 8px 24px rgba(255,106,0,.12);
+  --shadow-inset:inset 0 1px 0 rgba(255,255,255,.04);
   --glow:0 0 0 3px var(--acc-glow);
-  --r:10px;--r-sm:6px;--r-lg:14px;
+  --r-xs:4px;--r-sm:6px;--r:10px;--r-md:12px;--r-lg:14px;--r-xl:20px;
+  /* === ANIMATION TOKENS (Stage 1/5) — Linear-style ===
+     Custom easing curves stronger than CSS defaults.
+     UI animations stay <300ms; exits faster than enters. */
+  --ease-out:    cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  --dur-instant: 100ms;
+  --dur-fast:    160ms;
+  --dur-base:    220ms;
+  --dur-slow:    280ms;
+  --dur-exit:    180ms;
   --mono:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;
   --sans:'Space Grotesk','Inter',-apple-system,BlinkMacSystemFont,sans-serif;
   --display:'Bebas Neue','Space Grotesk',sans-serif;
+}
+
+/* === GLOBAL BEHAVIOR (Stage 1/5) === */
+*, *::before, *::after { -webkit-tap-highlight-color: transparent; }
+
+/* Respect users who request reduced motion (accessibility). */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* ═══════════ THEME: WARM PAPER (light) ═══════════ */
@@ -35,9 +62,12 @@ html[data-theme="paper"]{
   --acc:#d95a00;--acc2:#ff7a1f;--acc-deep:#a04200;--acc-glow:rgba(217,90,0,.22);
   --green:#5d8a2e;--red:#b8442a;--yel:#b57d1a;
   --ca:#d95a00;--cb:#b57d1a;--cc:#96591f;--cg:#5d8a2e;--cv:#b8442a;
+  --shadow-xs:0 1px 2px rgba(90,60,20,.08);
   --shadow-sm:0 1px 3px rgba(90,60,20,.1);
   --shadow-md:0 6px 18px rgba(90,60,20,.12), 0 1px 2px rgba(90,60,20,.08);
   --shadow-lg:0 18px 48px rgba(90,60,20,.18), 0 2px 8px rgba(90,60,20,.1);
+  --shadow-acc:0 4px 14px rgba(217,90,0,.20), 0 8px 24px rgba(217,90,0,.10);
+  --shadow-inset:inset 0 1px 0 rgba(255,255,255,.5);
 }
 html[data-theme="paper"] body{
   background:
