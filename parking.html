@@ -528,8 +528,19 @@ html[data-theme="paper"] #msearchInput{ background:var(--surf2) }
   padding:24px 16px; font-family:var(--mono); letter-spacing:.5px }
 .msr-item{ display:flex; align-items:center; gap:10px; padding:12px;
   margin-bottom:6px; background:var(--surf2); border:1px solid var(--bd);
-  border-radius:8px; cursor:pointer }
-.msr-item:active{ background:var(--surf3); border-color:var(--acc) }
+  border-radius:8px; cursor:pointer;
+  animation:msrEnter 280ms var(--ease-out) backwards }
+.msr-item:active{ background:var(--surf3); border-color:var(--acc); transform:scale(.98) }
+@keyframes msrEnter{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+/* Stagger first 8 items so they cascade in (45ms each, caps at 315ms total) */
+.msr-item:nth-child(1){animation-delay:0ms}
+.msr-item:nth-child(2){animation-delay:30ms}
+.msr-item:nth-child(3){animation-delay:60ms}
+.msr-item:nth-child(4){animation-delay:90ms}
+.msr-item:nth-child(5){animation-delay:120ms}
+.msr-item:nth-child(6){animation-delay:150ms}
+.msr-item:nth-child(7){animation-delay:180ms}
+.msr-item:nth-child(8){animation-delay:210ms}
 .msr-body{ flex:1; min-width:0 }
 .msr-title{ font-size:13px; font-weight:700; color:var(--tx); margin-bottom:3px }
 .msr-meta{ font-size:11px; color:var(--tx2); white-space:nowrap;
@@ -575,8 +586,14 @@ option{background:var(--surf);color:var(--tx)}
 .carchip{display:none;align-items:center;gap:10px;padding:11px 13px;
   background:linear-gradient(135deg, rgba(var(--acc-rgb),.1), rgba(var(--acc-rgb),.03));
   border:1px solid var(--acc);border-radius:var(--r);margin-top:10px;
-  position:relative;overflow:hidden}
+  position:relative;overflow:hidden;
+  transform:translateY(0);opacity:1;
+  transition:transform var(--dur-base) var(--ease-out),
+             opacity var(--dur-fast) var(--ease-out)}
 .carchip.on{display:flex}
+@starting-style{
+  .carchip.on{transform:translateY(-6px);opacity:0}
+}
 .carchip::before{content:'';position:absolute;top:0;left:0;bottom:0;width:3px;background:var(--acc)}
 .carchip-badge{width:38px;height:38px;border-radius:8px;background:rgba(var(--acc-rgb),.12);
   display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
@@ -690,6 +707,7 @@ html[data-theme="paper"] .stabs{
 .stab::before{content:'';width:6px;height:6px;border-radius:50%;
   background:currentColor;opacity:.6}
 .stab:hover{color:var(--tx);border-color:var(--bd2)}
+.stab:active,.vtab:active{transform:scale(.96)}
 .stab.active{color:var(--bg);border-color:var(--acc);
   background:var(--acc);box-shadow:0 3px 10px var(--acc-glow)}
 .stab.active::before{background:var(--bg);opacity:1}
@@ -727,6 +745,7 @@ html[data-theme="paper"] .stabs{
   transition:all .15s;font-family:inherit;text-decoration:none;line-height:1}
 .pt-btn:hover{border-color:var(--acc);color:var(--acc);
   background:var(--acc-glow)}
+.pt-btn:active{transform:scale(.95)}
 .pt-zoom{font-size:11.5px;color:var(--tx2);min-width:50px;text-align:center;
   padding:0 4px;font-family:var(--mono);font-weight:700;letter-spacing:.3px}
 .pt-link{margin-left:auto;background:linear-gradient(135deg,var(--acc),var(--acc-deep));
@@ -866,6 +885,9 @@ html[data-theme="paper"] .stabs{
              box-shadow var(--dur-fast) var(--ease-out);
   animation:cellEnter 320ms var(--ease-out) backwards}
 @keyframes cellEnter{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
+/* Phase 3 · Press-feedback — every tappable surface honours touch.
+   Apple HIG: ~3-5% scale-down on press. Linear uses scale(.97). */
+.cell:active,.gspot:active,.vne-spot:active{transform:scale(.97)}
 /* Stagger inside each .cgrid (max 8 cells per block) — caps at 175ms total */
 .cgrid .cell:nth-child(1){animation-delay:0ms}
 .cgrid .cell:nth-child(2){animation-delay:25ms}
