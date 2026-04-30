@@ -1106,9 +1106,11 @@ html[data-theme="paper"] .stabs{
   font-family:inherit;transition:all .15s}
 .mfield input:not([type=checkbox]):not([type=radio]):focus,.mfield select:focus,.mfield textarea:focus{
   border-color:var(--acc);box-shadow:var(--glow)}
-/* Checkboxes/radios inside .mfield labels — keep inline, accent-coloured */
+/* Global: every checkbox/radio gets theme-aware accent + pointer cursor */
+input[type=checkbox],input[type=radio]{accent-color:var(--acc);cursor:pointer}
+/* Checkboxes/radios inside .mfield labels — keep inline */
 .mfield input[type=checkbox],.mfield input[type=radio]{
-  width:auto;display:inline-block;accent-color:var(--acc);cursor:pointer;
+  width:auto;display:inline-block;
   vertical-align:middle;margin:0 6px 0 0}
 .mfield label:has(input[type=checkbox]),.mfield label:has(input[type=radio]){
   display:flex;align-items:center;gap:8px;cursor:pointer;
@@ -1141,6 +1143,20 @@ html[data-theme="paper"] .stabs{
   font-family:inherit;font-weight:700;text-transform:uppercase;letter-spacing:.3px;
   transition:all .15s}
 .mbtn-del:hover{background:rgba(224,85,61,.1);border-color:var(--red)}
+/* Filled-danger variant (clear log, delete cell entirely) — stronger affordance */
+.mbtn-danger{padding:10px 16px;border-radius:var(--r-sm);
+  border:1px solid var(--red);background:rgba(224,85,61,.18);
+  color:var(--red);font-size:12.5px;cursor:pointer;font-family:inherit;
+  font-weight:700;text-transform:uppercase;letter-spacing:.3px;transition:all .15s}
+.mbtn-danger:hover{background:rgba(224,85,61,.28)}
+.mbtn-danger:active{transform:scale(.97)}
+/* Inline ghost link button (e.g. ePlanBtn) — dashed, hover lifts color to acc */
+.ghost-link{display:none;background:transparent;border:1px dashed var(--bd);
+  color:var(--tx2);font-size:11px;padding:5px 12px;border-radius:var(--r-sm);
+  cursor:pointer;font-family:var(--mono);
+  transition:color var(--dur-fast) var(--ease-out),
+             border-color var(--dur-fast) var(--ease-out)}
+.ghost-link:hover{color:var(--acc);border-color:var(--acc)}
 .mbtn-cancel{padding:10px 16px;border-radius:var(--r-sm);border:1px solid var(--bd);
   background:transparent;color:var(--tx2);font-size:12.5px;cursor:pointer;
   font-family:inherit;font-weight:700;text-transform:uppercase;letter-spacing:.3px}
@@ -1713,11 +1729,11 @@ html[data-theme="paper"] .um-list-item{background:var(--surf2)}
       <button class="mbtn-save" onclick="saveEdit()">💾 Сохранить</button>
       <button class="mbtn-del" onclick="clearCell()">🗑 Очистить</button>
       <button id="eLockBtn" class="admin-only mbtn-cancel" onclick="openLockModal()" title="Заблокировать/разблокировать ячейку (admin)" style="font-size:16px;padding:8px 14px">🔓</button>
-      <button class="mbtn-del admin-only" onclick="deleteCellFully()" id="eDelBtn" style="background:rgba(224,85,61,.25);border-color:var(--red);color:var(--red)">🗑 Удалить ячейку</button>
+      <button class="mbtn-danger admin-only" onclick="deleteCellFully()" id="eDelBtn">🗑 Удалить ячейку</button>
       <button class="mbtn-cancel" onclick="closeModal()">Отмена</button>
     </div>
     <div style="text-align:right;margin-top:8px">
-      <button id="ePlanBtn" onclick="goToPlanFromEdit()" style="display:none;background:transparent;border:1px dashed var(--bd);color:var(--tx2);font-size:11px;padding:5px 12px;border-radius:var(--r-sm);cursor:pointer;font-family:var(--mono)" onmouseover="this.style.color='var(--acc)';this.style.borderColor='var(--acc)'" onmouseout="this.style.color='var(--tx2)';this.style.borderColor='var(--bd)'">📍 Показать на схеме</button>
+      <button id="ePlanBtn" class="ghost-link" onclick="goToPlanFromEdit()">📍 Показать на схеме</button>
     </div>
   </div>
 </div>
@@ -2070,7 +2086,7 @@ html[data-theme="paper"] .um-list-item{background:var(--surf2)}
     <div id="auditList" style="max-height:50vh;overflow-y:auto;border:1px solid var(--bd);border-radius:var(--r-sm);background:var(--surf2)"></div>
     <div class="mbtn-row">
       <button class="mbtn-save" onclick="exportAuditCSV()">📥 Экспорт CSV</button>
-      <button class="mbtn-del" onclick="clearAuditLog()" style="background:rgba(224,85,61,.25);border-color:var(--red);color:var(--red)">🗑 Очистить журнал</button>
+      <button class="mbtn-danger" onclick="clearAuditLog()">🗑 Очистить журнал</button>
       <button class="mbtn-cancel" onclick="document.getElementById('auditModal').classList.remove('open')">Закрыть</button>
     </div>
   </div>
