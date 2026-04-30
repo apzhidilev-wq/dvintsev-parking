@@ -200,9 +200,9 @@ html[data-theme="paper"] .plan-canvas object{
 html[data-theme="paper"] .plan-meta{background:rgba(251,245,234,.92);color:var(--tx2)}
 html[data-theme="paper"] .cf{background:linear-gradient(135deg,var(--surf2),var(--surf3));border-color:var(--bd)}
 html[data-theme="paper"] .cf:hover{background:linear-gradient(135deg,var(--bg),var(--surf2))}
-html[data-theme="paper"] .cnum{color:rgba(42,31,20,.55) !important}
-html[data-theme="paper"] .ccar{color:rgba(42,31,20,.75) !important}
-html[data-theme="paper"] .ctp{color:rgba(42,31,20,.45) !important}
+html[data-theme="paper"] .cnum{color:var(--tx2) !important}
+html[data-theme="paper"] .ccar{color:var(--tx) !important}
+html[data-theme="paper"] .ctp{color:var(--tx3) !important}
 html[data-theme="paper"] .co{background:linear-gradient(135deg,rgba(184,68,42,.12),rgba(184,68,42,.04));
   border-color:rgba(184,68,42,.35)}
 html[data-theme="paper"] .co:hover{background:linear-gradient(135deg,rgba(184,68,42,.2),rgba(184,68,42,.08))}
@@ -694,7 +694,7 @@ option{background:var(--surf);color:var(--tx)}
 .vtabs{display:flex;padding:16px 20px 0;gap:2px;position:relative;
   background:
     linear-gradient(180deg, rgba(var(--acc-rgb),.04) 0%, transparent 40%),
-    linear-gradient(180deg,#16130f 0%, #100e0b 70%, var(--bg) 100%);
+    linear-gradient(180deg,var(--surf) 0%, var(--surf2) 70%, var(--bg) 100%);
   flex-shrink:0;align-items:flex-end}
 .vtabs::after{content:'';position:absolute;left:0;right:0;bottom:0;height:1px;
   background:linear-gradient(90deg, transparent, var(--bd) 15%, var(--bd) 85%, transparent)}
@@ -750,7 +750,7 @@ html[data-theme="paper"] .vtab:hover{
 
 /* Section tabs strip */
 .stabs{display:flex;padding:12px 20px;gap:6px;flex-shrink:0;align-items:center;
-  background:linear-gradient(180deg, var(--bg) 0%, var(--bg) 60%, rgba(0,0,0,.12) 100%);
+  background:linear-gradient(180deg, var(--bg) 0%, var(--bg) 60%, var(--surf2) 100%);
   position:relative}
 .stabs::after{content:'';position:absolute;left:20px;right:20px;bottom:0;height:1px;
   background:linear-gradient(90deg, transparent, var(--bd), transparent);
@@ -760,7 +760,7 @@ html[data-theme="paper"] .stabs{
 .stab{padding:7px 15px;border-radius:999px;font-size:12px;font-weight:700;
   cursor:pointer;border:1px solid var(--bd);transition:all .15s;
   font-family:var(--mono);letter-spacing:.5px;text-transform:uppercase;
-  background:rgba(0,0,0,.25);color:var(--tx2);
+  background:var(--surf2);color:var(--tx2);
   display:inline-flex;align-items:center;gap:6px}
 .stab::before{content:'';width:6px;height:6px;border-radius:50%;
   background:currentColor;opacity:.6}
@@ -778,7 +778,7 @@ html[data-theme="paper"] .stabs{
   box-shadow:0 3px 10px rgba(224,85,61,.35)}
 .sstat{font-size:10px;opacity:.85;margin-left:4px;font-weight:600}
 .view-hint{font-size:11px;color:var(--tx2);margin-left:auto;
-  background:rgba(0,0,0,.3);padding:5px 11px;border-radius:999px;
+  background:var(--surf2);padding:5px 11px;border-radius:999px;
   border:1px solid var(--bd);font-family:var(--mono);letter-spacing:.3px;
   display:inline-flex;align-items:center;gap:6px}
 .view-hint::before{content:'◆';color:var(--acc);font-size:8px}
@@ -959,11 +959,11 @@ html[data-theme="paper"] .stabs{
 @media (hover:hover) and (pointer:fine){
   .cell:hover::after{opacity:1}
 }
-.cnum{font-size:10.5px;font-weight:800;color:rgba(232,226,216,.55);
+.cnum{font-size:10.5px;font-weight:800;color:var(--tx2);
   font-family:var(--mono);letter-spacing:.3px}
-.ccar{font-size:10px;color:rgba(232,226,216,.75);line-height:1.2;
+.ccar{font-size:10px;color:var(--tx);line-height:1.2;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
-.ctp{font-size:9px;color:rgba(232,226,216,.4);text-align:right;
+.ctp{font-size:9px;color:var(--tx3);text-align:right;
   font-family:var(--mono);text-transform:uppercase;letter-spacing:.3px}
 /* Унифицированная палитра — те же цвета что и на схеме (см. .shape-*) */
 .cf{background:linear-gradient(135deg,rgba(120,179,66,.10),rgba(120,179,66,.03));
