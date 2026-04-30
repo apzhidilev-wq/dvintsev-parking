@@ -1105,6 +1105,12 @@ html[data-theme="paper"] .stabs{
 .mfield input:focus,.mfield select:focus,.mfield textarea:focus{
   border-color:var(--acc);box-shadow:var(--glow)}
 .mfield textarea{resize:vertical;min-height:60px}
+/* .mrow — same layout contract as .mfield, used in legacy modals */
+.mrow{margin-bottom:14px}
+.mrow label{display:block;font-size:10.5px;color:var(--tx3);
+  margin:0 0 6px 0;font-weight:700;letter-spacing:.6px;
+  text-transform:uppercase;font-family:var(--mono)}
+.mrow input,.mrow select,.mrow textarea{width:100%;display:block}
 .mbtn-row{display:flex;gap:10px;margin-top:20px}
 .mbtn-save{flex:1;padding:12px;border-radius:var(--r-sm);border:none;
   background:linear-gradient(135deg,var(--acc),var(--acc-deep));color:var(--bg);
