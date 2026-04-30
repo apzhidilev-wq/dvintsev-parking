@@ -1328,6 +1328,25 @@ html[data-theme="paper"] .list-row,html[data-theme="paper"] .um-list-item{backgr
 ::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:4px;border:1px solid var(--bd)}
 ::-webkit-scrollbar-thumb:hover{background:var(--acc);border-color:var(--acc)}
 
+/* ═══════════════════════════════════════════════════════════════════
+   PHASE 5+ · DASHBOARD AWAKENING
+   When auth-overlay finishes fading out, body gets .app-waking for
+   ~1.2s. The shell elements then run one-shot entry animations with
+   sequential delays — header in first, left panel slides next, main
+   view fades last. iPad-style wake-up sequence.
+   ═══════════════════════════════════════════════════════════════════ */
+@keyframes appHdrEnter   {from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes appLpanelEnter{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:translateX(0)}}
+@keyframes appPviewEnter {from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+body.app-waking .hdr   {animation:appHdrEnter    280ms var(--ease-out)    0ms backwards}
+body.app-waking .lpanel{animation:appLpanelEnter 360ms var(--ease-drawer) 80ms backwards}
+body.app-waking .pview {animation:appPviewEnter  340ms var(--ease-out)  180ms backwards}
+@media (prefers-reduced-motion:reduce){
+  body.app-waking .hdr,
+  body.app-waking .lpanel,
+  body.app-waking .pview{animation:none}
+}
+
 /* ═══════════════════ AUTH — LOGIN SCREEN ═══════════════════ */
 .auth-overlay{position:fixed;inset:0;z-index:9999;display:flex;
   align-items:center;justify-content:center;padding:24px;
@@ -2711,6 +2730,10 @@ function enterApp(){
   // hide overlay — Phase 5: fade-out instead of instant display:none
   const ov = document.getElementById('authOverlay');
   ov.classList.add('is-leaving');
+  // Phase 5+ · Dashboard awakening — stagger entry of header / left
+  // panel / main view. Class triggers one-shot CSS animations.
+  document.body.classList.add('app-waking');
+  setTimeout(()=>document.body.classList.remove('app-waking'), 1200);
   // Wait for the .is-leaving opacity transition (320ms) then unmount.
   setTimeout(()=>{ov.style.display='none'; ov.classList.remove('is-leaving');}, 340);
 }
