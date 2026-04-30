@@ -1,0 +1,1045 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Palette Preview · БЦ Двинцев</title>
+<style>
+/* ─── BASE ─────────────────────────────────────────────────────────── */
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  font-feature-settings: 'tnum' 1, 'ss01' 1;
+  -webkit-font-smoothing: antialiased;
+  background: #f5f4f1;
+  color: #1a1a1a;
+  line-height: 1.5;
+  font-size: 14px;
+}
+.page {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 32px 24px 80px;
+}
+.page-hero {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  border-bottom: 1px solid #e5e3dd;
+  padding-bottom: 20px;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+}
+.page-hero h1 {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.8px;
+  margin: 0;
+}
+.page-hero p {
+  color: #666;
+  font-size: 14px;
+  flex: 1;
+  min-width: 240px;
+}
+.kicker {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: #d95a00;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+  margin-bottom: 32px;
+}
+@media (max-width: 1100px) { .row { grid-template-columns: 1fr; } }
+
+/* ─── PALETTE CARD (each variant) ──────────────────────────────────── */
+.pcard {
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid #e5e3dd;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+}
+.pcard-meta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  border-bottom: 1px solid #efece6;
+  background: #fafaf8;
+}
+.pcard-meta h2 {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  margin: 0;
+}
+.pcard-meta .label {
+  display: inline-block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #efece6;
+  color: #555;
+}
+.pcard-meta .meta-desc {
+  flex: 1;
+  font-size: 12px;
+  color: #666;
+}
+.swatches {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+}
+.sw {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255,255,255,.7);
+  box-shadow: 0 1px 3px rgba(0,0,0,.18);
+}
+
+/* ─── DEMO INSIDE EACH PALETTE ─────────────────────────────────────── */
+.demo {
+  --bg: var(--p-bg);
+  --surf: var(--p-surf);
+  --surf2: var(--p-surf2);
+  --bd: var(--p-bd);
+  --tx: var(--p-tx);
+  --tx2: var(--p-tx2);
+  --tx3: var(--p-tx3);
+  --acc: var(--p-acc);
+  --acc2: var(--p-acc2);
+  --acc-glow: var(--p-acc-glow);
+  --green: var(--p-green);
+  --red: var(--p-red);
+  --yel: var(--p-yel);
+  --pur: var(--p-pur);
+  background: var(--bg);
+  color: var(--tx);
+  padding: 0;
+  position: relative;
+  min-height: 480px;
+}
+
+/* HEADER inside demo */
+.dh {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--bd);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.dh-mark {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--acc), var(--acc2));
+  color: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800;
+  font-size: 13px;
+  box-shadow: 0 4px 12px var(--acc-glow);
+}
+.dh-text { display: flex; flex-direction: column; gap: 2px; }
+.dh-kicker {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--acc);
+  font-weight: 700;
+}
+.dh-title {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+  color: var(--tx);
+}
+.dh-chip {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px 5px 12px;
+  background: var(--surf);
+  border: 1px solid var(--bd);
+  border-radius: 999px;
+  font-size: 11px;
+}
+.dh-chip-name { color: var(--tx); font-weight: 600; }
+.dh-chip-role {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--acc-glow);
+  color: var(--acc);
+  font-weight: 700;
+}
+.dh-av {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--acc), var(--acc2));
+  color: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px;
+  font-weight: 800;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* STATS ROW */
+.dstats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--bd);
+}
+.dstat {
+  background: var(--bg);
+  padding: 12px 14px;
+}
+.dstat-k {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--tx3);
+  font-weight: 600;
+}
+.dstat-v {
+  font-family: 'JetBrains Mono', monospace;
+  font-feature-settings: 'tnum' 1;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  margin-top: 4px;
+  color: var(--tx);
+}
+.dstat-v .total {
+  color: var(--tx3);
+  font-size: 13px;
+  font-weight: 600;
+  margin-left: 4px;
+}
+.dstat-bar {
+  height: 3px;
+  background: var(--surf);
+  border-radius: 99px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+.dstat-bar > i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--acc), var(--acc2));
+}
+
+/* CONTENT — 2 cols: cards | side panel */
+.dbody {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 0;
+}
+.dcards-wrap {
+  padding: 16px 14px;
+  border-right: 1px solid var(--bd);
+}
+.dcards-h {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.dcards-h .lbl {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--tx2);
+}
+.dcards-h .occ {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--tx3);
+}
+.dcards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+}
+.dcard {
+  border-radius: 6px;
+  border: 1px solid;
+  padding: 7px 8px;
+  min-height: 52px;
+  font-family: 'JetBrains Mono', monospace;
+  position: relative;
+  overflow: hidden;
+}
+.dcard .num {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--tx);
+  letter-spacing: -0.2px;
+}
+.dcard .car {
+  font-size: 9.5px;
+  color: var(--tx2);
+  line-height: 1.3;
+  margin-top: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.2px;
+}
+.dcard .tp {
+  position: absolute;
+  top: 6px; right: 7px;
+  font-size: 8px;
+  color: var(--tx3);
+  letter-spacing: 0.4px;
+}
+.cf-occ {
+  background: color-mix(in oklch, var(--red) 14%, var(--bg));
+  border-color: color-mix(in oklch, var(--red) 40%, var(--bd));
+}
+.cf-free {
+  background: color-mix(in oklch, var(--green) 10%, var(--bg));
+  border-color: color-mix(in oklch, var(--green) 30%, var(--bd));
+}
+.cf-res {
+  background: color-mix(in oklch, var(--yel) 10%, var(--bg));
+  border-color: color-mix(in oklch, var(--yel) 30%, var(--bd));
+}
+.cf-imp {
+  background: color-mix(in oklch, var(--tx3) 8%, var(--bg));
+  border-color: var(--bd);
+  opacity: 0.7;
+}
+
+/* SIDE PANEL — modal preview + button + toast */
+.dside {
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.dside-h {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--tx2);
+}
+.dmodal {
+  background: linear-gradient(180deg, var(--surf), var(--bg));
+  border: 1px solid var(--bd);
+  border-radius: 10px;
+  padding: 14px;
+  position: relative;
+  box-shadow: 0 8px 24px rgba(0,0,0,.12);
+}
+.dmodal::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 14px; right: 14px;
+  height: 2px;
+  background: linear-gradient(90deg, var(--acc), var(--acc2) 50%, transparent);
+  border-radius: 0 0 2px 2px;
+}
+.dmodal h4 {
+  margin: 0 0 4px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--tx);
+}
+.dmodal .sub {
+  font-size: 11px;
+  color: var(--tx2);
+  margin-bottom: 10px;
+}
+.dmodal-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.dmf {
+  background: var(--surf2);
+  border: 1px solid var(--bd);
+  border-radius: 6px;
+  padding: 6px 9px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--tx);
+}
+.dmf .lab {
+  font-size: 8.5px;
+  color: var(--tx3);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  display: block;
+  margin-bottom: 2px;
+  font-weight: 600;
+}
+.dbtns {
+  display: flex;
+  gap: 6px;
+}
+.dbtn {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  padding: 7px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--bd);
+  background: var(--surf);
+  color: var(--tx);
+  cursor: pointer;
+}
+.dbtn-primary {
+  background: linear-gradient(180deg, var(--acc), var(--acc2));
+  border-color: var(--acc);
+  color: var(--bg);
+  box-shadow: 0 2px 6px var(--acc-glow);
+}
+
+/* TOAST inside demo */
+.dtoast {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 11px 13px;
+  background: var(--surf2);
+  border: 1px solid var(--bd);
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.04);
+}
+.dtoast .ico {
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  background: color-mix(in oklch, var(--green) 22%, var(--bg));
+  color: var(--green);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.dtoast .ttl {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--tx);
+  margin: 0;
+}
+.dtoast .dsc {
+  font-size: 10.5px;
+  color: var(--tx2);
+  margin-top: 2px;
+}
+
+/* ───────────────────────────────────────────────────────────────────
+   PALETTE A — CURRENT (warm orange / coffee)
+   ─────────────────────────────────────────────────────────────────── */
+.pal-current {
+  --p-bg: #0a0906;
+  --p-surf: #141210;
+  --p-surf2: #1c1915;
+  --p-bd: #2e2822;
+  --p-tx: #f4ede1;
+  --p-tx2: #a59a85;
+  --p-tx3: #6e6458;
+  --p-acc: #ff6a00;
+  --p-acc2: #ff8a33;
+  --p-acc-glow: rgba(255,106,0,.28);
+  --p-green: #78b342;
+  --p-red: #e0553d;
+  --p-yel: #e8a73a;
+  --p-pur: #d9a26a;
+}
+
+/* ───────────────────────────────────────────────────────────────────
+   PALETTE B — LINEAR (deep ink / electric indigo)
+   ─────────────────────────────────────────────────────────────────── */
+.pal-linear {
+  --p-bg: #08090C;
+  --p-surf: #0E1015;
+  --p-surf2: #14171F;
+  --p-bd: #1F2230;
+  --p-tx: #EAEAEC;
+  --p-tx2: #8A8F9C;
+  --p-tx3: #555A66;
+  --p-acc: #5E6AD2;
+  --p-acc2: #7C84E8;
+  --p-acc-glow: rgba(94,106,210,.30);
+  --p-green: #4CB782;
+  --p-red: #E5484D;
+  --p-yel: #FFB224;
+  --p-pur: #8E7BD8;
+}
+
+/* ───────────────────────────────────────────────────────────────────
+   PALETTE C — STRIPE (navy blueprint / electric blue)
+   ─────────────────────────────────────────────────────────────────── */
+.pal-stripe {
+  --p-bg: #0A2540;
+  --p-surf: #122E50;
+  --p-surf2: #1B3961;
+  --p-bd: #294670;
+  --p-tx: #F6F9FC;
+  --p-tx2: #ADBDCC;
+  --p-tx3: #6B7C8E;
+  --p-acc: #635BFF;
+  --p-acc2: #8B7FFF;
+  --p-acc-glow: rgba(99,91,255,.32);
+  --p-green: #00D4AA;
+  --p-red: #FF5A5F;
+  --p-yel: #FFC23E;
+  --p-pur: #B388FF;
+}
+
+/* ───────────────────────────────────────────────────────────────────
+   PALETTE D — NOTION-MONO (pure greys / single warm accent)
+   ─────────────────────────────────────────────────────────────────── */
+.pal-mono {
+  --p-bg: #0F0F0F;
+  --p-surf: #1A1A1A;
+  --p-surf2: #232323;
+  --p-bd: #2F2F2F;
+  --p-tx: #F5F5F5;
+  --p-tx2: #A0A0A0;
+  --p-tx3: #5C5C5C;
+  --p-acc: #EBEBEB;
+  --p-acc2: #FFFFFF;
+  --p-acc-glow: rgba(255,255,255,.10);
+  --p-green: #4FB286;
+  --p-red: #E15858;
+  --p-yel: #E8A938;
+  --p-pur: #9A8FE0;
+}
+.pal-mono .dh-mark { color: #0F0F0F; background: #EBEBEB; }
+.pal-mono .dh-av { color: #0F0F0F; background: #EBEBEB; }
+.pal-mono .dbtn-primary {
+  background: #EBEBEB;
+  border-color: #EBEBEB;
+  color: #0F0F0F;
+  box-shadow: 0 2px 6px rgba(255,255,255,.08);
+}
+.pal-mono .dh-kicker { color: #A0A0A0; }
+.pal-mono .dh-chip-role { background: rgba(255,255,255,.08); color: #EBEBEB; }
+.pal-mono .dmodal::before {
+  background: linear-gradient(90deg, #EBEBEB, transparent);
+}
+
+/* ───────────────────────────────────────────────────────────────────
+   PALETTE E — ARC (gradient peach → coral)
+   ─────────────────────────────────────────────────────────────────── */
+.pal-arc {
+  --p-bg: #1A0F1A;
+  --p-surf: #221525;
+  --p-surf2: #2C1B33;
+  --p-bd: #3A2542;
+  --p-tx: #F8F0F4;
+  --p-tx2: #B5A3B0;
+  --p-tx3: #6F5F6A;
+  --p-acc: #FF8C42;
+  --p-acc2: #FF3F8E;
+  --p-acc-glow: rgba(255,93,142,.32);
+  --p-green: #5BD4A1;
+  --p-red: #FF5A5F;
+  --p-yel: #FFC23E;
+  --p-pur: #C893E8;
+}
+
+/* ───────────────────────────────────────────────────────────────────
+   PALETTE F — APOLLO IOS (deep navy + iOS blue)
+   ─────────────────────────────────────────────────────────────────── */
+.pal-apollo {
+  --p-bg: #0B0F1A;
+  --p-surf: #131826;
+  --p-surf2: #1C2233;
+  --p-bd: #2A3147;
+  --p-tx: #F2F4F8;
+  --p-tx2: #97A0B5;
+  --p-tx3: #5E6678;
+  --p-acc: #0A84FF;
+  --p-acc2: #4FA3FF;
+  --p-acc-glow: rgba(10,132,255,.30);
+  --p-green: #34C759;
+  --p-red: #FF453A;
+  --p-yel: #FFD60A;
+  --p-pur: #BF5AF2;
+}
+.pal-apollo .dh-mark { color: #fff; }
+.pal-apollo .dh-av { color: #fff; }
+.pal-apollo .dbtn-primary { color: #fff; }
+
+/* ─── PAGE BG DECOR (just a soft warm) ─────────────────────────────── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 600px 300px at 80% 0%, rgba(255,156,80,.06), transparent 60%),
+    radial-gradient(ellipse 500px 300px at 20% 100%, rgba(94,106,210,.06), transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+.page { position: relative; z-index: 1; }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+<header class="page-hero">
+  <div>
+    <div class="kicker">БЦ Двинцев · палитра</div>
+    <h1 style="margin-top:6px">6 палитр на одном UI</h1>
+  </div>
+  <p>
+    Каждая карточка — одинаковая страничка приложения, окрашенная в свою палитру.
+    Выберите ту, что ощущается «дорого» и подходит вашему БЦ.
+    Я применю её в production parking.html новым коммитом.
+  </p>
+</header>
+
+<!-- Row 1 -->
+<section class="row">
+
+  <!-- A: CURRENT -->
+  <div class="pcard">
+    <div class="pcard-meta">
+      <h2>A · Сейчас</h2>
+      <span class="label">baseline</span>
+      <span class="meta-desc">warm orange + кофейный фон. Узнаваемо, но «автосервис».</span>
+      <div class="swatches">
+        <div class="sw" style="background:#0a0906"></div>
+        <div class="sw" style="background:#ff6a00"></div>
+        <div class="sw" style="background:#78b342"></div>
+        <div class="sw" style="background:#e0553d"></div>
+      </div>
+    </div>
+    <div class="demo pal-current">
+      <div class="dh">
+        <div class="dh-mark">Д</div>
+        <div class="dh-text"><span class="dh-kicker">БЦ Двинцев · паркинг</span><span class="dh-title">УЧЁТ ПАРКОВКИ</span></div>
+        <div class="dh-chip">
+          <span class="dh-chip-name">Александр</span>
+          <span class="dh-chip-role">admin</span>
+          <span class="dh-av">AD</span>
+        </div>
+      </div>
+      <div class="dstats">
+        <div class="dstat"><div class="dstat-k">Блок А</div><div class="dstat-v">51<span class="total">/168</span></div><div class="dstat-bar"><i style="width:70%"></i></div></div>
+        <div class="dstat"><div class="dstat-k">Блок В</div><div class="dstat-v">48<span class="total">/144</span></div><div class="dstat-bar"><i style="width:67%"></i></div></div>
+        <div class="dstat"><div class="dstat-k">Блок С</div><div class="dstat-v">100<span class="total">/192</span></div><div class="dstat-bar"><i style="width:48%"></i></div></div>
+        <div class="dstat"><div class="dstat-k">Наземная</div><div class="dstat-v">10<span class="total">/98</span></div><div class="dstat-bar"><i style="width:90%"></i></div></div>
+      </div>
+      <div class="dbody">
+        <div class="dcards-wrap">
+          <div class="dcards-h"><span class="lbl">Секция А · Блоки</span><span class="occ">117 / 168 (70%)</span></div>
+          <div class="dcards">
+            <div class="dcard cf-occ"><div class="tp">В</div><div class="num">1</div><div class="car">Infinity M35</div></div>
+            <div class="dcard cf-free"><div class="tp">Н</div><div class="num">2</div></div>
+            <div class="dcard cf-occ"><div class="tp">В</div><div class="num">3</div><div class="car">Renault Ark</div></div>
+            <div class="dcard cf-occ"><div class="tp">В</div><div class="num">4</div><div class="car">Skoda Kodiaq</div></div>
+            <div class="dcard cf-imp"><div class="tp">В</div><div class="num">5</div><div class="car">Имущество</div></div>
+            <div class="dcard cf-occ"><div class="tp">В</div><div class="num">6</div><div class="car">Porsche Macan</div></div>
+            <div class="dcard cf-occ"><div class="tp">Н</div><div class="num">7</div><div class="car">Samsung</div></div>
+            <div class="dcard cf-imp"><div class="tp">В</div><div class="num">8</div><div class="car">Имущество</div></div>
+          </div>
+        </div>
+        <div class="dside">
+          <div class="dside-h">Редактирование ячейки</div>
+          <div class="dmodal">
+            <h4>А · 1 — Infinity M35</h4>
+            <div class="sub">Подземная Klaus, тип «Высокая»</div>
+            <div class="dmodal-fields">
+              <div class="dmf"><span class="lab">Компания</span>СБЕР СЕРВИС</div>
+              <div class="dmf"><span class="lab">Гос.номер</span>А 000 АА 777</div>
+            </div>
+            <div class="dbtns">
+              <button class="dbtn dbtn-primary">Сохранить</button>
+              <button class="dbtn">Отмена</button>
+            </div>
+          </div>
+          <div class="dside-h">Toast</div>
+          <div class="dtoast">
+            <div class="ico">✓</div>
+            <div><p class="ttl">Ячейка сохранена</p><p class="dsc">А · 5 — СБЕР СЕРВИС</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- B: LINEAR -->
+  <div class="pcard">
+    <div class="pcard-meta">
+      <h2>B · Linear</h2>
+      <span class="label">premium tech</span>
+      <span class="meta-desc">cool ink + electric indigo. Как Linear/Vercel.</span>
+      <div class="swatches">
+        <div class="sw" style="background:#08090C"></div>
+        <div class="sw" style="background:#5E6AD2"></div>
+        <div class="sw" style="background:#4CB782"></div>
+        <div class="sw" style="background:#E5484D"></div>
+      </div>
+    </div>
+    <div class="demo pal-linear">
+      <div class="dh">
+        <div class="dh-mark">Д</div>
+        <div class="dh-text"><span class="dh-kicker">БЦ Двинцев · паркинг</span><span class="dh-title">УЧЁТ ПАРКОВКИ</span></div>
+        <div class="dh-chip">
+          <span class="dh-chip-name">Александр</span>
+          <span class="dh-chip-role">admin</span>
+          <span class="dh-av">AD</span>
+        </div>
+      </div>
+      <div class="dstats">
+        <div class="dstat"><div class="dstat-k">Блок А</div><div class="dstat-v">51<span class="total">/168</span></div><div class="dstat-bar"><i style="width:70%"></i></div></div>
+        <div class="dstat"><div class="dstat-k">Блок В</div><div class="dstat-v">48<span class="total">/144</span></div><div class="dstat-bar"><i style="width:67%"></i></div></div>
+        <div class="dstat"><div class="dstat-k">Блок С</div><div class="dstat-v">100<span class="total">/192</span></div><div class="dstat-bar"><i style="width:48%"></i></div></div>
+        <div class="dstat"><div class="dstat-k">Наземная</div><div class="dstat-v">10<span class="total">/98</span></div><div class="dstat-bar"><i style="width:90%"></i></div></div>
+      </div>
+      <div class="dbody">
+        <div class="dcards-wrap">
+          <div class="dcards-h"><span class="lbl">Секция А · Блоки</span><span class="occ">117 / 168 (70%)</span></div>
+          <div class="dcards">
+            <div class="dcard cf-occ"><div class="tp">В</div><div class="num">1</div><div class="car">Infinity M35</div></div>
+            <div class="dcard cf-free"><div class="tp">Н</div><div class="num">2</div></div>
+            <div class="dcard cf-occ"><div class="tp">В</div><div class="num">3</div><div class="car">Renault Ark</div></div>
+            <div class="dcard cf-occ"><div class="tp">В</div><div class="num">4</div><div class="car">Skoda Kodiaq</div></div>
+            <div class="dcard cf-imp"><div class="tp">В</div><div class="num">5</div><div class="car">Имущество</div></div>
+            <div class="dcard cf-occ"><div class="tp">В</div><div class="num">6</div><div class="car">Porsche Macan</div></div>
+            <div class="dcard cf-occ"><div class="tp">Н</div><div class="num">7</div><div class="car">Samsung</div></div>
+            <div class="dcard cf-imp"><div class="tp">В</div><div class="num">8</div><div class="car">Имущество</div></div>
+          </div>
+        </div>
+        <div class="dside">
+          <div class="dside-h">Редактирование ячейки</div>
+          <div class="dmodal">
+            <h4>А · 1 — Infinity M35</h4>
+            <div class="sub">Подземная Klaus, тип «Высокая»</div>
+            <div class="dmodal-fields">
+              <div class="dmf"><span class="lab">Компания</span>СБЕР СЕРВИС</div>
+              <div class="dmf"><span class="lab">Гос.номер</span>А 000 АА 777</div>
+            </div>
+            <div class="dbtns">
+              <button class="dbtn dbtn-primary">Сохранить</button>
+              <button class="dbtn">Отмена</button>
+            </div>
+          </div>
+          <div class="dside-h">Toast</div>
+          <div class="dtoast">
+            <div class="ico">✓</div>
+            <div><p class="ttl">Ячейка сохранена</p><p class="dsc">А · 5 — СБЕР СЕРВИС</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+<!-- Row 2 -->
+<section class="row">
+
+  <!-- C: STRIPE -->
+  <div class="pcard">
+    <div class="pcard-meta">
+      <h2>C · Stripe</h2>
+      <span class="label">premium fintech</span>
+      <span class="meta-desc">navy blueprint + electric blue. Серьёзно и корпоративно.</span>
+      <div class="swatches">
+        <div class="sw" style="background:#0A2540"></div>
+        <div class="sw" style="background:#635BFF"></div>
+        <div class="sw" style="background:#00D4AA"></div>
+        <div class="sw" style="background:#FF5A5F"></div>
+      </div>
+    </div>
+    <div class="demo pal-stripe">
+      <div class="dh">
+        <div class="dh-mark">Д</div>
+        <div class="dh-text"><span class="dh-kicker">БЦ Двинцев · паркинг</span><span class="dh-title">УЧЁТ ПАРКОВКИ</span></div>
+        <div class="dh-chip">
+          <span class="dh-chip-name">Александр</span>
+          <span class="dh-chip-role">admin</span>
+          <span class="dh-av">AD</span>
+        </div>
+      </div>
+      <div class="dstats">
+        <div class="dstat"><div class="dstat-k">Блок А</div><div class="dstat-v">51<span class="total">/168</span></div><div class="dstat-bar"><i style="width:70%"></i></div></div>
+        <div class="dstat"><div class="dstat-k">Блок В</div><div class="dstat-v">48<span class="total">/144</span></div><div class="dstat-bar"><i style="width:67%"></i></div></div>
+        <div class="dstat"><div class="dstat-k">Блок С</div><div class="dstat-v">100<span class="total">/192</span></div><div class="dstat-bar"><i style="width:48%"></i></div></div>
+        <div class="dstat"><div class="dstat-k">Наземная</div><div class="dstat-v">10<span class="total">/98</span></div><div class="dstat-bar"><i style="width:90%"></i></div></div>
+      </div>
+      <div class="dbody">
+        <div class="dcards-wrap">
+          <div class="dcards-h"><span class="lbl">Секция А · Блоки</span><span class="occ">117 / 168 (70%)</span></div>
+          <div class="dcards">
+            <div class="dcard cf-occ"><div class="tp">В</div><div class="num">1</div><div class="car">Infinity M35</div></div>
+            <div class="dcard cf-free"><div class="tp">Н</div><div class="num">2</div></div>
+            <div class="dcard cf-occ"><div class="tp">В</div><div class="num">3</div><div class="car">Renault Ark</div></div>
+            <div class="dcard cf-occ"><div class="tp">В</div><div class="num">4</div><div class="car">Skoda Kodiaq</div></div>
+            <div class="dcard cf-imp"><div class="tp">В</div><div class="num">5</div><div class="car">Имущество</div></div>
+            <div class="dcard cf-occ"><div class="tp">В</div><div class="num">6</div><div class="car">Porsche Macan</div></div>
+            <div class="dcard cf-occ"><div class="tp">Н</div><div class="num">7</div><div class="car">Samsung</div></div>
+            <div class="dcard cf-imp"><div class="tp">В</div><div class="num">8</div><div class="car">Имущество</div></div>
+          </div>
+        </div>
+        <div class="dside">
+          <div class="dside-h">Редактирование ячейки</div>
+          <div class="dmodal">
+            <h4>А · 1 — Infinity M35</h4>
+            <div class="sub">Подземная Klaus, тип «Высокая»</div>
+            <div class="dmodal-fields">
+              <div class="dmf"><span class="lab">Компания</span>СБЕР СЕРВИС</div>
+              <div class="dmf"><span class="lab">Гос.номер</span>А 000 АА 777</div>
+            </div>
+            <div class="dbtns">
+              <button class="dbtn dbtn-primary">Сохранить</button>
+              <button class="dbtn">Отмена</button>
+            </div>
+          </div>
+          <div class="dside-h">Toast</div>
+          <div class="dtoast">
+            <div class="ico">✓</div>
+            <div><p class="ttl">Ячейка сохранена</p><p class="dsc">А · 5 — СБЕР СЕРВИС</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- D: NOTION-MONO -->
+  <div class="pcard">
+    <div class="pcard-meta">
+      <h2>D · Mono</h2>
+      <span class="label">minimalism</span>
+      <span class="meta-desc">чистый ч/б, единственный warm-accent на статусах. Бесконечно элегантно.</span>
+      <div class="swatches">
+        <div class="sw" style="background:#0F0F0F"></div>
+        <div class="sw" style="background:#EBEBEB"></div>
+        <div class="sw" style="background:#4FB286"></div>
+        <div class="sw" style="background:#E15858"></div>
+      </div>
+    </div>
+    <div class="demo pal-mono">
+      <div class="dh">
+        <div class="dh-mark">Д</div>
+        <div class="dh-text"><span class="dh-kicker">БЦ Двинцев · паркинг</span><span class="dh-title">УЧЁТ ПАРКОВКИ</span></div>
+        <div class="dh-chip">
+          <span class="dh-chip-name">Александр</span>
+          <span class="dh-chip-role">admin</span>
+          <span class="dh-av">AD</span>
+        </div>
+      </div>
+      <div class="dstats">
+        <div class="dstat"><div class="dstat-k">Блок А</div><div class="dstat-v">51<span class="total">/168</span></div><div class="dstat-bar"><i style="width:70%"></i></div></div>
+        <div class="dstat"><div class="dstat-k">Блок В</div><div class="dstat-v">48<span class="total">/144</span></div><div class="dstat-bar"><i style="width:67%"></i></div></div>
+        <div class="dstat"><div class="dstat-k">Блок С</div><div class="dstat-v">100<span class="total">/192</span></div><div class="dstat-bar"><i style="width:48%"></i></div></div>
+        <div class="dstat"><div class="dstat-k">Наземная</div><div class="dstat-v">10<span class="total">/98</span></div><div class="dstat-bar"><i style="width:90%"></i></div></div>
+      </div>
+      <div class="dbody">
+        <div class="dcards-wrap">
+          <div class="dcards-h"><span class="lbl">Секция А · Блоки</span><span class="occ">117 / 168 (70%)</span></div>
+          <div class="dcards">
+            <div class="dcard cf-occ"><div class="tp">В</div><div class="num">1</div><div class="car">Infinity M35</div></div>
+            <div class="dcard cf-free"><div class="tp">Н</div><div class="num">2</div></div>
+            <div class="dcard cf-occ"><div class="tp">В</div><div class="num">3</div><div class="car">Renault Ark</div></div>
+            <div class="dcard cf-occ"><div class="tp">В</div><div class="num">4</div><div class="car">Skoda Kodiaq</div></div>
+            <div class="dcard cf-imp"><div class="tp">В</div><div class="num">5</div><div class="car">Имущество</div></div>
+            <div class="dcard cf-occ"><div class="tp">В</div><div class="num">6</div><div class="car">Porsche Macan</div></div>
+            <div class="dcard cf-occ"><div class="tp">Н</div><div class="num">7</div><div class="car">Samsung</div></div>
+            <div class="dcard cf-imp"><div class="tp">В</div><div class="num">8</div><div class="car">Имущество</div></div>
+          </div>
+        </div>
+        <div class="dside">
+          <div class="dside-h">Редактирование ячейки</div>
+          <div class="dmodal">
+            <h4>А · 1 — Infinity M35</h4>
+            <div class="sub">Подземная Klaus, тип «Высокая»</div>
+            <div class="dmodal-fields">
+              <div class="dmf"><span class="lab">Компания</span>СБЕР СЕРВИС</div>
+              <div class="dmf"><span class="lab">Гос.номер</span>А 000 АА 777</div>
+            </div>
+            <div class="dbtns">
+              <button class="dbtn dbtn-primary">Сохранить</button>
+              <button class="dbtn">Отмена</button>
+            </div>
+          </div>
+          <div class="dside-h">Toast</div>
+          <div class="dtoast">
+            <div class="ico">✓</div>
+            <div><p class="ttl">Ячейка сохранена</p><p class="dsc">А · 5 — СБЕР СЕРВИС</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+<!-- Row 3 -->
+<section class="row">
+
+  <!-- E: ARC -->
+  <div class="pcard">
+    <div class="pcard-meta">
+      <h2>E · Arc</h2>
+      <span class="label">trendy consumer</span>
+      <span class="meta-desc">gradient peach→coral, тёмный плам. Современно и тепло.</span>
+      <div class="swatches">
+        <div class="sw" style="background:#1A0F1A"></div>
+        <div class="sw" style="background:#FF8C42"></div>
+        <div class="sw" style="background:#FF3F8E"></div>
+        <div class="sw" style="background:#5BD4A1"></div>
+      </div>
+    </div>
+    <div class="demo pal-arc">
+      <div class="dh">
+        <div class="dh-mark">Д</div>
+        <div class="dh-text"><span class="dh-kicker">БЦ Двинцев · паркинг</span><span class="dh-title">УЧЁТ ПАРКОВКИ</span></div>
+        <div class="dh-chip">
+          <span class="dh-chip-name">Александр</span>
+          <span class="dh-chip-role">admin</span>
+          <span class="dh-av">AD</span>
+        </div>
+      </div>
+      <div class="dstats">
+        <div class="dstat"><div class="dstat-k">Блок А</div><div class="dstat-v">51<span class="total">/168</span></div><div class="dstat-bar"><i style="width:70%"></i></div></div>
+        <div class="dstat"><div class="dstat-k">Блок В</div><div class="dstat-v">48<span class="total">/144</span></div><div class="dstat-bar"><i style="width:67%"></i></div></div>
+        <div class="dstat"><div class="dstat-k">Блок С</div><div class="dstat-v">100<span class="total">/192</span></div><div class="dstat-bar"><i style="width:48%"></i></div></div>
+        <div class="dstat"><div class="dstat-k">Наземная</div><div class="dstat-v">10<span class="total">/98</span></div><div class="dstat-bar"><i style="width:90%"></i></div></div>
+      </div>
+      <div class="dbody">
+        <div class="dcards-wrap">
+          <div class="dcards-h"><span class="lbl">Секция А · Блоки</span><span class="occ">117 / 168 (70%)</span></div>
+          <div class="dcards">
+            <div class="dcard cf-occ"><div class="tp">В</div><div class="num">1</div><div class="car">Infinity M35</div></div>
+            <div class="dcard cf-free"><div class="tp">Н</div><div class="num">2</div></div>
+            <div class="dcard cf-occ"><div class="tp">В</div><div class="num">3</div><div class="car">Renault Ark</div></div>
+            <div class="dcard cf-occ"><div class="tp">В</div><div class="num">4</div><div class="car">Skoda Kodiaq</div></div>
+            <div class="dcard cf-imp"><div class="tp">В</div><div class="num">5</div><div class="car">Имущество</div></div>
+            <div class="dcard cf-occ"><div class="tp">В</div><div class="num">6</div><div class="car">Porsche Macan</div></div>
+            <div class="dcard cf-occ"><div class="tp">Н</div><div class="num">7</div><div class="car">Samsung</div></div>
+            <div class="dcard cf-imp"><div class="tp">В</div><div class="num">8</div><div class="car">Имущество</div></div>
+          </div>
+        </div>
+        <div class="dside">
+          <div class="dside-h">Редактирование ячейки</div>
+          <div class="dmodal">
+            <h4>А · 1 — Infinity M35</h4>
+            <div class="sub">Подземная Klaus, тип «Высокая»</div>
+            <div class="dmodal-fields">
+              <div class="dmf"><span class="lab">Компания</span>СБЕР СЕРВИС</div>
+              <div class="dmf"><span class="lab">Гос.номер</span>А 000 АА 777</div>
+            </div>
+            <div class="dbtns">
+              <button class="dbtn dbtn-primary">Сохранить</button>
+              <button class="dbtn">Отмена</button>
+            </div>
+          </div>
+          <div class="dside-h">Toast</div>
+          <div class="dtoast">
+            <div class="ico">✓</div>
+            <div><p class="ttl">Ячейка сохранена</p><p class="dsc">А · 5 — СБЕР СЕРВИС</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- F: APOLLO IOS -->
+  <div class="pcard">
+    <div class="pcard-meta">
+      <h2>F · Apollo iOS</h2>
+      <span class="label">premium native</span>
+      <span class="meta-desc">deep navy + iOS blue. Как премиальное native-приложение.</span>
+      <div class="swatches">
+        <div class="sw" style="background:#0B0F1A"></div>
+        <div class="sw" style="background:#0A84FF"></div>
+        <div class="sw" style="background:#34C759"></div>
+        <div class="sw" style="background:#FF453A"></div>
+      </div>
+    </div>
+    <div class="demo pal-apollo">
+      <div class="dh">
+        <div class="dh-mark">Д</div>
+        <div class="dh-text"><span class="dh-kicker">БЦ Двинцев · паркинг</span><span class="dh-title">УЧЁТ ПАРКОВКИ</span></div>
+        <div class="dh-chip">
+          <span class="dh-chip-name">Александр</span>
+          <span class="dh-chip-role">admin</span>
+          <span class="dh-av">AD</span>
+        </div>
+      </div>
+      <div class="dstats">
+        <div class="dstat"><div class="dstat-k">Блок А</div><div class="dstat-v">51<span class="total">/168</span></div><div class="dstat-bar"><i style="width:70%"></i></div></div>
+        <div class="dstat"><div class="dstat-k">Блок В</div><div class="dstat-v">48<span class="total">/144</span></div><div class="dstat-bar"><i style="width:67%"></i></div></div>
+        <div class="dstat"><div class="dstat-k">Блок С</div><div class="dstat-v">100<span class="total">/192</span></div><div class="dstat-bar"><i style="width:48%"></i></div></div>
+        <div class="dstat"><div class="dstat-k">Наземная</div><div class="dstat-v">10<span class="total">/98</span></div><div class="dstat-bar"><i style="width:90%"></i></div></div>
+      </div>
+      <div class="dbody">
+        <div class="dcards-wrap">
+          <div class="dcards-h"><span class="lbl">Секция А · Блоки</span><span class="occ">117 / 168 (70%)</span></div>
+          <div class="dcards">
+            <div class="dcard cf-occ"><div class="tp">В</div><div class="num">1</div><div class="car">Infinity M35</div></div>
+            <div class="dcard cf-free"><div class="tp">Н</div><div class="num">2</div></div>
+            <div class="dcard cf-occ"><div class="tp">В</div><div class="num">3</div><div class="car">Renault Ark</div></div>
+            <div class="dcard cf-occ"><div class="tp">В</div><div class="num">4</div><div class="car">Skoda Kodiaq</div></div>
+            <div class="dcard cf-imp"><div class="tp">В</div><div class="num">5</div><div class="car">Имущество</div></div>
+            <div class="dcard cf-occ"><div class="tp">В</div><div class="num">6</div><div class="car">Porsche Macan</div></div>
+            <div class="dcard cf-occ"><div class="tp">Н</div><div class="num">7</div><div class="car">Samsung</div></div>
+            <div class="dcard cf-imp"><div class="tp">В</div><div class="num">8</div><div class="car">Имущество</div></div>
+          </div>
+        </div>
+        <div class="dside">
+          <div class="dside-h">Редактирование ячейки</div>
+          <div class="dmodal">
+            <h4>А · 1 — Infinity M35</h4>
+            <div class="sub">Подземная Klaus, тип «Высокая»</div>
+            <div class="dmodal-fields">
+              <div class="dmf"><span class="lab">Компания</span>СБЕР СЕРВИС</div>
+              <div class="dmf"><span class="lab">Гос.номер</span>А 000 АА 777</div>
+            </div>
+            <div class="dbtns">
+              <button class="dbtn dbtn-primary">Сохранить</button>
+              <button class="dbtn">Отмена</button>
+            </div>
+          </div>
+          <div class="dside-h">Toast</div>
+          <div class="dtoast">
+            <div class="ico">✓</div>
+            <div><p class="ttl">Ячейка сохранена</p><p class="dsc">А · 5 — СБЕР СЕРВИС</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+</div><!-- /.page -->
+</body>
+</html>
