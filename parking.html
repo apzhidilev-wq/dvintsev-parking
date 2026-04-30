@@ -1266,6 +1266,53 @@ html[data-theme="paper"] .list-row,html[data-theme="paper"] .um-list-item{backgr
   border-color:rgba(224,85,61,.4)}
 .pill-muted{color:var(--tx2);background:var(--surf2);border-color:var(--bd2)}
 
+/* ═══════════════════════════════════════════════════════════════════
+   PHASE 4 · EMPTY STATE PRIMITIVE
+   iOS-style placeholder for "no data" / "no results" zones.
+   Compose: <div class="empty-state">
+              <div class="empty-state-icon">🔍</div>
+              <div class="empty-state-title">Ничего не найдено</div>
+              <div class="empty-state-text">Уточните запрос…</div>
+            </div>
+   Modifier: .empty-state-compact (smaller padding, smaller icon)
+   ═══════════════════════════════════════════════════════════════════ */
+.empty-state{display:flex;flex-direction:column;align-items:center;
+  justify-content:center;text-align:center;padding:32px 20px;gap:8px;
+  color:var(--tx3);animation:dvFadeIn 220ms var(--ease-out)}
+.empty-state-icon{width:48px;height:48px;border-radius:50%;
+  background:var(--surf2);color:var(--tx2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;margin-bottom:4px;
+  border:1px solid var(--bd)}
+.empty-state-title{font-size:13px;font-weight:600;color:var(--tx2);
+  letter-spacing:-.1px}
+.empty-state-text{font-size:11.5px;color:var(--tx3);
+  max-width:280px;line-height:1.5}
+.empty-state-compact{padding:18px 14px;gap:6px}
+.empty-state-compact .empty-state-icon{width:36px;height:36px;font-size:16px}
+.empty-state-compact .empty-state-title{font-size:12px}
+.empty-state-compact .empty-state-text{font-size:10.5px}
+
+/* ═══════════════════════════════════════════════════════════════════
+   PHASE 4 · OFFLINE BANNER
+   Fixed top strip shown while navigator.onLine === false.
+   JS toggles .offline-banner.show on window online/offline events.
+   ═══════════════════════════════════════════════════════════════════ */
+.offline-banner{position:fixed;top:0;left:0;right:0;z-index:9000;
+  padding:8px 16px;padding-top:max(8px,env(safe-area-inset-top));
+  text-align:center;
+  background:linear-gradient(180deg,#ff9500,#e07d00);color:#fff;
+  font-size:12px;font-weight:700;letter-spacing:.3px;
+  font-family:var(--mono);text-transform:uppercase;
+  box-shadow:0 4px 14px rgba(255,149,0,.4);
+  transform:translateY(-100%);
+  transition:transform var(--dur-base) var(--ease-out);
+  pointer-events:none;display:flex;align-items:center;justify-content:center;gap:8px}
+.offline-banner.show{transform:translateY(0);pointer-events:auto}
+.offline-banner-dot{width:6px;height:6px;border-radius:50%;background:#fff;
+  animation:offlinePulse 1.4s ease-in-out infinite}
+@keyframes offlinePulse{0%,100%{opacity:.4}50%{opacity:1}}
+
 /* EXPORT */
 .exp-row{display:flex;gap:6px;margin-top:10px}
 .exp-btn{flex:1;padding:9px 8px;border-radius:var(--r-sm);border:1px solid var(--bd);
@@ -1460,6 +1507,11 @@ html[data-role="viewer"] .readonly-banner{display:flex}
 <!-- iOS-first typography: SF Pro on Apple, Segoe UI / Roboto fallbacks. No Google Fonts request. -->
 </head>
 <body>
+<!-- Phase 4: offline banner — JS toggles .show on online/offline events -->
+<div class="offline-banner" id="offlineBanner" role="status" aria-live="polite">
+  <span class="offline-banner-dot"></span>
+  Нет подключения · работаете в офлайн-режиме
+</div>
 
 <!-- ═══════════════════ LOGIN OVERLAY ═══════════════════ -->
 <div class="auth-overlay" id="authOverlay">
@@ -1985,7 +2037,11 @@ html[data-role="viewer"] .readonly-banner{display:flex}
     </button>
   </div>
   <div class="msearch-results" id="msearchResults">
-    <div class="msearch-hint">Начните вводить запрос</div>
+    <div class="empty-state">
+      <div class="empty-state-icon">🔍</div>
+      <div class="empty-state-title">Поиск по парковке</div>
+      <div class="empty-state-text">Ячейка, компания, владелец, гос. номер, авто</div>
+    </div>
   </div>
 </div>
 
@@ -2265,6 +2321,26 @@ html[data-role="viewer"] .readonly-banner{display:flex}
 </div>
 
 <script>
+// ═══════════════════════════════════════════════════════════════
+// PHASE 4 · OFFLINE BANNER
+// Toggles a fixed top banner whenever navigator.onLine flips.
+// Works in tandem with the existing cloud-sync sbStatus indicator.
+// ═══════════════════════════════════════════════════════════════
+(function initOfflineBanner(){
+  const upd = () => {
+    const b = document.getElementById('offlineBanner');
+    if(!b) return;
+    if(navigator.onLine === false) b.classList.add('show');
+    else b.classList.remove('show');
+  };
+  window.addEventListener('online',  upd);
+  window.addEventListener('offline', upd);
+  // Run on load + when DOM is parsed (covers both early-script and late init)
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', upd);
+  } else { upd(); }
+})();
+
 // ═══════════════════════════════════════════════════════════════
 // AUTH MODULE (frontend-only gate; honest warning: code is visible in DevTools)
 // ═══════════════════════════════════════════════════════════════
@@ -4150,7 +4226,11 @@ function renderAuditList(){
     `Всего: ${log.length} · показано: ${filtered.length}`;
   const list = document.getElementById('auditList');
   if(!filtered.length){
-    list.innerHTML = '<div style="padding:30px;text-align:center;color:var(--tx3);font-size:12px">Нет записей</div>';
+    list.innerHTML = `<div class="empty-state">
+      <div class="empty-state-icon">📋</div>
+      <div class="empty-state-title">Нет записей</div>
+      <div class="empty-state-text">${log.length ? 'Текущие фильтры ничего не показывают. Попробуйте сбросить.' : 'Журнал пока пустой — действия будут записываться сюда автоматически.'}</div>
+    </div>`;
     return;
   }
   const html = filtered.slice(0,500).map(e=>{
@@ -5826,11 +5906,11 @@ function showPlanError(err){
   const wrap = planState.canvasEl;
   if(!wrap) return;
   wrap.innerHTML = `
-    <div class="plan-err">
-      <div style="font-size:38px;margin-bottom:8px">⚠</div>
-      <div style="color:var(--tx);font-weight:600;margin-bottom:4px">Не удалось загрузить схему</div>
-      <div style="color:var(--tx2);font-size:12.5px;margin-bottom:14px">${(err&&err.message)||err}</div>
-      <a class="pt-btn pt-link" style="margin:0;display:inline-flex" href="${PLAN_PDF_URL}" target="_blank">Открыть PDF в новой вкладке</a>
+    <div class="empty-state plan-err">
+      <div class="empty-state-icon" style="background:rgba(224,85,61,.12);color:var(--red);border-color:rgba(224,85,61,.4)">⚠</div>
+      <div class="empty-state-title">Не удалось загрузить схему</div>
+      <div class="empty-state-text">${(err&&err.message)||err}</div>
+      <a class="btn btn-primary btn-sm" style="margin-top:8px" href="${PLAN_PDF_URL}" target="_blank">Открыть PDF в новой вкладке</a>
     </div>`;
 }
 
@@ -6695,7 +6775,11 @@ function doSearch(q){
       if(textHit||plateHit) found.push({sec,id,c});
     });
   });
-  if(!found.length){res.innerHTML='<div style="font-size:11px;color:var(--tx3);padding:3px 0">Ничего не найдено</div>';return;}
+  if(!found.length){res.innerHTML=`<div class="empty-state empty-state-compact">
+    <div class="empty-state-icon">🔍</div>
+    <div class="empty-state-title">Ничего не найдено</div>
+    <div class="empty-state-text">Попробуйте короче — например, гос.номер или часть компании</div>
+  </div>`;return;}
   res.innerHTML=found.slice(0,8).map(f=>{
     const hasGeom = !!f.c.geom;
     return `
@@ -6718,7 +6802,11 @@ function openMobileSearch(){
   const inp = document.getElementById('msearchInput');
   inp.value = '';
   document.getElementById('msearchResults').innerHTML =
-    '<div class="msearch-hint">Начните вводить запрос</div>';
+    `<div class="empty-state">
+      <div class="empty-state-icon">🔍</div>
+      <div class="empty-state-title">Поиск по парковке</div>
+      <div class="empty-state-text">Ячейка, компания, владелец, гос. номер, авто</div>
+    </div>`;
   setTimeout(()=>inp.focus(), 100);
 }
 function closeMobileSearch(){
@@ -6734,7 +6822,10 @@ function msearchInput(q){
   const res = document.getElementById('msearchResults');
   q = (q||'').trim();
   if(q.length < 2){
-    res.innerHTML = '<div class="msearch-hint">Введите минимум 2 символа</div>';
+    res.innerHTML = `<div class="empty-state empty-state-compact">
+      <div class="empty-state-icon">⌨</div>
+      <div class="empty-state-text">Введите минимум 2 символа</div>
+    </div>`;
     return;
   }
   const qLo = q.toLowerCase();
@@ -6749,7 +6840,11 @@ function msearchInput(q){
     });
   });
   if(!found.length){
-    res.innerHTML = '<div class="msearch-hint">Ничего не найдено</div>';
+    res.innerHTML = `<div class="empty-state">
+      <div class="empty-state-icon">🔍</div>
+      <div class="empty-state-title">Ничего не найдено</div>
+      <div class="empty-state-text">Попробуйте часть гос.номера, фамилии или название компании</div>
+    </div>`;
     return;
   }
   res.innerHTML = found.slice(0, 30).map(f=>{
