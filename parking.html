@@ -54,6 +54,28 @@
   }
 }
 
+/* ═══════════ SKELETON LOADERS (Stage 5/5) ═══════════ */
+.dv-skeleton{background:linear-gradient(90deg,
+  var(--surf2) 0%,var(--surf3) 50%,var(--surf2) 100%);
+  background-size:200% 100%;
+  animation:dvShimmer 1.6s infinite linear;
+  border-radius:var(--r-sm)}
+@keyframes dvShimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.dv-skeleton-grid{display:grid;grid-template-columns:1fr 1fr;gap:3px;padding:5px}
+.dv-skeleton-cell{height:48px;border-radius:5px}
+.dv-skeleton-block{display:flex;flex-direction:column;
+  background:var(--surf);border:1px solid var(--bd);border-radius:var(--r);
+  padding:0;margin-bottom:14px;animation:dvFadeIn 240ms var(--ease-out) backwards}
+.dv-skeleton-block-hdr{display:flex;justify-content:space-between;
+  padding:11px 13px;border-bottom:1px solid var(--bd)}
+.dv-skeleton-block-hdr .dv-skeleton{height:14px;width:42%;border-radius:3px}
+.dv-skeleton-block-hdr .dv-skeleton:last-child{width:18%}
+@keyframes dvFadeIn{from{opacity:0}to{opacity:1}}
+.dv-skeleton-block:nth-child(1){animation-delay:0ms}
+.dv-skeleton-block:nth-child(2){animation-delay:60ms}
+.dv-skeleton-block:nth-child(3){animation-delay:120ms}
+.dv-skeleton-block:nth-child(4){animation-delay:180ms}
+
 /* ═══════════ SONNER-STYLE TOASTS (Stage 4/5) ═══════════ */
 .dv-toaster{position:fixed;bottom:max(env(safe-area-inset-bottom),16px);
   right:max(env(safe-area-inset-right),16px);
@@ -1649,7 +1671,41 @@ html[data-theme="paper"] .um-list-item{background:#fffaf0}
 
       <!-- ── GRID VIEW ── -->
       <div class="pview-inner" id="view-grid">
-        <div id="grid-content"></div>
+        <div id="grid-content"><!-- Initial skeleton — replaced by buildGrid() once data is ready -->
+          <div class="dv-skeleton-block">
+            <div class="dv-skeleton-block-hdr">
+              <div class="dv-skeleton"></div><div class="dv-skeleton"></div>
+            </div>
+            <div class="dv-skeleton-grid">
+              <div class="dv-skeleton dv-skeleton-cell"></div><div class="dv-skeleton dv-skeleton-cell"></div>
+              <div class="dv-skeleton dv-skeleton-cell"></div><div class="dv-skeleton dv-skeleton-cell"></div>
+              <div class="dv-skeleton dv-skeleton-cell"></div><div class="dv-skeleton dv-skeleton-cell"></div>
+              <div class="dv-skeleton dv-skeleton-cell"></div><div class="dv-skeleton dv-skeleton-cell"></div>
+            </div>
+          </div>
+          <div class="dv-skeleton-block">
+            <div class="dv-skeleton-block-hdr">
+              <div class="dv-skeleton"></div><div class="dv-skeleton"></div>
+            </div>
+            <div class="dv-skeleton-grid">
+              <div class="dv-skeleton dv-skeleton-cell"></div><div class="dv-skeleton dv-skeleton-cell"></div>
+              <div class="dv-skeleton dv-skeleton-cell"></div><div class="dv-skeleton dv-skeleton-cell"></div>
+              <div class="dv-skeleton dv-skeleton-cell"></div><div class="dv-skeleton dv-skeleton-cell"></div>
+              <div class="dv-skeleton dv-skeleton-cell"></div><div class="dv-skeleton dv-skeleton-cell"></div>
+            </div>
+          </div>
+          <div class="dv-skeleton-block">
+            <div class="dv-skeleton-block-hdr">
+              <div class="dv-skeleton"></div><div class="dv-skeleton"></div>
+            </div>
+            <div class="dv-skeleton-grid">
+              <div class="dv-skeleton dv-skeleton-cell"></div><div class="dv-skeleton dv-skeleton-cell"></div>
+              <div class="dv-skeleton dv-skeleton-cell"></div><div class="dv-skeleton dv-skeleton-cell"></div>
+              <div class="dv-skeleton dv-skeleton-cell"></div><div class="dv-skeleton dv-skeleton-cell"></div>
+              <div class="dv-skeleton dv-skeleton-cell"></div><div class="dv-skeleton dv-skeleton-cell"></div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- ── GROUND VIEW ── -->
@@ -6071,22 +6127,61 @@ function switchS(sec){
 // ═══════════════════════════════════════════════════════════════
 // STATS
 // ═══════════════════════════════════════════════════════════════
+// Animated integer tween (Stage 5/5) — used in updateStats for header counters.
+function dvTweenInt(getEl, key, target, dur){
+  const el=getEl();
+  if(!el) return;
+  const prev=el.__dvTweenVals||(el.__dvTweenVals={});
+  const start=(prev[key]==null)?target:prev[key];
+  if(start===target){ prev[key]=target; return; }
+  const t0=performance.now();
+  const D=dur||500;
+  const easeOut=t=>1-Math.pow(1-t,3);
+  cancelAnimationFrame(prev[key+'_raf']);
+  function tick(now){
+    const t=Math.min(1,(now-t0)/D);
+    prev[key]=Math.round(start+(target-start)*easeOut(t));
+    el.dataset['v_'+key]=prev[key];
+    el.dispatchEvent(new CustomEvent('dvtween',{detail:{key,value:prev[key]}}));
+    if(t<1) prev[key+'_raf']=requestAnimationFrame(tick);
+    else prev[key]=target;
+  }
+  prev[key+'_raf']=requestAnimationFrame(tick);
+}
+
 function updateStats(){
   const map=[
     ['А','а',{А:1},'.ca'],['В','в',{В:1},'.cb'],['С','с',{С:1},'.cc'],
     ['Н','н',{},''],['ВНЕ','в2',{},'']
   ];
-  
+
   Object.entries(PARKING).forEach(([sec,cells])=>{
     const keys=Object.keys(cells);
     const total=keys.length;
     const occ=keys.filter(k=>cells[k].oc).length;
     const free=total-occ;
     const pct=total>0?Math.round(occ/total*100):0;
-    
+
     const label=sec==='А'?'А':sec==='В'?'В':sec==='С'?'С':sec==='Н'?'Нз':sec==='ВНЕ'?'Вне':'?';
-    const el=document.getElementById('hs-'+(sec==='Н'?'н':sec==='ВНЕ'?'в2':sec.toLowerCase()));
-    if(el)el.innerHTML=`<span class="sbv-free">${free}</span><span class="sbv-total">/${total}</span>`;
+    const elId='hs-'+(sec==='Н'?'н':sec==='ВНЕ'?'в2':sec.toLowerCase());
+    const el=document.getElementById(elId);
+    if(el){
+      // Set markup once; tween updates the inner numbers live.
+      if(!el.querySelector('.sbv-free')){
+        el.innerHTML='<span class="sbv-free">'+free+'</span><span class="sbv-total">/'+total+'</span>';
+      }
+      dvTweenInt(()=>el.querySelector('.sbv-free'), 'n', free, 500);
+      dvTweenInt(()=>el.querySelector('.sbv-total'), 'n', total, 500);
+      // Subscribe once to mirror the value back into textContent.
+      const fEl=el.querySelector('.sbv-free');
+      const tEl=el.querySelector('.sbv-total');
+      if(fEl && !fEl._dvSub){ fEl._dvSub=1;
+        fEl.addEventListener('dvtween',(ev)=>{ fEl.textContent=ev.detail.value; });
+      }
+      if(tEl && !tEl._dvSub){ tEl._dvSub=1;
+        tEl.addEventListener('dvtween',(ev)=>{ tEl.textContent='/'+ev.detail.value; });
+      }
+    }
     
     // Section tab stat
     const ss=document.getElementById('ss-'+(sec.toLowerCase().replace('вне','вне')));
