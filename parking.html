@@ -1140,44 +1140,109 @@ input[type=checkbox],input[type=radio]{accent-color:var(--acc);cursor:pointer}
   text-transform:uppercase;font-family:var(--mono)}
 .mrow input:not([type=checkbox]):not([type=radio]),.mrow select,.mrow textarea{width:100%;display:block}
 .mbtn-row{display:flex;gap:10px;margin-top:20px}
-.mbtn-save{flex:1;padding:12px;border-radius:var(--r-sm);border:none;
+
+/* ═══════════════════════════════════════════════════════════════════
+   PHASE 2 · COMPONENT PRIMITIVES (BUTTON SDK)
+   ───────────────────────────────────────────────────────────────────
+   Single source of truth for all clickable affordances.
+
+   New SDK         ← Legacy alias (still works)
+   ───────────────────────────────────────────────
+   .btn .btn-primary  ← .mbtn-save
+   .btn .btn-secondary ← .mbtn-cancel
+   .btn .btn-danger   ← .mbtn-danger    (filled red)
+   .btn .btn-danger-outline ← .mbtn-del (outlined red)
+   .btn .btn-ghost-link ← .ghost-link   (dashed border, mono font)
+   Modifiers: .btn-block (flex:1) — shared base lives in .btn
+   ═══════════════════════════════════════════════════════════════════ */
+.btn,.mbtn-save,.mbtn-cancel,.mbtn-del,.mbtn-danger{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  padding:10px 16px;border-radius:var(--r-sm);
+  font-family:inherit;font-weight:700;font-size:12.5px;
+  letter-spacing:.3px;text-transform:uppercase;
+  cursor:pointer;user-select:none;border:1px solid transparent;
+  transition:transform var(--dur-fast) var(--ease-out),
+             background-color var(--dur-fast) var(--ease-out),
+             border-color var(--dur-fast) var(--ease-out),
+             box-shadow var(--dur-fast) var(--ease-out),
+             color var(--dur-fast) var(--ease-out)}
+.btn:active,.mbtn-save:active,.mbtn-cancel:active,.mbtn-del:active,.mbtn-danger:active{transform:scale(.97)}
+.btn:disabled,.btn[disabled]{opacity:.5;cursor:not-allowed;pointer-events:none}
+
+/* Primary — gradient CTA. Default flex:1 in mbtn-row; .btn alone is auto-width */
+.btn-primary,.mbtn-save{
   background:linear-gradient(135deg,var(--acc),var(--acc-deep));color:var(--bg);
-  font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;
-  letter-spacing:.5px;text-transform:uppercase;
-  box-shadow:0 4px 14px var(--acc-glow),inset 0 1px 0 rgba(255,220,180,.3);
-  transition:all .18s}
-.mbtn-save:hover{transform:translateY(-1px);
-  box-shadow:0 8px 22px var(--acc-glow),inset 0 1px 0 rgba(255,220,180,.4)}
-.mbtn-save:active{transform:scale(.97)}
-.mbtn-cancel:active,.mbtn-del:active{transform:scale(.97)}
-.mbtn-del{padding:10px 16px;border-radius:var(--r-sm);border:1px solid rgba(224,85,61,.5);
-  background:transparent;color:var(--red);font-size:12.5px;cursor:pointer;
-  font-family:inherit;font-weight:700;text-transform:uppercase;letter-spacing:.3px;
-  transition:all .15s}
-.mbtn-del:hover{background:rgba(224,85,61,.1);border-color:var(--red)}
-/* Filled-danger variant (clear log, delete cell entirely) — stronger affordance */
-.mbtn-danger{padding:10px 16px;border-radius:var(--r-sm);
-  border:1px solid var(--red);background:rgba(224,85,61,.18);
-  color:var(--red);font-size:12.5px;cursor:pointer;font-family:inherit;
-  font-weight:700;text-transform:uppercase;letter-spacing:.3px;transition:all .15s}
-.mbtn-danger:hover{background:rgba(224,85,61,.28)}
-.mbtn-danger:active{transform:scale(.97)}
-/* Inline ghost link button (e.g. ePlanBtn) — dashed, hover lifts color to acc.
-   Note: NO `display:none` here — JS toggles via element.style.display, which
-   needs to be able to set '' (default inline-block) to show the button. */
-.ghost-link{background:transparent;border:1px dashed var(--bd);
-  color:var(--tx2);font-size:11px;padding:5px 12px;border-radius:var(--r-sm);
-  cursor:pointer;font-family:var(--mono);
-  transition:color var(--dur-fast) var(--ease-out),
-             border-color var(--dur-fast) var(--ease-out)}
-.ghost-link:hover{color:var(--acc);border-color:var(--acc)}
-.mbtn-cancel{padding:10px 16px;border-radius:var(--r-sm);border:1px solid var(--bd);
-  background:transparent;color:var(--tx2);font-size:12.5px;cursor:pointer;
-  font-family:inherit;font-weight:700;text-transform:uppercase;letter-spacing:.3px}
-.mbtn-cancel:hover{border-color:var(--bd2);color:var(--tx)}
-.modal-id-badge{background:rgba(var(--acc-rgb),.12);padding:3px 11px;border-radius:999px;
-  font-size:12px;color:var(--acc);font-weight:700;font-family:var(--mono);
-  letter-spacing:.3px;border:1px solid rgba(var(--acc-rgb),.25)}
+  border:none;font-size:13px;font-weight:800;letter-spacing:.5px;
+  box-shadow:0 4px 14px var(--acc-glow),inset 0 1px 0 rgba(255,255,255,.18)}
+.btn-primary:hover,.mbtn-save:hover{transform:translateY(-1px);
+  box-shadow:0 8px 22px var(--acc-glow),inset 0 1px 0 rgba(255,255,255,.24)}
+.mbtn-save{flex:1;padding:12px}
+
+/* Secondary — neutral outlined */
+.btn-secondary,.mbtn-cancel{
+  background:transparent;color:var(--tx2);border-color:var(--bd)}
+.btn-secondary:hover,.mbtn-cancel:hover{border-color:var(--bd2);color:var(--tx)}
+
+/* Danger filled — strong destructive affordance */
+.btn-danger,.mbtn-danger{
+  background:rgba(224,85,61,.18);color:var(--red);border-color:var(--red)}
+.btn-danger:hover,.mbtn-danger:hover{background:rgba(224,85,61,.28)}
+
+/* Danger outline — softer destructive (e.g. clear field) */
+.btn-danger-outline,.mbtn-del{
+  background:transparent;color:var(--red);border-color:rgba(224,85,61,.5)}
+.btn-danger-outline:hover,.mbtn-del:hover{
+  background:rgba(224,85,61,.1);border-color:var(--red)}
+
+/* Ghost link — dashed, mono, low-emphasis (e.g. "📍 Show on plan") */
+.btn-ghost-link,.ghost-link{
+  background:transparent;border:1px dashed var(--bd);
+  color:var(--tx2);font-size:11px;padding:5px 12px;
+  font-family:var(--mono);font-weight:600;text-transform:none;letter-spacing:0}
+.btn-ghost-link:hover,.ghost-link:hover{color:var(--acc);border-color:var(--acc)}
+
+/* Sizing modifiers */
+.btn-sm{padding:7px 12px;font-size:11.5px}
+.btn-block{width:100%;flex:1 1 auto}
+
+/* ═══════════════════════════════════════════════════════════════════
+   LIST-ROW PRIMITIVE — iOS-style card row (white card, soft shadow,
+   subtle border). Use for any vertical list of selectable/editable items.
+   New SDK              ← Legacy alias
+   ───────────────────────────────────────────────
+   .list-row            ← .um-list-item (user mgmt rows)
+   ═══════════════════════════════════════════════════════════════════ */
+.list-row,.um-list-item{display:flex;align-items:center;gap:12px;
+  padding:10px 12px;background:var(--bg);
+  border:1px solid var(--bd);border-radius:var(--r);
+  box-shadow:var(--shadow-xs);
+  transition:border-color var(--dur-fast) var(--ease-out),
+             box-shadow var(--dur-fast) var(--ease-out)}
+.list-row:hover,.um-list-item:hover{border-color:var(--bd2);box-shadow:var(--shadow-sm)}
+html[data-theme="paper"] .list-row,html[data-theme="paper"] .um-list-item{background:var(--surf2)}
+
+/* ═══════════════════════════════════════════════════════════════════
+   PILL / BADGE PRIMITIVE — small rounded label for status, role, count.
+   Variants: -acc / -success / -danger / -muted
+   Existing aliases:
+   .pill-acc    ← .modal-id-badge, .um-li-role.role-admin, .um-h-role.role-admin
+   .pill-success ← .um-li-role.role-operator, .um-h-role.role-operator
+   .pill-muted  ← .um-li-role.role-viewer, .um-h-role.role-viewer
+   ═══════════════════════════════════════════════════════════════════ */
+.pill{display:inline-flex;align-items:center;gap:4px;
+  padding:3px 9px;border-radius:999px;
+  font-size:10px;font-weight:700;font-family:var(--mono);
+  letter-spacing:.6px;text-transform:uppercase;
+  border:1px solid;background:transparent}
+.pill-acc,.modal-id-badge{padding:3px 11px;font-size:12px;color:var(--acc);
+  background:rgba(var(--acc-rgb),.12);
+  border:1px solid rgba(var(--acc-rgb),.25);border-radius:999px;
+  font-weight:700;font-family:var(--mono);letter-spacing:.3px}
+.pill-success{color:var(--green);background:rgba(120,179,66,.12);
+  border-color:rgba(120,179,66,.4)}
+.pill-danger{color:var(--red);background:rgba(224,85,61,.12);
+  border-color:rgba(224,85,61,.4)}
+.pill-muted{color:var(--tx2);background:var(--surf2);border-color:var(--bd2)}
 
 /* EXPORT */
 .exp-row{display:flex;gap:6px;margin-top:10px}
@@ -1339,12 +1404,7 @@ html[data-role="viewer"] .readonly-banner{display:flex}
 /* ═══════════════════ USER MGMT MODAL ═══════════════════ */
 .um-list{display:flex;flex-direction:column;gap:8px;margin-top:12px;
   max-height:340px;overflow-y:auto;padding-right:4px}
-.um-list-item{display:flex;align-items:center;gap:12px;padding:10px 12px;
-  background:var(--bg);border:1px solid var(--bd);border-radius:var(--r);
-  box-shadow:var(--shadow-xs);
-  transition:all .15s}
-html[data-theme="paper"] .um-list-item{background:var(--surf2)}
-.um-list-item:hover{border-color:var(--bd2);box-shadow:var(--shadow-sm)}
+/* .um-list-item base styles now in .list-row primitive (see Phase 2 SDK) */
 .um-li-av{width:32px;height:32px;border-radius:50%;flex-shrink:0;
   display:flex;align-items:center;justify-content:center;
   font-family:var(--mono);font-size:11px;font-weight:800;color:var(--bg);
@@ -1761,12 +1821,12 @@ html[data-theme="paper"] .um-list-item{background:var(--surf2)}
       Хранится последние 10 копий. Восстановление полностью заменяет текущие данные ячеек.
     </div>
     <div style="display:flex;gap:8px;margin-bottom:12px">
-      <button class="mbtn-save" onclick="createManualSnapshot()" style="font-size:11px;padding:6px 12px">📸 Создать snapshot сейчас</button>
-      <button class="mbtn-cancel" onclick="exportSnapshotsAsJSON()" style="font-size:11px;padding:6px 12px">⬇ Экспорт всех</button>
+      <button class="btn btn-primary btn-sm" onclick="createManualSnapshot()">📸 Создать snapshot сейчас</button>
+      <button class="btn btn-secondary btn-sm" onclick="exportSnapshotsAsJSON()">⬇ Экспорт всех</button>
     </div>
     <div id="snapshotsList" style="max-height:360px;overflow:auto;border:1px solid var(--bd);border-radius:var(--r-sm);padding:8px"></div>
     <div class="mbtn-row" style="margin-top:14px">
-      <button class="mbtn-cancel" onclick="closeSnapshotsModal()">Закрыть</button>
+      <button class="btn btn-secondary btn-block" onclick="closeSnapshotsModal()">Закрыть</button>
     </div>
   </div>
 </div>
