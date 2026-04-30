@@ -9,20 +9,21 @@
 <title>БЦ Двинцев — Паркинг</title>
 <style>
 :root{
-  /* === DARK — orange on black === */
-  --bg:#0a0906;--surf:#141210;--surf2:#1c1915;--surf3:#24201b;
-  --bd:#2e2822;--bd2:#3a3128;--tx:#f4ede1;--tx2:#a59a85;--tx3:#6e6458;
-  --acc:#ff6a00;--acc2:#ff8a33;--acc-deep:#c94d00;--acc-glow:rgba(255,106,0,.28);
-  --green:#78b342;--red:#e0553d;--yel:#e8a73a;
-  --ora:#ff8a33;--pur:#d9a26a;--teal:#d48a4d;
-  /* Section chromatic (tuned within warm palette) */
-  --ca:#ff6a00;--cb:#e8a73a;--cc:#c97c2e;--cg:#9ab54b;--cv:#e0553d;
-  --shadow-xs:0 1px 2px rgba(0,0,0,.45);
-  --shadow-sm:0 1px 3px rgba(0,0,0,.55);
-  --shadow-md:0 6px 20px rgba(0,0,0,.55), 0 1px 2px rgba(0,0,0,.5);
-  --shadow-lg:0 18px 50px rgba(0,0,0,.7), 0 2px 8px rgba(0,0,0,.5);
-  --shadow-acc:0 4px 14px var(--acc-glow), 0 8px 24px rgba(255,106,0,.12);
-  --shadow-inset:inset 0 1px 0 rgba(255,255,255,.04);
+  /* === APOLLO LIGHT (default) — pure white + Apple greys + iOS Blue === */
+  --bg:#FFFFFF;--surf:#FAFAFA;--surf2:#F2F2F7;--surf3:#E5E5EA;
+  --bd:rgba(60,60,67,.10);--bd2:rgba(60,60,67,.20);
+  --tx:#1D1D1F;--tx2:#6E6E73;--tx3:#8E8E93;
+  --acc:#007AFF;--acc2:#4DA2FF;--acc-deep:#0064D2;--acc-glow:rgba(0,122,255,.18);
+  --green:#34C759;--red:#FF3B30;--yel:#FF9500;
+  --ora:#FF9500;--pur:#AF52DE;--teal:#5AC8FA;
+  /* Section chromatic — iOS-style accents */
+  --ca:#007AFF;--cb:#5AC8FA;--cc:#5856D6;--cg:#34C759;--cv:#FF3B30;
+  --shadow-xs:0 1px 2px rgba(0,0,0,.04);
+  --shadow-sm:0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:0 4px 8px rgba(0,0,0,.06), 0 2px 4px rgba(0,0,0,.05), 0 8px 16px rgba(0,0,0,.04);
+  --shadow-lg:0 4px 12px rgba(0,0,0,.08), 0 12px 32px -8px rgba(0,0,0,.10);
+  --shadow-acc:0 1px 2px rgba(0,0,0,.08), 0 4px 12px var(--acc-glow);
+  --shadow-inset:inset 0 1px 0 rgba(255,255,255,.5);
   --glow:0 0 0 3px var(--acc-glow);
   --r-xs:4px;--r-sm:6px;--r:10px;--r-md:12px;--r-lg:14px;--r-xl:20px;
   /* === ANIMATION TOKENS (Stage 1/5) — Linear-style ===
@@ -112,31 +113,29 @@
              color var(--dur-fast) var(--ease-out)}
 .dv-toast .dv-taction:hover{border-color:var(--acc);color:var(--acc)}
 .dv-toast .dv-taction:active{transform:scale(0.96)}
-html[data-theme="paper"] .dv-toast{background:#fffaf0;color:var(--tx)}
+html[data-theme="paper"] .dv-toast{background:var(--surf2);color:var(--tx)}
 html[data-theme="paper"] .dv-toast .dv-tdesc{color:var(--tx2)}
 
-/* ═══════════ THEME: WARM PAPER (light) ═══════════ */
+/* ═══════════ THEME: APOLLO DARK (alt) — deep navy + iOS blue ═══════════
+   Активируется data-theme="paper" (имя сохранено для localStorage compat). */
 html[data-theme="paper"]{
-  --bg:#f4ece0;--surf:#fbf5ea;--surf2:#ede3d1;--surf3:#e2d6c0;
-  --bd:#d8c9ae;--bd2:#c4b190;
-  --tx:#2a1f14;--tx2:#6b5a42;--tx3:#8f7e63;
-  --acc:#d95a00;--acc2:#ff7a1f;--acc-deep:#a04200;--acc-glow:rgba(217,90,0,.22);
-  --green:#5d8a2e;--red:#b8442a;--yel:#b57d1a;
-  --ca:#d95a00;--cb:#b57d1a;--cc:#96591f;--cg:#5d8a2e;--cv:#b8442a;
-  --shadow-xs:0 1px 2px rgba(90,60,20,.08);
-  --shadow-sm:0 1px 3px rgba(90,60,20,.1);
-  --shadow-md:0 6px 18px rgba(90,60,20,.12), 0 1px 2px rgba(90,60,20,.08);
-  --shadow-lg:0 18px 48px rgba(90,60,20,.18), 0 2px 8px rgba(90,60,20,.1);
-  --shadow-acc:0 4px 14px rgba(217,90,0,.20), 0 8px 24px rgba(217,90,0,.10);
-  --shadow-inset:inset 0 1px 0 rgba(255,255,255,.5);
+  --bg:#0B0F1A;--surf:#131826;--surf2:#1C2233;--surf3:#252C42;
+  --bd:rgba(255,255,255,.08);--bd2:rgba(255,255,255,.16);
+  --tx:#F2F4F8;--tx2:#97A0B5;--tx3:#5E6678;
+  --acc:#0A84FF;--acc2:#4FA3FF;--acc-deep:#0064D2;--acc-glow:rgba(10,132,255,.32);
+  --green:#34C759;--red:#FF453A;--yel:#FFD60A;
+  --ca:#0A84FF;--cb:#5AC8FA;--cc:#5E5CE6;--cg:#30D158;--cv:#FF453A;
+  --shadow-xs:0 1px 2px rgba(0,0,0,.40);
+  --shadow-sm:0 1px 3px rgba(0,0,0,.45);
+  --shadow-md:0 6px 20px rgba(0,0,0,.55), 0 1px 2px rgba(0,0,0,.45);
+  --shadow-lg:0 18px 50px rgba(0,0,0,.65), 0 2px 8px rgba(0,0,0,.45);
+  --shadow-acc:0 4px 14px var(--acc-glow), 0 8px 24px rgba(10,132,255,.14);
+  --shadow-inset:inset 0 1px 0 rgba(255,255,255,.05);
 }
 html[data-theme="paper"] body{
   background:
-    radial-gradient(1200px 600px at 85% -10%, rgba(217,90,0,.08), transparent 60%),
-    radial-gradient(900px 500px at -5% 110%, rgba(160,66,0,.06), transparent 55%),
-    /* fiber noise */
-    repeating-linear-gradient(0deg, rgba(120,80,30,.014) 0 1px, transparent 1px 3px),
-    repeating-linear-gradient(90deg, rgba(120,80,30,.012) 0 1px, transparent 1px 4px),
+    radial-gradient(1200px 600px at 85% -10%, rgba(10,132,255,.10), transparent 60%),
+    radial-gradient(900px 500px at -5% 110%, rgba(94,92,230,.06), transparent 55%),
     var(--bg);
 }
 html[data-theme="paper"] .hdr{
@@ -145,7 +144,7 @@ html[data-theme="paper"] .hdr{
     linear-gradient(180deg,#fbf5ea 0%,#f4ece0 100%);
   box-shadow:0 1px 0 rgba(255,255,255,.6) inset, 0 6px 20px rgba(90,60,20,.08);
 }
-html[data-theme="paper"] .hdr-title{color:#2a1f14}
+html[data-theme="paper"] .hdr-title{color:var(--tx)}
 html[data-theme="paper"] .lpanel{
   background:linear-gradient(180deg, rgba(217,90,0,.025), transparent 300px), var(--surf);
   box-shadow:inset -1px 0 0 rgba(0,0,0,.02), 4px 0 16px rgba(90,60,20,.08);
@@ -164,25 +163,25 @@ html[data-theme="paper"] .mfield input:focus,
 html[data-theme="paper"] .mfield select:focus{
   border-color:var(--acc);box-shadow:0 0 0 3px var(--acc-glow);background:#fff
 }
-html[data-theme="paper"] option{background:#fffaf0;color:var(--tx)}
+html[data-theme="paper"] option{background:var(--surf2);color:var(--tx)}
 /* Audit-фильтры — тематические input/select без inline-стилей */
 .au-flt{ width:100%; padding:6px 8px; background:var(--bg);
   border:1px solid var(--bd); border-radius:5px;
   color:var(--tx); font-size:12px; outline:none; font-family:inherit }
 .au-flt:focus{ border-color:var(--acc); box-shadow:0 0 0 2px var(--acc-glow) }
-html[data-theme="paper"] .au-flt{ background:#fffaf0 }
-html[data-theme="paper"] .au-flt:focus{ background:#fff }
+html[data-theme="paper"] .au-flt{ background:var(--surf2) }
+html[data-theme="paper"] .au-flt:focus{ background:var(--bg) }
 html[data-theme="paper"] .hint-box,
-html[data-theme="paper"] .sr:last-child{background:#fffaf0}
+html[data-theme="paper"] .sr:last-child{background:var(--surf2)}
 html[data-theme="paper"] .sbadge{background:transparent}
 html[data-theme="paper"] .sbadge:hover{background:rgba(217,90,0,.06)}
-html[data-theme="paper"] .stab{background:#fffaf0;color:var(--tx2)}
+html[data-theme="paper"] .stab{background:var(--surf2);color:var(--tx2)}
 html[data-theme="paper"] .stab:hover{color:var(--tx)}
-html[data-theme="paper"] .view-hint{background:#fffaf0}
+html[data-theme="paper"] .view-hint{background:var(--surf2)}
 html[data-theme="paper"] .plan-tools{
   background:linear-gradient(180deg,#fbf5ea,#f4ece0)
 }
-html[data-theme="paper"] .pt-btn{background:#fffaf0;color:var(--tx)}
+html[data-theme="paper"] .pt-btn{background:var(--surf2);color:var(--tx)}
 html[data-theme="paper"] .plan-viewport{
   background:
     radial-gradient(1px 1px at 50% 50%, rgba(217,90,0,.15) 50%, transparent 50%) 0 0 / 32px 32px,
@@ -197,8 +196,8 @@ html[data-theme="paper"] .plan-canvas object{
     0 0 0 1px rgba(217,90,0,.25)
 }
 html[data-theme="paper"] .plan-meta{background:rgba(251,245,234,.92);color:var(--tx2)}
-html[data-theme="paper"] .cf{background:linear-gradient(135deg,#fffaf0,#f7efe0);border-color:var(--bd)}
-html[data-theme="paper"] .cf:hover{background:linear-gradient(135deg,#fff,#fffaf0)}
+html[data-theme="paper"] .cf{background:linear-gradient(135deg,var(--surf2),var(--surf3));border-color:var(--bd)}
+html[data-theme="paper"] .cf:hover{background:linear-gradient(135deg,var(--bg),var(--surf2))}
 html[data-theme="paper"] .cnum{color:rgba(42,31,20,.55) !important}
 html[data-theme="paper"] .ccar{color:rgba(42,31,20,.75) !important}
 html[data-theme="paper"] .ctp{color:rgba(42,31,20,.45) !important}
@@ -209,8 +208,8 @@ html[data-theme="paper"] .cr{background:linear-gradient(135deg,rgba(181,125,26,.
   border-color:rgba(181,125,26,.25)}
 html[data-theme="paper"] .ca{background:linear-gradient(135deg,rgba(93,138,46,.22),rgba(93,138,46,.1)) !important;
   border-color:var(--green) !important;box-shadow:inset 0 0 0 1px rgba(93,138,46,.3)}
-html[data-theme="paper"] .cz{background:linear-gradient(135deg,#eee3f0,#e5d8e9);border-color:#c8b0cf}
-html[data-theme="paper"] .cs-lab{background:linear-gradient(135deg,#f0e9d8,#e8dfc8);border-color:#c8b488}
+html[data-theme="paper"] .cz{background:linear-gradient(135deg,var(--surf2),var(--surf3));border-color:var(--bd2)}
+html[data-theme="paper"] .cs-lab{background:linear-gradient(135deg,var(--surf2),var(--surf3));border-color:var(--bd2)}
 html[data-theme="paper"] .blk,
 html[data-theme="paper"] .gspot,
 html[data-theme="paper"] .vne-spot,
@@ -221,14 +220,14 @@ html[data-theme="paper"] .blk-hdr{
   background:linear-gradient(180deg,#f0e5d0,#ede3d1);color:var(--tx2)
 }
 html[data-theme="paper"] .gspot:hover,
-html[data-theme="paper"] .vne-spot:hover{background:linear-gradient(135deg,var(--surf),#fffaf0)}
-html[data-theme="paper"] .modal{background:linear-gradient(180deg,var(--surf),#fffaf0);
+html[data-theme="paper"] .vne-spot:hover{background:linear-gradient(135deg,var(--surf),var(--surf2))}
+html[data-theme="paper"] .modal{background:linear-gradient(180deg,var(--surf),var(--surf2));
   box-shadow:0 18px 64px rgba(90,60,20,.22),0 0 0 1px rgba(217,90,0,.2)}
 html[data-theme="paper"] .modal-bg{background:rgba(42,31,20,.4)}
 html[data-theme="paper"] .tt{background:rgba(251,245,234,.98);color:var(--tx);
   box-shadow:0 12px 40px rgba(90,60,20,.22),0 0 0 1px rgba(217,90,0,.15)}
 html[data-theme="paper"] .exp-btn,
-html[data-theme="paper"] .mbtn-cancel{background:#fffaf0;color:var(--tx2)}
+html[data-theme="paper"] .mbtn-cancel{background:var(--surf2);color:var(--tx2)}
 html[data-theme="paper"] ::-webkit-scrollbar-thumb{background:var(--bd2);border-color:var(--bd)}
 html[data-theme="paper"] ::-webkit-scrollbar-track{background:rgba(90,60,20,.05)}
 html[data-theme="paper"] .mono,
@@ -329,7 +328,7 @@ body{font-family:var(--sans);
 .theme-btn:hover{color:var(--acc);border-color:var(--acc);
   background:rgba(255,106,0,.06);box-shadow:0 0 0 3px var(--acc-glow)}
 .theme-btn svg{width:12px;height:12px;flex-shrink:0}
-html[data-theme="paper"] .theme-btn{background:#fffaf0;color:var(--tx2)}
+html[data-theme="paper"] .theme-btn{background:var(--surf2);color:var(--tx2)}
 html[data-theme="paper"] .theme-btn:hover{background:rgba(217,90,0,.06)}
 
 /* LAYOUT */
@@ -585,7 +584,7 @@ html[data-touch="1"] .um-touch-check{ display:inline !important }
   background:var(--surf2); border:1px solid var(--bd); border-radius:8px;
   color:var(--tx); font-family:inherit; outline:none }
 #msearchInput:focus{ border-color:var(--acc) }
-html[data-theme="paper"] #msearchInput{ background:#fffaf0 }
+html[data-theme="paper"] #msearchInput{ background:var(--surf2) }
 .msearch-results{ flex:1; overflow-y:auto; padding:8px 12px;
   -webkit-overflow-scrolling:touch }
 .msearch-hint{ text-align:center; color:var(--tx3); font-size:12px;
@@ -1264,10 +1263,10 @@ html[data-theme="paper"] .auth-overlay{
   color:var(--tx);padding:12px 14px;border-radius:var(--r);
   font-family:var(--sans);font-size:14px;transition:all .18s;
   font-weight:500;letter-spacing:.2px}
-html[data-theme="paper"] .auth-field input{background:#fffaf0}
+html[data-theme="paper"] .auth-field input{background:var(--surf2)}
 .auth-field input:focus{outline:none;border-color:var(--acc);
   box-shadow:0 0 0 3px var(--acc-glow);background:var(--bg)}
-html[data-theme="paper"] .auth-field input:focus{background:#fff}
+html[data-theme="paper"] .auth-field input:focus{background:var(--bg)}
 .auth-err{font-size:12px;color:var(--red);margin-top:10px;margin-bottom:4px;
   padding:10px 12px;border-radius:var(--r);
   background:rgba(224,85,61,.1);border:1px solid rgba(224,85,61,.3);
@@ -1298,7 +1297,7 @@ html[data-theme="paper"] .auth-field input:focus{background:#fff}
   border-radius:999px;border:1px solid var(--bd);
   background:rgba(0,0,0,.25);cursor:pointer;transition:all .18s;
   font-family:inherit;margin-left:12px;position:relative}
-html[data-theme="paper"] .user-chip{background:#fffaf0}
+html[data-theme="paper"] .user-chip{background:var(--surf2)}
 .user-chip:hover{border-color:var(--acc);background:rgba(255,106,0,.06);
   box-shadow:0 0 0 3px var(--acc-glow)}
 .user-chip-info{display:flex;flex-direction:column;align-items:flex-start;
@@ -1369,7 +1368,7 @@ html[data-role="viewer"] .readonly-banner{display:flex}
 .um-list-item{display:flex;align-items:center;gap:12px;padding:10px 12px;
   background:rgba(0,0,0,.25);border:1px solid var(--bd);border-radius:var(--r);
   transition:all .15s}
-html[data-theme="paper"] .um-list-item{background:#fffaf0}
+html[data-theme="paper"] .um-list-item{background:var(--surf2)}
 .um-list-item:hover{border-color:var(--bd2)}
 .um-li-av{width:32px;height:32px;border-radius:50%;flex-shrink:0;
   display:flex;align-items:center;justify-content:center;
@@ -7043,16 +7042,27 @@ function importJSON(ev){
   const lbl=document.getElementById('themeBtnLbl');
   const iconMoon='<path d="M13 8.5a5 5 0 01-6.5-6.5A5.5 5.5 0 108.5 14 5 5 0 0113 8.5z" fill="currentColor" stroke="none"/>';
   const iconSun='<circle cx="8" cy="8" r="3"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.5 3.5l1.5 1.5M11 11l1.5 1.5M3.5 12.5L5 11M11 5l1.5-1.5"/>';
+  // After Apollo palette switch:
+  //   default (no attribute) = Apollo Light
+  //   data-theme="paper"     = Apollo Dark (legacy attr name kept for storage compat)
   function apply(t){
-    if(t==='paper'){html.setAttribute('data-theme','paper');if(lbl)lbl.textContent='ТЁМНАЯ';
-      const icon=document.getElementById('themeBtnIcon');if(icon)icon.innerHTML=iconMoon;}
-    else{html.removeAttribute('data-theme');if(lbl)lbl.textContent='БУМАГА';
+    if(t==='paper'){html.setAttribute('data-theme','paper');if(lbl)lbl.textContent='СВЕТЛАЯ';
       const icon=document.getElementById('themeBtnIcon');if(icon)icon.innerHTML=iconSun;}
+    else{html.removeAttribute('data-theme');if(lbl)lbl.textContent='ТЁМНАЯ';
+      const icon=document.getElementById('themeBtnIcon');if(icon)icon.innerHTML=iconMoon;}
   }
-  apply(localStorage.getItem(KEY)||'dark');
+  // One-time migration: legacy 'dark' (warm orange) and 'paper' (warm cream)
+  // both rebrand to Apollo Light. After that any user toggle is honored as-is.
+  let stored=localStorage.getItem(KEY);
+  if((stored==='dark' || stored==='paper') && !localStorage.getItem(KEY+'-apollo')){
+    stored='light';
+    localStorage.setItem(KEY,'light');
+    localStorage.setItem(KEY+'-apollo','1');
+  }
+  apply(stored||'light');
   window.toggleTheme=function(){
-    const cur=html.getAttribute('data-theme')||'dark';
-    const next=cur==='paper'?'dark':'paper';
+    const cur=html.getAttribute('data-theme')||'light';
+    const next=cur==='paper'?'light':'paper';
     localStorage.setItem(KEY,next);apply(next);
   };
 })();
