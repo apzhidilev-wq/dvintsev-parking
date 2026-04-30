@@ -1162,8 +1162,10 @@ input[type=checkbox],input[type=radio]{accent-color:var(--acc);cursor:pointer}
   font-weight:700;text-transform:uppercase;letter-spacing:.3px;transition:all .15s}
 .mbtn-danger:hover{background:rgba(224,85,61,.28)}
 .mbtn-danger:active{transform:scale(.97)}
-/* Inline ghost link button (e.g. ePlanBtn) — dashed, hover lifts color to acc */
-.ghost-link{display:none;background:transparent;border:1px dashed var(--bd);
+/* Inline ghost link button (e.g. ePlanBtn) — dashed, hover lifts color to acc.
+   Note: NO `display:none` here — JS toggles via element.style.display, which
+   needs to be able to set '' (default inline-block) to show the button. */
+.ghost-link{background:transparent;border:1px dashed var(--bd);
   color:var(--tx2);font-size:11px;padding:5px 12px;border-radius:var(--r-sm);
   cursor:pointer;font-family:var(--mono);
   transition:color var(--dur-fast) var(--ease-out),
@@ -1745,7 +1747,7 @@ html[data-theme="paper"] .um-list-item{background:var(--surf2)}
       <button class="mbtn-cancel" onclick="closeModal()">Отмена</button>
     </div>
     <div style="text-align:right;margin-top:8px">
-      <button id="ePlanBtn" class="ghost-link" onclick="goToPlanFromEdit()">📍 Показать на схеме</button>
+      <button id="ePlanBtn" class="ghost-link" style="display:none" onclick="goToPlanFromEdit()">📍 Показать на схеме</button>
     </div>
   </div>
 </div>
