@@ -1331,30 +1331,63 @@ html[data-theme="paper"] .list-row,html[data-theme="paper"] .um-list-item{backgr
 /* ═══════════════════ AUTH — LOGIN SCREEN ═══════════════════ */
 .auth-overlay{position:fixed;inset:0;z-index:9999;display:flex;
   align-items:center;justify-content:center;padding:24px;
-  background:
-    radial-gradient(900px 500px at 20% 10%, rgba(var(--acc-rgb),.10), transparent 60%),
-    radial-gradient(700px 400px at 85% 90%, rgba(var(--acc-rgb),.06), transparent 60%),
-    rgba(255,255,255,.6);
-  backdrop-filter:blur(20px) saturate(1.2);-webkit-backdrop-filter:blur(20px) saturate(1.2)}
-html[data-theme="paper"] .auth-overlay{
-  background:
-    radial-gradient(900px 500px at 20% 10%, rgba(var(--acc-rgb),.14), transparent 60%),
-    radial-gradient(700px 400px at 85% 90%, rgba(94,92,230,.10), transparent 60%),
-    rgba(11,15,26,.6)}
+  background:rgba(255,255,255,.6);
+  backdrop-filter:blur(20px) saturate(1.2);-webkit-backdrop-filter:blur(20px) saturate(1.2);
+  overflow:hidden;
+  transition:opacity 320ms var(--ease-out)}
+.auth-overlay.is-leaving{opacity:0;pointer-events:none}
+/* Animated gradient mesh — two soft blobs slowly drift across the bg.
+   Pure CSS, no JS. Disabled in prefers-reduced-motion. */
+.auth-overlay::before,.auth-overlay::after{
+  content:'';position:absolute;inset:-20%;pointer-events:none;
+  border-radius:50%;filter:blur(60px);opacity:.55;
+  animation:authMeshDrift 18s ease-in-out infinite}
+.auth-overlay::before{
+  background:radial-gradient(circle, rgba(var(--acc-rgb),.40) 0%, transparent 70%);
+  width:60%;height:60%;left:-10%;top:-10%;animation-delay:0s}
+.auth-overlay::after{
+  background:radial-gradient(circle, rgba(94,92,230,.28) 0%, transparent 70%);
+  width:55%;height:55%;right:-15%;bottom:-10%;animation-delay:-9s}
+@keyframes authMeshDrift{
+  0%,100%{transform:translate(0,0) scale(1)}
+  33%{transform:translate(8%,-6%) scale(1.08)}
+  66%{transform:translate(-6%,5%) scale(.95)}
+}
+@media (prefers-reduced-motion:reduce){
+  .auth-overlay::before,.auth-overlay::after{animation:none}
+}
+html[data-theme="paper"] .auth-overlay{background:rgba(11,15,26,.6)}
+html[data-theme="paper"] .auth-overlay::before{
+  background:radial-gradient(circle, rgba(var(--acc-rgb),.30) 0%, transparent 70%);opacity:.6}
+html[data-theme="paper"] .auth-overlay::after{
+  background:radial-gradient(circle, rgba(94,92,230,.24) 0%, transparent 70%);opacity:.5}
 .auth-card{width:100%;max-width:420px;
   background:linear-gradient(180deg,var(--surf),var(--bg));
   border:1px solid var(--bd);border-radius:var(--r-lg);
   padding:36px 32px 28px;box-shadow:var(--shadow-lg),0 0 0 1px rgba(var(--acc-rgb),.15);
-  position:relative;overflow:hidden}
+  position:relative;overflow:hidden;z-index:1;
+  /* Entry animation — fade-up + slight scale, Linear-style */
+  animation:authCardEnter 480ms var(--ease-out) backwards}
+@keyframes authCardEnter{
+  from{opacity:0;transform:translateY(12px) scale(.98)}
+  to  {opacity:1;transform:translateY(0)    scale(1)}
+}
 .auth-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;
   background:linear-gradient(90deg,transparent,var(--acc) 20%,var(--acc2) 50%,var(--acc) 80%,transparent);
   filter:blur(.3px)}
-.auth-mark{width:56px;height:56px;border-radius:14px;
+.auth-mark{width:64px;height:64px;border-radius:16px;
   background:linear-gradient(135deg,var(--acc) 0%,var(--acc-deep) 100%);
-  display:flex;align-items:center;justify-content:center;margin:0 auto 18px;
-  box-shadow:0 10px 30px var(--acc-glow),inset 0 1px 0 rgba(255,255,255,.2);
-  font-family:var(--display);font-size:30px;color:var(--bg);letter-spacing:1px;
-  transform:rotate(-2deg)}
+  display:flex;align-items:center;justify-content:center;margin:0 auto 20px;
+  box-shadow:0 14px 38px var(--acc-glow),inset 0 1px 0 rgba(255,255,255,.22);
+  position:relative;
+  /* gentle floating animation — Apollo-style ambient motion */
+  animation:authMarkFloat 5.2s ease-in-out infinite}
+.auth-mark svg{width:64%;height:64%;display:block;
+  filter:drop-shadow(0 2px 6px rgba(0,0,0,.12))}
+@keyframes authMarkFloat{
+  0%,100%{transform:translateY(0) rotate(-2deg)}
+  50%   {transform:translateY(-3px) rotate(0.5deg)}
+}
 .auth-kicker{font-family:var(--mono);font-size:10px;font-weight:700;
   color:var(--acc);text-align:center;letter-spacing:2px;text-transform:uppercase;
   margin-bottom:4px}
@@ -1386,11 +1419,21 @@ html[data-theme="paper"] .auth-field input:focus{background:var(--bg)}
   background:linear-gradient(135deg,var(--acc),var(--acc-deep));
   color:var(--bg);border:none;font-family:var(--mono);font-weight:800;
   font-size:12px;letter-spacing:1.6px;text-transform:uppercase;cursor:pointer;
-  transition:all .18s;margin-top:6px;
+  transition:all .18s;margin-top:6px;position:relative;
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
   box-shadow:0 6px 20px var(--acc-glow),inset 0 1px 0 rgba(255,255,255,.25)}
 .auth-btn:hover{transform:translateY(-1px);
   box-shadow:0 10px 28px var(--acc-glow),inset 0 1px 0 rgba(255,255,255,.3)}
-.auth-btn:active{transform:translateY(0)}
+.auth-btn:active{transform:scale(.98)}
+.auth-btn:disabled{opacity:.85;cursor:wait;transform:none}
+.auth-btn.is-loading .auth-btn-text{opacity:0}
+.auth-btn-spinner{display:none;position:absolute;inset:0;
+  align-items:center;justify-content:center;gap:8px}
+.auth-btn.is-loading .auth-btn-spinner{display:inline-flex}
+.auth-btn-spinner::before{content:'';width:14px;height:14px;
+  border:2px solid rgba(255,255,255,.3);border-top-color:#fff;
+  border-radius:50%;animation:authSpin 700ms linear infinite}
+@keyframes authSpin{to{transform:rotate(360deg)}}
 .auth-footer{margin-top:22px;padding-top:18px;border-top:1px solid var(--bd);
   font-size:10.5px;color:var(--tx3);text-align:center;font-family:var(--mono);
   letter-spacing:.4px;line-height:1.6}
@@ -1516,7 +1559,13 @@ html[data-role="viewer"] .readonly-banner{display:flex}
 <!-- ═══════════════════ LOGIN OVERLAY ═══════════════════ -->
 <div class="auth-overlay" id="authOverlay">
   <form class="auth-card" id="authForm" onsubmit="return doLogin(event)">
-    <div class="auth-mark">D</div>
+    <div class="auth-mark">
+      <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
+        <rect x="2" y="2" width="44" height="44" rx="12" fill="var(--bg)"/>
+        <path d="M14 34V14h10.5c4.2 0 7 2.6 7 7s-2.8 7-7 7H19v6h-5zm5-11h5a2.5 2.5 0 000-5h-5v5z" fill="var(--acc)"/>
+        <circle cx="37" cy="14" r="3" fill="var(--acc)"/>
+      </svg>
+    </div>
     <div class="auth-kicker">БЦ «Двинцев» · Паркинг</div>
     <div class="auth-title">Вход в систему</div>
     <div id="authDeepHint" style="display:none;font-size:11.5px;color:var(--acc);background:rgba(var(--acc-rgb),.08);border:1px dashed var(--acc);border-radius:var(--r-sm);padding:8px 10px;margin-bottom:14px;font-family:var(--mono);text-align:center"></div>
@@ -1530,7 +1579,10 @@ html[data-role="viewer"] .readonly-banner{display:flex}
     </div>
     <div class="auth-err" id="authErr">Неверный логин или пароль</div>
     <label class="auth-remember"><input type="checkbox" id="authRemember" checked>Запомнить меня на 7 дней</label>
-    <button type="submit" class="auth-btn">Войти</button>
+    <button type="submit" class="auth-btn" id="authBtn">
+      <span class="auth-btn-text">Войти</span>
+      <span class="auth-btn-spinner" aria-hidden="true">Входим…</span>
+    </button>
     <div id="authBuildTag" style="margin-top:14px;font-size:9.5px;color:var(--tx3);font-family:var(--mono);letter-spacing:.5px;text-align:center;opacity:.6">build 2026-04-28 · v14</div>
   </form>
 </div>
@@ -2530,6 +2582,12 @@ async function doLogin(ev){
   const p = document.getElementById('authPass').value;
   const remember = document.getElementById('authRemember').checked;
   const err = document.getElementById('authErr');
+  const btn = document.getElementById('authBtn');
+  // Phase 5 · Loading state — disable button + show spinner during the 15-sec
+  // cloud-auth window (iPhone Safari via iCloud Private Relay can take up
+  // to ~13 sec even on good WiFi).
+  if(btn){ btn.classList.add('is-loading'); btn.disabled = true; }
+  const reset = ()=>{ if(btn){ btn.classList.remove('is-loading'); btn.disabled = false; } };
   const users = await initUsers();
   let found = users.find(x=>x.u===u);
 
@@ -2550,6 +2608,7 @@ async function doLogin(ev){
     document.getElementById('authPass').value='';
     setTimeout(()=>err.classList.remove('show'), 8000);
     console.warn('Login failed.', { cloudErr, localStatus, SB_URL });
+    reset();
     return false;
   }
   err.classList.remove('show');
@@ -2597,6 +2656,7 @@ async function doLogin(ev){
 
   CURRENT_USER = { u:found.u, name:found.name, role:found.role };
   await setSession(CURRENT_USER, remember);
+  reset(); // clear loading state for the next time the overlay opens
   enterApp();
   // Sync с облаком после логина:
   //   - если облако приняло пароль → сразу инициализируем (pull/push)
@@ -2648,8 +2708,11 @@ function enterApp(){
   document.getElementById('umhUser').textContent = '@' + CURRENT_USER.u;
   document.getElementById('umhRole').textContent = r.label;
   document.getElementById('umhRole').className = 'um-h-role role-'+CURRENT_USER.role;
-  // hide overlay
-  document.getElementById('authOverlay').style.display='none';
+  // hide overlay — Phase 5: fade-out instead of instant display:none
+  const ov = document.getElementById('authOverlay');
+  ov.classList.add('is-leaving');
+  // Wait for the .is-leaving opacity transition (320ms) then unmount.
+  setTimeout(()=>{ov.style.display='none'; ov.classList.remove('is-leaving');}, 340);
 }
 
 // ─── Tablet / touch mode ──────────────────────────────────────────
