@@ -1331,6 +1331,48 @@ html[data-theme="paper"] .list-row,html[data-theme="paper"] .um-list-item{backgr
 ::-webkit-scrollbar-thumb:hover{background:var(--acc);border-color:var(--acc)}
 
 /* ═══════════════════════════════════════════════════════════════════
+   FOLLOW-UP #3 · ONBOARDING TOUR
+   First-time user gets a 5-step guided tour with a spotlight cutout
+   (huge box-shadow on a small element) + floating tooltip card.
+   Persistence: localStorage.dvintsev_onboarding_done = '1'.
+   ═══════════════════════════════════════════════════════════════════ */
+.onb{position:fixed;inset:0;z-index:9500;pointer-events:auto;
+  animation:dvFadeIn 240ms var(--ease-out)}
+.onb[hidden]{display:none}
+.onb-spot{position:absolute;border-radius:12px;
+  box-shadow:0 0 0 100vmax rgba(0,0,0,.62), 0 0 0 2px var(--acc),
+             0 0 24px var(--acc-glow);
+  pointer-events:none;
+  transition:top 320ms var(--ease-out),left 320ms var(--ease-out),
+             width 320ms var(--ease-out),height 320ms var(--ease-out)}
+.onb-card{position:absolute;max-width:320px;width:calc(100% - 32px);
+  background:linear-gradient(180deg,var(--surf),var(--bg));
+  border:1px solid var(--bd);border-radius:var(--r-lg);
+  box-shadow:var(--shadow-lg),0 0 0 1px rgba(var(--acc-rgb),.18);
+  padding:18px 18px 14px;
+  transition:top 320ms var(--ease-out),left 320ms var(--ease-out)}
+.onb-card::before{content:'';position:absolute;top:0;left:18px;right:18px;height:2px;
+  background:linear-gradient(90deg,transparent,var(--acc) 50%,transparent);
+  border-radius:0 0 2px 2px}
+.onb-step{font-size:10px;color:var(--acc);font-family:var(--mono);
+  font-weight:700;letter-spacing:1.2px;text-transform:uppercase;
+  margin-bottom:6px}
+.onb-title{font-size:16px;font-weight:700;color:var(--tx);
+  letter-spacing:-.3px;margin-bottom:6px;line-height:1.25}
+.onb-text{font-size:12.5px;color:var(--tx2);line-height:1.5;margin-bottom:14px}
+.onb-nav{display:flex;align-items:center;gap:8px}
+@media (prefers-reduced-motion:reduce){
+  .onb-spot,.onb-card{transition:none}
+  .onb{animation:none}
+}
+/* Mobile: card always at bottom */
+@media (max-width:600px){
+  .onb-card{left:12px !important;right:12px !important;
+    bottom:max(12px,env(safe-area-inset-bottom)) !important;
+    top:auto !important;width:auto;max-width:none}
+}
+
+/* ═══════════════════════════════════════════════════════════════════
    PHASE 5+ · DASHBOARD AWAKENING
    When auth-overlay finishes fading out, body gets .app-waking for
    ~1.2s. The shell elements then run one-shot entry animations with
@@ -1577,6 +1619,22 @@ html[data-role="viewer"] .readonly-banner{display:flex}
   Нет подключения · работаете в офлайн-режиме
 </div>
 
+<!-- Follow-up #3 · Onboarding tour overlay (shown once per user) -->
+<div class="onb" id="onb" hidden>
+  <div class="onb-spot" id="onbSpot"></div>
+  <div class="onb-card" id="onbCard">
+    <div class="onb-step" id="onbStepLabel">1 / 5</div>
+    <div class="onb-title" id="onbTitle"></div>
+    <div class="onb-text" id="onbText"></div>
+    <div class="onb-nav">
+      <button class="btn btn-secondary btn-sm" onclick="onbSkip()">Пропустить</button>
+      <div style="flex:1"></div>
+      <button class="btn btn-secondary btn-sm" id="onbBack" onclick="onbPrev()">Назад</button>
+      <button class="btn btn-primary btn-sm" id="onbNext" onclick="onbNext()">Далее</button>
+    </div>
+  </div>
+</div>
+
 <!-- ═══════════════════ LOGIN OVERLAY ═══════════════════ -->
 <div class="auth-overlay" id="authOverlay">
   <form class="auth-card" id="authForm" onsubmit="return doLogin(event)">
@@ -1684,6 +1742,10 @@ html[data-role="viewer"] .readonly-banner{display:flex}
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="2" width="10" height="12" rx="1.5"/><circle cx="8" cy="12" r="0.6" fill="currentColor"/></svg>
           <span style="flex:1">Планшет-режим</span>
           <span id="umTouchState" style="font-family:var(--mono);font-size:10px;opacity:.7;letter-spacing:.5px">ВЫКЛ</span>
+        </button>
+        <button class="um-item" onclick="restartOnboarding();event.stopPropagation()">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 2"/></svg>
+          Показать тур ещё раз
         </button>
         <button class="um-item um-danger" onclick="doLogout(event)">
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 3H3v10h3M10 5l3 3-3 3M13 8H6"/></svg>
@@ -2395,6 +2457,122 @@ html[data-role="viewer"] .readonly-banner{display:flex}
 
 <script>
 // ═══════════════════════════════════════════════════════════════
+// FOLLOW-UP #3 · ONBOARDING TOUR
+// 5-step welcome guide for first-time users. Persistence via
+// localStorage. Triggered automatically after enterApp() if the flag
+// isn't set. User can skip at any step.
+// ═══════════════════════════════════════════════════════════════
+const ONB_KEY = 'dvintsev_onboarding_done';
+const ONB_STEPS = [
+  {
+    target: null, // first step is full-screen welcome
+    title: 'Добро пожаловать!',
+    text: 'Приложение управления парковкой БЦ «Двинцев». Покажу основное за 5 шагов — займёт меньше минуты.'
+  },
+  {
+    target: '.lpanel .psec',
+    title: 'Поиск и подбор по машине',
+    text: 'Введи гос.номер чтобы найти машину или подобрать ячейку под её габариты. Кнопка ✦ покажет где такая машина физически влезет.'
+  },
+  {
+    target: '.vtabs',
+    title: 'Виды парковки',
+    text: 'Переключайся между Схемой (PDF-планировка), Блочным видом (карточки) и Наземной зоной.'
+  },
+  {
+    target: '#userChip',
+    title: 'Меню пользователя',
+    text: 'Журнал изменений, бэкапы данных, настройки уведомлений, смена пароля. Под ролью «Администратор» доступно управление пользователями.'
+  },
+  {
+    target: null,
+    title: 'Готово!',
+    text: 'Тапни ячейку чтобы редактировать её. Всё работает — можно начинать.'
+  }
+];
+let _onbIdx = 0;
+function shouldShowOnboarding(){
+  try{ return localStorage.getItem(ONB_KEY) !== '1'; }catch(_){ return false; }
+}
+function startOnboarding(){
+  if(!shouldShowOnboarding()) return;
+  _onbIdx = 0;
+  document.getElementById('onb').hidden = false;
+  onbRender();
+  window.addEventListener('resize', onbRender);
+}
+function onbRender(){
+  const step = ONB_STEPS[_onbIdx];
+  if(!step) return;
+  document.getElementById('onbStepLabel').textContent = `${_onbIdx + 1} / ${ONB_STEPS.length}`;
+  document.getElementById('onbTitle').textContent = step.title;
+  document.getElementById('onbText').textContent = step.text;
+  document.getElementById('onbBack').style.visibility = _onbIdx === 0 ? 'hidden' : 'visible';
+  document.getElementById('onbNext').textContent = _onbIdx === ONB_STEPS.length - 1 ? 'Готово' : 'Далее';
+  positionSpotlight(step.target);
+}
+function positionSpotlight(targetSel){
+  const spot = document.getElementById('onbSpot');
+  const card = document.getElementById('onbCard');
+  const target = targetSel ? document.querySelector(targetSel) : null;
+  if(!target){
+    // Centered card, no spotlight (full-screen step)
+    spot.style.top = '50%'; spot.style.left = '50%';
+    spot.style.width = '0'; spot.style.height = '0';
+    card.style.top = '50%';
+    card.style.left = '50%';
+    card.style.transform = 'translate(-50%, -50%)';
+    return;
+  }
+  const r = target.getBoundingClientRect();
+  const pad = 6;
+  spot.style.top    = `${r.top - pad}px`;
+  spot.style.left   = `${r.left - pad}px`;
+  spot.style.width  = `${r.width + pad * 2}px`;
+  spot.style.height = `${r.height + pad * 2}px`;
+  // Card placement — try below the spot, else above, else right
+  card.style.transform = '';
+  const cardW = 320, cardH = 180, gap = 14;
+  const vpW = window.innerWidth, vpH = window.innerHeight;
+  let cardTop, cardLeft;
+  if(r.bottom + gap + cardH < vpH){
+    cardTop = r.bottom + gap;
+    cardLeft = Math.min(Math.max(8, r.left), vpW - cardW - 8);
+  } else if(r.top - gap - cardH > 0){
+    cardTop = r.top - gap - cardH;
+    cardLeft = Math.min(Math.max(8, r.left), vpW - cardW - 8);
+  } else {
+    // Side
+    cardTop = Math.max(8, Math.min(r.top, vpH - cardH - 8));
+    cardLeft = r.right + gap + cardW < vpW ? r.right + gap : r.left - gap - cardW;
+  }
+  card.style.top  = `${cardTop}px`;
+  card.style.left = `${cardLeft}px`;
+}
+function onbNext(){
+  if(_onbIdx >= ONB_STEPS.length - 1){ onbDone(); return; }
+  _onbIdx++; onbRender();
+}
+function onbPrev(){
+  if(_onbIdx <= 0) return;
+  _onbIdx--; onbRender();
+}
+function onbSkip(){ onbDone(); }
+function onbDone(){
+  try{ localStorage.setItem(ONB_KEY, '1'); }catch(_){}
+  document.getElementById('onb').hidden = true;
+  window.removeEventListener('resize', onbRender);
+}
+// User-initiated rerun (from User menu)
+function restartOnboarding(){
+  try{ localStorage.removeItem(ONB_KEY); }catch(_){}
+  // Close user menu if open
+  const menu = document.getElementById('userMenu');
+  if(menu) menu.classList.remove('open');
+  startOnboarding();
+}
+
+// ═══════════════════════════════════════════════════════════════
 // FOLLOW-UP #1 · MODAL OPENS FROM CLICK ORIGIN (Linear-style)
 // ────────────────────────────────────────────────────────────────
 // Tracks the last pointer/click position globally. When any
@@ -2788,7 +2966,12 @@ function enterApp(){
   document.body.classList.add('app-waking');
   setTimeout(()=>document.body.classList.remove('app-waking'), 1200);
   // Wait for the .is-leaving opacity transition (320ms) then unmount.
-  setTimeout(()=>{ov.style.display='none'; ov.classList.remove('is-leaving');}, 340);
+  setTimeout(()=>{
+    ov.style.display='none';
+    ov.classList.remove('is-leaving');
+    // Follow-up #3 · Show onboarding tour for first-time users (post-wake).
+    if(typeof startOnboarding === 'function') startOnboarding();
+  }, 700);
 }
 
 // ─── Tablet / touch mode ──────────────────────────────────────────
