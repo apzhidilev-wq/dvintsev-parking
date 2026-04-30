@@ -166,7 +166,7 @@ html[data-theme="paper"] .mfield select:focus{
 }
 html[data-theme="paper"] option{background:#fffaf0;color:var(--tx)}
 /* Audit-фильтры — тематические input/select без inline-стилей */
-.au-flt{ width:100%; padding:6px 8px; background:#0e0c0a;
+.au-flt{ width:100%; padding:6px 8px; background:var(--bg);
   border:1px solid var(--bd); border-radius:5px;
   color:var(--tx); font-size:12px; outline:none; font-family:inherit }
 .au-flt:focus{ border-color:var(--acc); box-shadow:0 0 0 2px var(--acc-glow) }
@@ -251,7 +251,7 @@ body{font-family:var(--sans);
 /* HEADER */
 .hdr{position:relative;background:
   radial-gradient(800px 200px at 20% -60%, var(--acc-glow), transparent 60%),
-  linear-gradient(180deg,#17130e 0%,#0f0d0a 100%);
+  linear-gradient(180deg,var(--bg) 0%,#0f0d0a 100%);
   border-bottom:1px solid var(--bd);
   padding:max(env(safe-area-inset-top),22px) 22px 0;
   min-height:calc(72px + max(env(safe-area-inset-top),22px));
@@ -626,11 +626,11 @@ html[data-theme="paper"] #msearchInput{ background:#fffaf0 }
 label{display:block;font-size:11px;color:var(--tx2);margin-bottom:5px;margin-top:10px;
   font-weight:600;letter-spacing:.3px;text-transform:uppercase;font-family:var(--mono)}
 label:first-of-type{margin-top:0}
-select,input[type=text]{width:100%;background:#0e0c0a;border:1px solid var(--bd);
+select,input[type=text]{width:100%;background:var(--bg);border:1px solid var(--bd);
   color:var(--tx);padding:10px 12px;border-radius:var(--r-sm);font-size:13.5px;outline:none;
   transition:all .15s;font-family:inherit}
 select:focus,input:focus{border-color:var(--acc);box-shadow:var(--glow);background:#100d0a}
-option{background:#141210;color:var(--tx)}
+option{background:var(--surf);color:var(--tx)}
 
 /* Car chips (selected car display) */
 .carchip{display:none;align-items:center;gap:10px;padding:11px 13px;
@@ -647,7 +647,7 @@ option{background:#141210;color:var(--tx)}
 .carchip-meta{font-size:10.5px;color:var(--tx2);margin-top:2px;font-family:var(--mono);
   letter-spacing:.3px}
 
-.specs{background:#0e0c0a;border-radius:var(--r);overflow:hidden;margin-top:12px;display:none;
+.specs{background:var(--bg);border-radius:var(--r);overflow:hidden;margin-top:12px;display:none;
   border:1px solid var(--bd)}
 .sr{display:flex;justify-content:space-between;align-items:center;
   padding:8px 12px;border-bottom:1px solid var(--bd);font-size:13px}
@@ -664,7 +664,7 @@ option{background:#141210;color:var(--tx)}
 .btn{width:100%;margin-top:10px;padding:11px 14px;border-radius:var(--r-sm);border:none;
   font-size:13.5px;font-weight:700;cursor:pointer;transition:all .18s;
   font-family:inherit;letter-spacing:.2px;text-transform:uppercase}
-.btn-hi{background:linear-gradient(135deg,var(--acc) 0%,var(--acc-deep) 100%);color:#120c06;display:none;
+.btn-hi{background:linear-gradient(135deg,var(--acc) 0%,var(--acc-deep) 100%);color:var(--bg);display:none;
   box-shadow:0 4px 14px var(--acc-glow), inset 0 1px 0 rgba(255,220,180,.3)}
 .btn-hi:hover{transform:translateY(-1px);
   box-shadow:0 8px 22px var(--acc-glow), inset 0 1px 0 rgba(255,220,180,.4)}
@@ -684,7 +684,7 @@ option{background:#141210;color:var(--tx)}
   padding:2px 0;font-family:var(--mono);letter-spacing:.2px}
 .ld{width:14px;height:14px;border-radius:4px;flex-shrink:0}
 
-.hint-box{margin-top:12px;padding:10px 12px;background:#0e0c0a;border-radius:var(--r);
+.hint-box{margin-top:12px;padding:10px 12px;background:var(--bg);border-radius:var(--r);
   font-size:11px;color:var(--tx2);line-height:1.55;border:1px solid var(--bd);
   font-family:var(--mono);letter-spacing:.2px}
 .hint-box b{color:var(--acc);font-weight:700}
@@ -764,9 +764,9 @@ html[data-theme="paper"] .stabs{
 .stab::before{content:'';width:6px;height:6px;border-radius:50%;
   background:currentColor;opacity:.6}
 .stab:hover{color:var(--tx);border-color:var(--bd2)}
-.stab.active{color:#120c06;border-color:var(--acc);
+.stab.active{color:var(--bg);border-color:var(--acc);
   background:var(--acc);box-shadow:0 3px 10px var(--acc-glow)}
-.stab.active::before{background:#120c06;opacity:1}
+.stab.active::before{background:var(--bg);opacity:1}
 .stab[data-s="А"].active{background:var(--ca);border-color:var(--ca);
   box-shadow:0 3px 10px rgba(255,106,0,.35)}
 .stab[data-s="В"].active{background:var(--cb);border-color:var(--cb);color:#1a1408;
@@ -792,7 +792,7 @@ html[data-theme="paper"] .stabs{
   border-radius:var(--r-lg);border:1px solid var(--bd);box-shadow:var(--shadow-md);
   overflow:hidden;display:flex;flex-direction:column;min-height:640px}
 .plan-tools{display:flex;align-items:center;gap:6px;padding:10px 12px;
-  background:linear-gradient(180deg,#17130e,#141210);
+  background:linear-gradient(180deg,var(--bg),var(--surf));
   border-bottom:1px solid var(--bd);flex-wrap:wrap;z-index:5}
 .pt-btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;
   min-width:34px;height:32px;padding:0 12px;border-radius:7px;
@@ -804,8 +804,8 @@ html[data-theme="paper"] .stabs{
 .pt-zoom{font-size:11.5px;color:var(--tx2);min-width:50px;text-align:center;
   padding:0 4px;font-family:var(--mono);font-weight:700;letter-spacing:.3px}
 .pt-link{margin-left:auto;background:linear-gradient(135deg,var(--acc),var(--acc-deep));
-  color:#120c06;border-color:var(--acc);box-shadow:0 2px 8px var(--acc-glow)}
-.pt-link:hover{color:#120c06;background:linear-gradient(135deg,var(--acc2),var(--acc));
+  color:var(--bg);border-color:var(--acc);box-shadow:0 2px 8px var(--acc-glow)}
+.pt-link:hover{color:var(--bg);background:linear-gradient(135deg,var(--acc2),var(--acc));
   border-color:var(--acc2)}
 .plan-viewport{flex:1;overflow:auto;position:relative;background:
   radial-gradient(1px 1px at 50% 50%, rgba(255,106,0,.12) 50%, transparent 50%) 0 0 / 32px 32px,
@@ -837,39 +837,39 @@ html[data-theme="paper"] .stabs{
   vector-effect:non-scaling-stroke}
 .plan-overlay .cell-shape:hover{stroke-width:3}
 /* Палитра по статусу — соответствует .ca/.co/.cr/.cz/.cs-lab из блочного вида */
-.plan-overlay .cell-shape.shape-cf{fill:rgba(120,179,66,.22);stroke:#78b342}
+.plan-overlay .cell-shape.shape-cf{fill:rgba(120,179,66,.22);stroke:var(--green)}
 .plan-overlay .cell-shape.shape-cf:hover{fill:rgba(120,179,66,.42)}
-.plan-overlay .cell-shape.shape-co{fill:rgba(224,85,61,.25);stroke:#e0553d}
+.plan-overlay .cell-shape.shape-co{fill:rgba(224,85,61,.25);stroke:var(--red)}
 .plan-overlay .cell-shape.shape-co:hover{fill:rgba(224,85,61,.45)}
-.plan-overlay .cell-shape.shape-cr{fill:rgba(232,167,58,.18);stroke:#e8a73a}
+.plan-overlay .cell-shape.shape-cr{fill:rgba(232,167,58,.18);stroke:var(--yel)}
 .plan-overlay .cell-shape.shape-cr:hover{fill:rgba(232,167,58,.35)}
 .plan-overlay .cell-shape.shape-cz{fill:rgba(124,108,180,.18);stroke:#7c6cb4}
 .plan-overlay .cell-shape.shape-cz:hover{fill:rgba(124,108,180,.32)}
-.plan-overlay .cell-shape.shape-cs{fill:rgba(201,124,46,.20);stroke:#c97c2e}
+.plan-overlay .cell-shape.shape-cs{fill:rgba(201,124,46,.20);stroke:var(--acc-deep)}
 .plan-overlay .cell-shape.shape-cs:hover{fill:rgba(201,124,46,.36)}
 /* Подсветка-пульс при переходе из других видов */
 .plan-overlay .cell-shape.pulse{
   animation:cellPulse 1.1s ease-in-out 3;
-  stroke:#ff6a00 !important;stroke-width:5}
+  stroke:var(--acc) !important;stroke-width:5}
 @keyframes cellPulse{
   0%,100%{filter:drop-shadow(0 0 0 rgba(255,106,0,0))}
   50%    {filter:drop-shadow(0 0 18px rgba(255,106,0,.95));stroke-width:8}
 }
-.plan-overlay .cell-shape.sel{stroke:#ff6a00;stroke-width:3.5;
+.plan-overlay .cell-shape.sel{stroke:var(--acc);stroke-width:3.5;
   fill:rgba(255,106,0,.35)}
 .plan-overlay .cell-label{pointer-events:none;fill:#fff;
   font:700 10px var(--mono,monospace);text-anchor:middle;
   paint-order:stroke;stroke:rgba(0,0,0,.75);stroke-width:1}
-.plan-overlay .edit-handle{fill:#ff6a00;stroke:#000;stroke-width:2;
+.plan-overlay .edit-handle{fill:var(--acc);stroke:#000;stroke-width:2;
   pointer-events:auto;cursor:nwse-resize}
-.plan-overlay .edit-draft{fill:rgba(255,106,0,.2);stroke:#ff6a00;
+.plan-overlay .edit-draft{fill:rgba(255,106,0,.2);stroke:var(--acc);
   vector-effect:non-scaling-stroke;
   stroke-width:2;stroke-dasharray:20 12;pointer-events:none}
 .plan-edit-mode .plan-viewport{cursor:crosshair}
 .plan-edit-mode .cell-shape{cursor:move}
 .plan-edit-mode .plan-overlay{pointer-events:auto}
-.pt-btn.pt-edit.active{background:linear-gradient(135deg,#ff6a00,#c94d00);
-  color:#fff;border-color:#ff6a00}
+.pt-btn.pt-edit.active{background:linear-gradient(135deg,var(--acc),var(--acc-deep));
+  color:#fff;border-color:var(--acc)}
 .pf-sep{color:var(--bd);font-size:14px;padding:0 4px;user-select:none}
 .pf-btn{font-weight:700;letter-spacing:.4px;min-width:34px}
 .pf-btn.active{background:rgba(255,106,0,.16);border-color:var(--acc);
@@ -923,7 +923,7 @@ html[data-theme="paper"] .stabs{
 .blk:hover{box-shadow:var(--shadow-md);border-color:var(--bd2);transform:translateY(-1px)}
 .blk:hover::before{opacity:1}
 .blk-hdr{padding:8px 11px;font-size:11px;font-weight:700;color:var(--tx2);
-  background:linear-gradient(180deg,#17130e,var(--surf2));
+  background:linear-gradient(180deg,var(--bg),var(--surf2));
   display:flex;justify-content:space-between;align-items:center;
   border-bottom:1px solid var(--bd);letter-spacing:.6px;
   font-family:var(--mono);text-transform:uppercase}
@@ -1077,7 +1077,7 @@ html[data-theme="paper"] .stabs{
 .vne-spot.vzak{background:linear-gradient(135deg,rgba(124,108,180,.14),rgba(124,108,180,.04));
   border-color:rgba(124,108,180,.45);border-left-color:#7c6cb4}
 .vne-spot.vsklad{background:linear-gradient(135deg,rgba(201,124,46,.14),rgba(201,124,46,.04));
-  border-color:rgba(201,124,46,.45);border-left-color:#c97c2e}
+  border-color:rgba(201,124,46,.45);border-left-color:var(--acc-deep)}
 .gspot.ga{background:linear-gradient(135deg,rgba(120,179,66,.28),rgba(120,179,66,.12)) !important;
   border-color:var(--green) !important;border-left-color:var(--green) !important;
   animation:pg 2s infinite}
@@ -1178,7 +1178,7 @@ html[data-theme="paper"] .stabs{
 .mfield label{font-size:10.5px;color:var(--tx3);margin-bottom:6px;display:block;
   font-family:var(--mono);text-transform:uppercase;letter-spacing:.6px;font-weight:700}
 .mfield input,.mfield select,.mfield textarea{
-  width:100%;background:#0e0c0a;border:1px solid var(--bd);
+  width:100%;background:var(--bg);border:1px solid var(--bd);
   color:var(--tx);padding:10px 12px;border-radius:var(--r-sm);font-size:14px;outline:none;
   font-family:inherit;transition:all .15s}
 .mfield input:focus,.mfield select:focus,.mfield textarea:focus{
@@ -1186,7 +1186,7 @@ html[data-theme="paper"] .stabs{
 .mfield textarea{resize:vertical;min-height:60px}
 .mbtn-row{display:flex;gap:10px;margin-top:20px}
 .mbtn-save{flex:1;padding:12px;border-radius:var(--r-sm);border:none;
-  background:linear-gradient(135deg,var(--acc),var(--acc-deep));color:#120c06;
+  background:linear-gradient(135deg,var(--acc),var(--acc-deep));color:var(--bg);
   font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;
   letter-spacing:.5px;text-transform:uppercase;
   box-shadow:0 4px 14px var(--acc-glow),inset 0 1px 0 rgba(255,220,180,.3);
@@ -1246,7 +1246,7 @@ html[data-theme="paper"] .auth-overlay{
   background:linear-gradient(135deg,var(--acc) 0%,var(--acc-deep) 100%);
   display:flex;align-items:center;justify-content:center;margin:0 auto 18px;
   box-shadow:0 10px 30px var(--acc-glow),inset 0 1px 0 rgba(255,255,255,.2);
-  font-family:var(--display);font-size:30px;color:#120c06;letter-spacing:1px;
+  font-family:var(--display);font-size:30px;color:var(--bg);letter-spacing:1px;
   transform:rotate(-2deg)}
 .auth-kicker{font-family:var(--mono);font-size:10px;font-weight:700;
   color:var(--acc);text-align:center;letter-spacing:2px;text-transform:uppercase;
@@ -1260,13 +1260,13 @@ html[data-theme="paper"] .auth-overlay{
 .auth-field label{display:block;font-size:10px;color:var(--tx3);
   font-family:var(--mono);text-transform:uppercase;letter-spacing:.8px;
   font-weight:700;margin-bottom:6px}
-.auth-field input{width:100%;background:#0e0c0a;border:1px solid var(--bd);
+.auth-field input{width:100%;background:var(--bg);border:1px solid var(--bd);
   color:var(--tx);padding:12px 14px;border-radius:var(--r);
   font-family:var(--sans);font-size:14px;transition:all .18s;
   font-weight:500;letter-spacing:.2px}
 html[data-theme="paper"] .auth-field input{background:#fffaf0}
 .auth-field input:focus{outline:none;border-color:var(--acc);
-  box-shadow:0 0 0 3px var(--acc-glow);background:#0a0906}
+  box-shadow:0 0 0 3px var(--acc-glow);background:var(--bg)}
 html[data-theme="paper"] .auth-field input:focus{background:#fff}
 .auth-err{font-size:12px;color:var(--red);margin-top:10px;margin-bottom:4px;
   padding:10px 12px;border-radius:var(--r);
@@ -1277,7 +1277,7 @@ html[data-theme="paper"] .auth-field input:focus{background:#fff}
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
 .auth-btn{width:100%;padding:13px 16px;border-radius:var(--r);
   background:linear-gradient(135deg,var(--acc),var(--acc-deep));
-  color:#120c06;border:none;font-family:var(--mono);font-weight:800;
+  color:var(--bg);border:none;font-family:var(--mono);font-weight:800;
   font-size:12px;letter-spacing:1.6px;text-transform:uppercase;cursor:pointer;
   transition:all .18s;margin-top:6px;
   box-shadow:0 6px 20px var(--acc-glow),inset 0 1px 0 rgba(255,255,255,.25)}
@@ -1314,10 +1314,10 @@ html[data-theme="paper"] .user-chip{background:#fffaf0}
 .user-chip-av{width:28px;height:28px;border-radius:50%;flex-shrink:0;
   display:flex;align-items:center;justify-content:center;
   font-family:var(--mono);font-size:10px;font-weight:800;
-  color:#120c06;background:linear-gradient(135deg,var(--acc),var(--acc-deep));
+  color:var(--bg);background:linear-gradient(135deg,var(--acc),var(--acc-deep));
   box-shadow:inset 0 1px 0 rgba(255,255,255,.2);letter-spacing:.5px}
 .user-chip-av.av-op{background:linear-gradient(135deg,var(--green),#5a8a2e);color:#0f1a08}
-.user-chip-av.av-vw{background:linear-gradient(135deg,#6e6458,#4a423a);color:var(--tx)}
+.user-chip-av.av-vw{background:linear-gradient(135deg,var(--tx3),var(--bd2));color:var(--tx)}
 
 /* DROPDOWN */
 .user-menu{position:absolute;top:calc(100% + 6px);right:0;min-width:220px;
@@ -1373,10 +1373,10 @@ html[data-theme="paper"] .um-list-item{background:#fffaf0}
 .um-list-item:hover{border-color:var(--bd2)}
 .um-li-av{width:32px;height:32px;border-radius:50%;flex-shrink:0;
   display:flex;align-items:center;justify-content:center;
-  font-family:var(--mono);font-size:11px;font-weight:800;color:#120c06;
+  font-family:var(--mono);font-size:11px;font-weight:800;color:var(--bg);
   background:linear-gradient(135deg,var(--acc),var(--acc-deep))}
 .um-li-av.av-op{background:linear-gradient(135deg,var(--green),#5a8a2e);color:#0f1a08}
-.um-li-av.av-vw{background:linear-gradient(135deg,#6e6458,#4a423a);color:var(--tx)}
+.um-li-av.av-vw{background:linear-gradient(135deg,var(--tx3),var(--bd2));color:var(--tx)}
 .um-li-body{flex:1;min-width:0}
 .um-li-n{font-size:13px;font-weight:700;color:var(--tx);line-height:1.2}
 .um-li-u{font-size:11px;color:var(--tx3);font-family:var(--mono);margin-top:2px;letter-spacing:.3px}
@@ -1437,9 +1437,9 @@ html[data-theme="paper"] .um-list-item{background:#fffaf0}
   <div class="hdr-brand">
     <div class="hdr-mark">
       <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
-        <rect x="2" y="2" width="44" height="44" rx="10" fill="#FF6A00"/>
-        <path d="M14 34V14h10.5c4.2 0 7 2.6 7 7s-2.8 7-7 7H19v6h-5zm5-11h5a2.5 2.5 0 000-5h-5v5z" fill="#120C06"/>
-        <circle cx="37" cy="14" r="3" fill="#120C06"/>
+        <rect x="2" y="2" width="44" height="44" rx="10" fill="var(--acc)"/>
+        <path d="M14 34V14h10.5c4.2 0 7 2.6 7 7s-2.8 7-7 7H19v6h-5zm5-11h5a2.5 2.5 0 000-5h-5v5z" fill="var(--bg)"/>
+        <circle cx="37" cy="14" r="3" fill="var(--bg)"/>
       </svg>
     </div>
     <div class="hdr-text">
@@ -1572,11 +1572,11 @@ html[data-theme="paper"] .um-list-item{background:#fffaf0}
     <div class="psec">
       <div class="ptitle">Условные обозначения</div>
       <div class="leg">
-        <div class="li"><div class="ld" style="background:rgba(120,179,66,.18);border:1px solid #78b342"></div>Свободна</div>
-        <div class="li"><div class="ld" style="background:rgba(224,85,61,.18);border:1px solid #e0553d"></div>Занята</div>
-        <div class="li"><div class="ld" style="background:rgba(232,167,58,.18);border:1px solid #e8a73a"></div>Имущество</div>
+        <div class="li"><div class="ld" style="background:rgba(120,179,66,.18);border:1px solid var(--green)"></div>Свободна</div>
+        <div class="li"><div class="ld" style="background:rgba(224,85,61,.18);border:1px solid var(--red)"></div>Занята</div>
+        <div class="li"><div class="ld" style="background:rgba(232,167,58,.18);border:1px solid var(--yel)"></div>Имущество</div>
         <div class="li"><div class="ld" style="background:rgba(124,108,180,.18);border:1px solid #7c6cb4"></div>Законсерв.</div>
-        <div class="li"><div class="ld" style="background:rgba(201,124,46,.20);border:1px solid #c97c2e"></div>Склад</div>
+        <div class="li"><div class="ld" style="background:rgba(201,124,46,.20);border:1px solid var(--acc-deep)"></div>Склад</div>
       </div>
       <div style="margin-top:8px;padding:7px;background:var(--surf2);border-radius:5px;font-size:10px;color:var(--tx3)">
         <b style="color:var(--tx2)">Лимит:</b> 8 авт./блок<br>
@@ -2960,9 +2960,9 @@ function sbStatus(state){
   if(!el) return;
   const map = {
     idle:    { dot:'#7c6cb4', text:'Локально' },
-    online:  { dot:'#78b342', text:'Облако ●' },
-    sync:    { dot:'#e8a73a', text:'Синк…' },
-    err:     { dot:'#e0553d', text:'Облако ✗' },
+    online:  { dot:'var(--green)', text:'Облако ●' },
+    sync:    { dot:'var(--yel)', text:'Синк…' },
+    err:     { dot:'var(--red)', text:'Облако ✗' },
     offline: { dot:'#7c6cb4', text:'Offline' }
   };
   const m = map[state] || map.idle;
@@ -3956,10 +3956,10 @@ async function testTelegram(){
   st.textContent = '… отправка';
   try{
     await sendTelegram(token, chatId, '✅ Тест уведомлений из БЦ «Двинцев» — Учёт парковки.');
-    st.style.color = 'var(--green, #78b342)';
+    st.style.color = 'var(--green, var(--green))';
     st.textContent = '✓ Сообщение отправлено';
   }catch(err){
-    st.style.color = 'var(--red, #e0553d)';
+    st.style.color = 'var(--red, var(--red))';
     st.textContent = '✗ ' + err.message;
   }
 }
@@ -3970,10 +3970,10 @@ async function testWebhook(){
   st.textContent = '… отправка';
   try{
     await sendWebhook(url, { event:'test', text:'Тест уведомлений из БЦ «Двинцев»', ts: Date.now() });
-    st.style.color = 'var(--green, #78b342)';
+    st.style.color = 'var(--green, var(--green))';
     st.textContent = '✓ Webhook принял запрос';
   }catch(err){
-    st.style.color = 'var(--red, #e0553d)';
+    st.style.color = 'var(--red, var(--red))';
     st.textContent = '✗ ' + err.message;
   }
 }
@@ -4424,7 +4424,7 @@ function applyClass(el,cell){el.className='cell '+cellColor(cell);}
 // SVG FLOOR PLAN
 // ═══════════════════════════════════════════════════════════════
 const SECTION_COLORS = {
-  'А':{fill:'rgba(202,138,4,.12)',stroke:'rgba(202,138,4,.6)',text:'#ca8a04',occ:'#92400e',free:'#78350f',avail:'rgba(22,163,74,.6)'},
+  'А':{fill:'rgba(202,138,4,.12)',stroke:'rgba(202,138,4,.6)',text:'#ca8a04',occ:'var(--acc-deep)',free:'#78350f',avail:'rgba(22,163,74,.6)'},
   'В':{fill:'rgba(14,116,144,.12)',stroke:'rgba(14,116,144,.6)',text:'#0e7490',occ:'#164e63',free:'#083344',avail:'rgba(22,163,74,.6)'},
   'С':{fill:'rgba(124,58,237,.12)',stroke:'rgba(124,58,237,.6)',text:'#7c3aed',occ:'#4c1d95',free:'#2e1065',avail:'rgba(22,163,74,.6)'}
 };
@@ -4585,7 +4585,7 @@ function buildVne(){
       const tpLabel=cell.tp==='Вне ячейки'?'Спец.':cell.tp==='спот'?'Спот':
                     cell.tp==='Законсервированные'?'Закон.':cell.tp==='склад'?'Склад':'';
       const tpColor=cell.tp==='Законсервированные'?'color:#3b82f6;background:rgba(59,130,246,.2)':
-                    cell.tp==='склад'?'color:#92400e;background:rgba(146,64,14,.2)':
+                    cell.tp==='склад'?'color:var(--acc-deep);background:rgba(146,64,14,.2)':
                     'color:var(--tx2);background:var(--surf3)';
       const noGeom=!cell.geom;
       const cls='vne-spot '+(cell.oc?'vocc':cell.tp==='Законсервированные'?'vzak':cell.tp==='склад'?'vsklad':'')+(noGeom?' no-geom':'')+(cell.locked?' is-locked':'');
@@ -5730,11 +5730,11 @@ async function renderPlanSnapshot(scale, fmt){
 // не зависеть от <style> блоков документа
 function inlineCellStyles(svg){
   const styleMap = {
-    'shape-cf': {fill:'rgba(120,179,66,.22)', stroke:'#78b342'},
-    'shape-co': {fill:'rgba(224,85,61,.25)',  stroke:'#e0553d'},
-    'shape-cr': {fill:'rgba(232,167,58,.18)', stroke:'#e8a73a'},
+    'shape-cf': {fill:'rgba(120,179,66,.22)', stroke:'var(--green)'},
+    'shape-co': {fill:'rgba(224,85,61,.25)',  stroke:'var(--red)'},
+    'shape-cr': {fill:'rgba(232,167,58,.18)', stroke:'var(--yel)'},
     'shape-cz': {fill:'rgba(124,108,180,.18)',stroke:'#7c6cb4'},
-    'shape-cs': {fill:'rgba(201,124,46,.20)', stroke:'#c97c2e'}
+    'shape-cs': {fill:'rgba(201,124,46,.20)', stroke:'var(--acc-deep)'}
   };
   // Текущий фильтр секции — применяем opacity для не-активных
   const filterSec = svg.getAttribute('data-filter');
