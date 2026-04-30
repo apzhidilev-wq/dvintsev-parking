@@ -140,30 +140,18 @@ html[data-theme="paper"] body{
     radial-gradient(900px 500px at -5% 110%, rgba(94,92,230,.06), transparent 55%),
     var(--bg);
 }
-html[data-theme="paper"] .hdr{
-  background:
-    radial-gradient(800px 200px at 20% -60%, var(--acc-glow), transparent 60%),
-    linear-gradient(180deg,#fbf5ea 0%,#f4ece0 100%);
-  box-shadow:0 1px 0 rgba(255,255,255,.6) inset, 0 6px 20px rgba(90,60,20,.08);
-}
-html[data-theme="paper"] .hdr-title{color:var(--tx)}
-html[data-theme="paper"] .lpanel{
-  background:linear-gradient(180deg, rgba(217,90,0,.025), transparent 300px), var(--surf);
-  box-shadow:inset -1px 0 0 rgba(0,0,0,.02), 4px 0 16px rgba(90,60,20,.08);
-}
+/* Inputs slightly elevated (surf2) so they stand out from modal surf in dark theme */
 html[data-theme="paper"] select,
 html[data-theme="paper"] input[type=text],
+html[data-theme="paper"] input[type=password],
+html[data-theme="paper"] input[type=email],
+html[data-theme="paper"] input[type=number],
+html[data-theme="paper"] input[type=tel],
 html[data-theme="paper"] .specs,
 html[data-theme="paper"] .mfield input,
 html[data-theme="paper"] .mfield select,
 html[data-theme="paper"] .mfield textarea{
-  background:#fffaf0;color:var(--tx);border-color:var(--bd)
-}
-html[data-theme="paper"] select:focus,
-html[data-theme="paper"] input:focus,
-html[data-theme="paper"] .mfield input:focus,
-html[data-theme="paper"] .mfield select:focus{
-  border-color:var(--acc);box-shadow:0 0 0 3px var(--acc-glow);background:#fff
+  background:var(--surf2)
 }
 html[data-theme="paper"] option{background:var(--surf2);color:var(--tx)}
 /* Audit-фильтры — тематические input/select без inline-стилей */
@@ -172,73 +160,16 @@ html[data-theme="paper"] option{background:var(--surf2);color:var(--tx)}
   color:var(--tx); font-size:12px; outline:none; font-family:inherit }
 .au-flt:focus{ border-color:var(--acc); box-shadow:0 0 0 2px var(--acc-glow) }
 html[data-theme="paper"] .au-flt{ background:var(--surf2) }
-html[data-theme="paper"] .au-flt:focus{ background:var(--bg) }
+html[data-theme="paper"] .au-flt:focus{ background:var(--surf3) }
+/* Subtle visibility for hint blocks (var(--acc-rgb,.03) tint is too faint on navy) */
 html[data-theme="paper"] .hint-box,
 html[data-theme="paper"] .sr:last-child{background:var(--surf2)}
-html[data-theme="paper"] .sbadge{background:transparent}
-html[data-theme="paper"] .sbadge:hover{background:rgba(217,90,0,.06)}
-html[data-theme="paper"] .stab{background:var(--surf2);color:var(--tx2)}
-html[data-theme="paper"] .stab:hover{color:var(--tx)}
-html[data-theme="paper"] .view-hint{background:var(--surf2)}
-html[data-theme="paper"] .plan-tools{
-  background:linear-gradient(180deg,#fbf5ea,#f4ece0)
-}
-html[data-theme="paper"] .pt-btn{background:var(--surf2);color:var(--tx)}
-html[data-theme="paper"] .plan-viewport{
-  background:
-    radial-gradient(1px 1px at 50% 50%, rgba(217,90,0,.15) 50%, transparent 50%) 0 0 / 32px 32px,
-    radial-gradient(1px 1px at 50% 50%, rgba(90,60,20,.06) 50%, transparent 50%) 16px 16px / 32px 32px,
-    #f4ece0
-}
-html[data-theme="paper"] .plan-canvas canvas,
-html[data-theme="paper"] .plan-canvas iframe,
-html[data-theme="paper"] .plan-canvas embed,
-html[data-theme="paper"] .plan-canvas object{
-  box-shadow:0 16px 48px rgba(90,60,20,.25), 0 3px 10px rgba(90,60,20,.15),
-    0 0 0 1px rgba(217,90,0,.25)
-}
-html[data-theme="paper"] .plan-meta{background:rgba(251,245,234,.92);color:var(--tx2)}
-html[data-theme="paper"] .cf{background:linear-gradient(135deg,var(--surf2),var(--surf3));border-color:var(--bd)}
-html[data-theme="paper"] .cf:hover{background:linear-gradient(135deg,var(--bg),var(--surf2))}
-html[data-theme="paper"] .cnum{color:var(--tx2) !important}
-html[data-theme="paper"] .ccar{color:var(--tx) !important}
-html[data-theme="paper"] .ctp{color:var(--tx3) !important}
-html[data-theme="paper"] .co{background:linear-gradient(135deg,rgba(184,68,42,.12),rgba(184,68,42,.04));
-  border-color:rgba(184,68,42,.35)}
-html[data-theme="paper"] .co:hover{background:linear-gradient(135deg,rgba(184,68,42,.2),rgba(184,68,42,.08))}
-html[data-theme="paper"] .cr{background:linear-gradient(135deg,rgba(181,125,26,.1),rgba(181,125,26,.03));
-  border-color:rgba(181,125,26,.25)}
-html[data-theme="paper"] .ca{background:linear-gradient(135deg,rgba(93,138,46,.22),rgba(93,138,46,.1)) !important;
-  border-color:var(--green) !important;box-shadow:inset 0 0 0 1px rgba(93,138,46,.3)}
-html[data-theme="paper"] .cz{background:linear-gradient(135deg,var(--surf2),var(--surf3));border-color:var(--bd2)}
-html[data-theme="paper"] .cs-lab{background:linear-gradient(135deg,var(--surf2),var(--surf3));border-color:var(--bd2)}
-html[data-theme="paper"] .blk,
-html[data-theme="paper"] .gspot,
-html[data-theme="paper"] .vne-spot,
-html[data-theme="paper"] .fhdr,
-html[data-theme="paper"] .plan-wrap,
-html[data-theme="paper"] .modal{background:var(--surf);color:var(--tx)}
-html[data-theme="paper"] .blk-hdr{
-  background:linear-gradient(180deg,#f0e5d0,#ede3d1);color:var(--tx2)
-}
-html[data-theme="paper"] .gspot:hover,
-html[data-theme="paper"] .vne-spot:hover{background:linear-gradient(135deg,var(--surf),var(--surf2))}
-html[data-theme="paper"] .modal{background:linear-gradient(180deg,var(--surf),var(--surf2));
-  box-shadow:0 18px 64px rgba(90,60,20,.22),0 0 0 1px rgba(217,90,0,.2)}
-html[data-theme="paper"] .modal-bg{background:rgba(42,31,20,.4)}
-html[data-theme="paper"] .tt{background:var(--surf);color:var(--tx);
-  box-shadow:var(--shadow-lg),0 0 0 1px rgba(var(--acc-rgb),.15)}
-html[data-theme="paper"] .exp-btn,
-html[data-theme="paper"] .mbtn-cancel{background:var(--surf2);color:var(--tx2)}
-html[data-theme="paper"] ::-webkit-scrollbar-thumb{background:var(--bd2);border-color:var(--bd)}
-html[data-theme="paper"] ::-webkit-scrollbar-track{background:rgba(90,60,20,.05)}
+/* Modal: gradient surf→surf2 (default uses surf→bg, but bg is too dark on paper) */
+html[data-theme="paper"] .modal{
+  background:linear-gradient(180deg,var(--surf),var(--surf2))}
+/* Strip text-shadow halos that look weird on dark navy */
 html[data-theme="paper"] .mono,
 html[data-theme="paper"] .hdr-clock{text-shadow:none}
-html[data-theme="paper"] .gspot.gocc,
-html[data-theme="paper"] .vne-spot.vocc{
-  background:linear-gradient(135deg,rgba(184,68,42,.08),rgba(184,68,42,.02));
-  border-color:rgba(184,68,42,.3);border-left-color:var(--red)
-}
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:var(--sans);
   background:
@@ -331,7 +262,7 @@ body{font-family:var(--sans);
   background:var(--surf3);box-shadow:0 0 0 3px var(--acc-glow)}
 .theme-btn svg{width:12px;height:12px;flex-shrink:0}
 html[data-theme="paper"] .theme-btn{background:var(--surf2);color:var(--tx2)}
-html[data-theme="paper"] .theme-btn:hover{background:rgba(217,90,0,.06)}
+html[data-theme="paper"] .theme-btn:hover{background:var(--surf3)}
 
 /* LAYOUT */
 .wrap{display:flex;flex:1;overflow:hidden;position:relative}
@@ -733,21 +664,8 @@ option{background:var(--surf);color:var(--tx)}
   pointer-events:none}
 .vtab svg{width:16px;height:16px;flex-shrink:0}
 
-/* Paper-theme tab overrides */
-html[data-theme="paper"] .vtabs{
-  background:
-    linear-gradient(180deg, rgba(217,90,0,.06) 0%, transparent 45%),
-    linear-gradient(180deg,#f7eedc 0%, #f5ecda 60%, var(--bg) 100%)}
-html[data-theme="paper"] .vtab.active{
-  background:linear-gradient(180deg,
-    rgba(217,90,0,.12) 0%,
-    rgba(217,90,0,.05) 40%,
-    var(--bg) 100%);
-  box-shadow:
-    0 -2px 14px rgba(217,90,0,.18),
-    inset 0 1px 0 rgba(255,255,255,.7)}
-html[data-theme="paper"] .vtab:hover{
-  background:linear-gradient(180deg, rgba(217,90,0,.08) 0%, rgba(217,90,0,.02) 100%)}
+/* Paper-theme: default tab styles already use var(--acc-rgb), which auto-swap
+   to Apollo Dark navy blue. No explicit overrides needed. */
 
 /* Section tabs strip */
 .stabs{display:flex;padding:12px 20px;gap:6px;flex-shrink:0;align-items:center;
@@ -757,7 +675,7 @@ html[data-theme="paper"] .vtab:hover{
   background:linear-gradient(90deg, transparent, var(--bd), transparent);
   opacity:.6}
 html[data-theme="paper"] .stabs{
-  background:linear-gradient(180deg, var(--bg) 0%, var(--bg) 60%, rgba(90,60,20,.04) 100%)}
+  background:linear-gradient(180deg, var(--bg) 0%, var(--bg) 60%, var(--surf) 100%)}
 .stab{padding:7px 15px;border-radius:999px;font-size:12px;font-weight:700;
   cursor:pointer;border:1px solid var(--bd);transition:all .15s;
   font-family:var(--mono);letter-spacing:.5px;text-transform:uppercase;
@@ -1234,9 +1152,9 @@ html[data-theme="paper"] .stabs{
   backdrop-filter:blur(20px) saturate(1.2);-webkit-backdrop-filter:blur(20px) saturate(1.2)}
 html[data-theme="paper"] .auth-overlay{
   background:
-    radial-gradient(900px 500px at 20% 10%, rgba(217,90,0,.10), transparent 60%),
-    radial-gradient(700px 400px at 85% 90%, rgba(160,66,0,.08), transparent 60%),
-    rgba(244,236,224,.6)}
+    radial-gradient(900px 500px at 20% 10%, rgba(var(--acc-rgb),.14), transparent 60%),
+    radial-gradient(700px 400px at 85% 90%, rgba(94,92,230,.10), transparent 60%),
+    rgba(11,15,26,.6)}
 .auth-card{width:100%;max-width:420px;
   background:linear-gradient(180deg,var(--surf),var(--bg));
   border:1px solid var(--bd);border-radius:var(--r-lg);
