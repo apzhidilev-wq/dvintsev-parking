@@ -1112,6 +1112,12 @@ html[data-theme="paper"] .stabs{
   display:flex;align-items:center;gap:8px;cursor:pointer;
   text-transform:none;letter-spacing:0;font-size:13px;font-weight:500;
   color:var(--tx);font-family:var(--sans)}
+/* Checkbox at the END of the label (iOS toggle-row style) */
+.mfield label.cb-right{justify-content:space-between;
+  padding:10px 12px;border:1px solid var(--bd);border-radius:var(--r-sm);
+  background:var(--surf);transition:border-color var(--dur-fast) var(--ease-out)}
+.mfield label.cb-right:hover{border-color:var(--bd2)}
+.mfield label.cb-right input[type=checkbox]{margin:0}
 .mfield textarea{resize:vertical;min-height:60px}
 /* .mrow — same layout contract as .mfield, used in legacy modals */
 .mrow{margin-bottom:14px}
@@ -2094,7 +2100,7 @@ html[data-theme="paper"] .um-list-item{background:var(--surf2)}
       <div><label>Рядов</label><select id="qrRows"><option>3</option><option selected>4</option><option>5</option></select></div>
     </div>
     <div class="mfield">
-      <label><input type="checkbox" id="qrInfo" checked> Включить компанию и авто на табличку</label>
+      <label class="cb-right">Включить компанию и авто на табличку <input type="checkbox" id="qrInfo" checked></label>
     </div>
     <div class="mfield">
       <label>Базовый URL <span style="color:var(--tx3);font-weight:400">(куда ведёт QR)</span></label>
