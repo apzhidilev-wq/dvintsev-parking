@@ -1110,18 +1110,20 @@ html[data-theme="paper"] .stabs{
   margin-top:env(safe-area-inset-top);margin-bottom:env(safe-area-inset-bottom);
   overflow-y:auto;box-shadow:var(--shadow-lg),0 0 0 1px rgba(var(--acc-rgb),.2);
   position:relative;
-  transform:translateY(0);opacity:1;
+  /* Scale-from-origin (Follow-up #1) — JS sets transform-origin to the
+     click position so the modal grows from where the user tapped. */
+  transform:scale(1);opacity:1;
   transition:transform var(--dur-base) var(--ease-out),
-             opacity var(--dur-base) var(--ease-out)}
+             opacity var(--dur-fast) var(--ease-out)}
 @starting-style{
-  .modal-bg.open .modal{transform:translateY(4px);opacity:0}
+  .modal-bg.open .modal{transform:scale(.92);opacity:0}
 }
 /* Fallback for browsers without @starting-style: identical look via a one-shot
-   keyframe that runs on .open (no opacity/transform pre-state, so no FOUC). */
+   keyframe. Origin still set via JS so growth point is honoured. */
 @supports not (animation-timeline:scroll()){
   .modal-bg.open .modal{animation:linearModalEnter var(--dur-base) var(--ease-out)}
   .modal-bg.open{animation:linearBgEnter var(--dur-base) var(--ease-out)}
-  @keyframes linearModalEnter{from{transform:translateY(4px);opacity:0}to{transform:translateY(0);opacity:1}}
+  @keyframes linearModalEnter{from{transform:scale(.92);opacity:0}to{transform:scale(1);opacity:1}}
   @keyframes linearBgEnter{from{opacity:0}to{opacity:1}}
 }
 .modal::before{content:'';position:absolute;top:0;left:24px;right:24px;height:2px;
@@ -2392,6 +2394,57 @@ html[data-role="viewer"] .readonly-banner{display:flex}
 </div>
 
 <script>
+// ═══════════════════════════════════════════════════════════════
+// FOLLOW-UP #1 · MODAL OPENS FROM CLICK ORIGIN (Linear-style)
+// ────────────────────────────────────────────────────────────────
+// Tracks the last pointer/click position globally. When any
+// .modal-bg gains the .open class, we compute the click position
+// relative to its .modal child and set transform-origin so the
+// scale-up animation appears to grow from the spot the user tapped.
+// ═══════════════════════════════════════════════════════════════
+let __lastClickX = null, __lastClickY = null;
+document.addEventListener('pointerdown', e => {
+  __lastClickX = e.clientX; __lastClickY = e.clientY;
+}, true);
+document.addEventListener('touchstart', e => {
+  const t = e.touches && e.touches[0];
+  if(t){ __lastClickX = t.clientX; __lastClickY = t.clientY; }
+}, {capture:true, passive:true});
+
+function _applyModalOrigin(bgEl){
+  const modal = bgEl.querySelector('.modal');
+  if(!modal) return;
+  if(__lastClickX == null){ modal.style.transformOrigin = ''; return; }
+  // rAF so getBoundingClientRect reads the post-paint position.
+  requestAnimationFrame(()=>{
+    const r = modal.getBoundingClientRect();
+    if(r.width === 0 || r.height === 0){
+      modal.style.transformOrigin = ''; return;
+    }
+    let ox = __lastClickX - r.left;
+    let oy = __lastClickY - r.top;
+    // Clamp to the modal box so the origin is always a real anchor —
+    // otherwise off-screen origins make the modal look like it's
+    // launching from nowhere.
+    ox = Math.max(0, Math.min(r.width,  ox));
+    oy = Math.max(0, Math.min(r.height, oy));
+    modal.style.transformOrigin = `${ox}px ${oy}px`;
+  });
+}
+
+// Watch every .modal-bg for class changes — auto-applies origin on open.
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.modal-bg').forEach(bg => {
+    new MutationObserver(muts => {
+      for(const m of muts){
+        if(m.attributeName === 'class' && bg.classList.contains('open')){
+          _applyModalOrigin(bg);
+        }
+      }
+    }).observe(bg, {attributes:true, attributeFilter:['class']});
+  });
+});
+
 // ═══════════════════════════════════════════════════════════════
 // PHASE 4 · OFFLINE BANNER
 // Toggles a fixed top banner whenever navigator.onLine flips.
