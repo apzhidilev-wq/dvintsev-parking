@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Icon Preview — 5 вариантов</title>
+<style>
+:root{
+  --bg:#FFFFFF;--surf:#FAFAFA;--surf2:#F2F2F7;--surf3:#E5E5EA;
+  --bd:rgba(60,60,67,.10);--bd2:rgba(60,60,67,.20);
+  --tx:#1D1D1F;--tx2:#6E6E73;--tx3:#8E8E93;
+  --acc:#007AFF;--acc-rgb:0,122,255;--acc-glow:rgba(0,122,255,.18);
+  --red:#FF3B30;
+  --r-sm:6px;--r:10px;--r-lg:14px;
+  --shadow-xs:0 1px 2px rgba(0,0,0,.04);
+  --shadow-sm:0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  --dur-fast:160ms;--ease-out:cubic-bezier(0.23,1,0.32,1);
+  --sans:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Roboto,system-ui,sans-serif;
+  --display:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',Roboto,system-ui,sans-serif;
+  --mono:ui-monospace,'SF Mono',SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+}
+html[data-theme="dark"]{
+  --bg:#0B0F1A;--surf:#131826;--surf2:#1C2233;--surf3:#252C42;
+  --bd:rgba(255,255,255,.08);--bd2:rgba(255,255,255,.16);
+  --tx:#F2F4F8;--tx2:#97A0B5;--tx3:#5E6678;
+  --acc:#0A84FF;--acc-rgb:10,132,255;--acc-glow:rgba(10,132,255,.32);
+  --red:#FF453A;
+  --shadow-xs:0 1px 2px rgba(0,0,0,.40);
+  --shadow-sm:0 1px 3px rgba(0,0,0,.45);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--sans);background:var(--bg);color:var(--tx);
+  padding:32px 24px;min-height:100vh;
+  background:radial-gradient(900px 500px at 20% -10%, rgba(var(--acc-rgb),.06), transparent 60%), var(--bg)}
+header{max-width:920px;margin:0 auto 32px;display:flex;align-items:center;gap:16px}
+h1{font-family:var(--display);font-size:24px;font-weight:700;letter-spacing:-.4px;flex:1}
+.intro{color:var(--tx2);font-size:13px;margin-bottom:24px;line-height:1.5;max-width:920px;margin-left:auto;margin-right:auto}
+.theme-switch{display:inline-flex;background:var(--surf2);border:1px solid var(--bd);
+  border-radius:999px;padding:3px}
+.theme-switch button{padding:6px 14px;border:none;background:transparent;color:var(--tx2);
+  font-family:var(--mono);font-size:11px;letter-spacing:.5px;text-transform:uppercase;
+  font-weight:700;cursor:pointer;border-radius:999px;
+  transition:background var(--dur-fast) var(--ease-out),color var(--dur-fast) var(--ease-out)}
+.theme-switch button.active{background:var(--bg);color:var(--tx);
+  box-shadow:var(--shadow-sm)}
+
+main{max-width:920px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+
+.variant{background:var(--surf);border:1px solid var(--bd);border-radius:var(--r-lg);
+  padding:20px;box-shadow:var(--shadow-xs)}
+.variant-hdr{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.variant-name{font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:-.2px}
+.variant-tag{font-family:var(--mono);font-size:10px;color:var(--acc);
+  background:rgba(var(--acc-rgb),.12);border:1px solid rgba(var(--acc-rgb),.3);
+  border-radius:999px;padding:2px 8px;letter-spacing:.5px;text-transform:uppercase;font-weight:700}
+.variant-desc{color:var(--tx2);font-size:12px;line-height:1.5;margin-bottom:14px}
+
+/* Modal-tools layout — same as production */
+.modal-tools{display:flex;gap:4px;align-items:center;
+  padding:4px;border:1px solid var(--bd);border-radius:var(--r-sm);
+  background:var(--surf2)}
+.modal-tools-spacer{flex:1}
+.btn-icon{width:36px;height:36px;border-radius:var(--r-sm);
+  border:1px solid transparent;background:transparent;color:var(--tx2);
+  display:inline-flex;align-items:center;justify-content:center;
+  cursor:pointer;flex-shrink:0;padding:0;
+  transition:transform var(--dur-fast) var(--ease-out),
+             background-color var(--dur-fast) var(--ease-out),
+             border-color var(--dur-fast) var(--ease-out),
+             color var(--dur-fast) var(--ease-out)}
+.btn-icon:hover{background:var(--bg);border-color:var(--bd2);color:var(--tx)}
+.btn-icon:active{transform:scale(.92)}
+.btn-icon-danger{color:var(--red)}
+.btn-icon-danger:hover{background:rgba(224,85,61,.10);
+  border-color:rgba(224,85,61,.5);color:var(--red)}
+.btn-icon svg{display:block}
+
+footer{max-width:920px;margin:32px auto 0;color:var(--tx3);font-size:11px;
+  text-align:center;font-family:var(--mono);letter-spacing:.4px;line-height:1.6}
+
+/* Pick label */
+.pick-row{display:flex;align-items:center;gap:8px;margin-top:10px;
+  font-family:var(--mono);font-size:11px;color:var(--tx3);letter-spacing:.4px}
+.pick-row code{background:var(--surf2);padding:2px 8px;border-radius:4px;
+  border:1px solid var(--bd);color:var(--acc);font-weight:700}
+
+/* Variant 4 (duotone) helper styles */
+.duotone-fill{opacity:.22}
+</style>
+</head>
+<body>
+<header>
+  <h1>Icon Preview · 5 вариантов</h1>
+  <div class="theme-switch">
+    <button id="themeLight" class="active" onclick="setTheme('light')">Light</button>
+    <button id="themeDark" onclick="setTheme('dark')">Dark</button>
+  </div>
+</header>
+<p class="intro">Иконки модалки «Редактировать ячейку»: очистить · замок открыт · замок закрыт · показать на схеме · удалить ячейку. Все варианты используют один layout (тот же что на проде). Hover ↔ active states работают, наведи мышь.</p>
+
+<main>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<!-- VARIANT 1: THIN APOLLO (Apple SF Symbols-light) -->
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<section class="variant">
+  <div class="variant-hdr">
+    <div class="variant-name">1 · Thin Apollo</div>
+    <span class="variant-tag">SF Symbols-light · 1.5px</span>
+  </div>
+  <p class="variant-desc">Самый «Apple» — тонкий равномерный stroke 1.5px, скруглённые caps и joins. Совпадает с иконками в user-меню текущего приложения. Спокойный, элегантный, hover оживляет.</p>
+  <div class="modal-tools">
+    <button class="btn-icon" title="Очистить">
+      <svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9.5 2l4.5 4.5-7 7H3v-4z"/>
+        <path d="M6 13.5h8.5"/>
+      </svg>
+    </button>
+    <button class="btn-icon" title="Замок открыт">
+      <svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="7" width="10" height="7" rx="1.5"/>
+        <path d="M5 7V4.5a3 3 0 015.5-1.7"/>
+      </svg>
+    </button>
+    <button class="btn-icon" title="Замок закрыт">
+      <svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="7" width="10" height="7" rx="1.5"/>
+        <path d="M5 7V4.5a3 3 0 016 0V7"/>
+      </svg>
+    </button>
+    <button class="btn-icon" title="Показать на схеме">
+      <svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M8 14s5-4.5 5-8.5a5 5 0 00-10 0c0 4 5 8.5 5 8.5z"/>
+        <circle cx="8" cy="6" r="1.8"/>
+      </svg>
+    </button>
+    <div class="modal-tools-spacer"></div>
+    <button class="btn-icon btn-icon-danger" title="Удалить ячейку">
+      <svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M2.5 4.5h11"/>
+        <path d="M6 4.5V3a1 1 0 011-1h2a1 1 0 011 1v1.5"/>
+        <path d="M4.5 4.5l1 9.5h5l1-9.5"/>
+        <path d="M7 7v4.5M9 7v4.5"/>
+      </svg>
+    </button>
+  </div>
+  <div class="pick-row">→ <code>Pick #1</code> для самого «iOS-родного» вида</div>
+</section>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<!-- VARIANT 2: BOLD LINEAR (stroke 2.0) -->
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<section class="variant">
+  <div class="variant-hdr">
+    <div class="variant-name">2 · Bold Linear</div>
+    <span class="variant-tag">Stroke 2.0 · уверенный</span>
+  </div>
+  <p class="variant-desc">Stroke 2.0 — те же геометрии, но с большим визуальным весом. Лучше читается на маленьких размерах и тач-устройствах. Так делает Linear, Vercel Dashboard.</p>
+  <div class="modal-tools">
+    <button class="btn-icon" title="Очистить">
+      <svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9.5 2l4.5 4.5-7 7H3v-4z"/>
+        <path d="M6 13.5h8.5"/>
+      </svg>
+    </button>
+    <button class="btn-icon" title="Замок открыт">
+      <svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="7" width="10" height="7" rx="1.5"/>
+        <path d="M5 7V4.5a3 3 0 015.5-1.7"/>
+      </svg>
+    </button>
+    <button class="btn-icon" title="Замок закрыт">
+      <svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="7" width="10" height="7" rx="1.5"/>
+        <path d="M5 7V4.5a3 3 0 016 0V7"/>
+      </svg>
+    </button>
+    <button class="btn-icon" title="Показать на схеме">
+      <svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M8 14s5-4.5 5-8.5a5 5 0 00-10 0c0 4 5 8.5 5 8.5z"/>
+        <circle cx="8" cy="6" r="1.8"/>
+      </svg>
+    </button>
+    <div class="modal-tools-spacer"></div>
+    <button class="btn-icon btn-icon-danger" title="Удалить ячейку">
+      <svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M2.5 4.5h11"/>
+        <path d="M6 4.5V3a1 1 0 011-1h2a1 1 0 011 1v1.5"/>
+        <path d="M4.5 4.5l1 9.5h5l1-9.5"/>
+      </svg>
+    </button>
+  </div>
+  <div class="pick-row">→ <code>Pick #2</code> для уверенного toolbar-look (Linear-style)</div>
+</section>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<!-- VARIANT 3: FILLED PREMIUM (solid monochrome) -->
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<section class="variant">
+  <div class="variant-hdr">
+    <div class="variant-name">3 · Filled Premium</div>
+    <span class="variant-tag">Solid · Bloomberg / Stripe</span>
+  </div>
+  <p class="variant-desc">Заполненные silhouettes (без stroke). Серьёзный «штамп»-вид, premium-feel. Как Stripe Dashboard, Notion, Bloomberg Terminal. Чуть тяжелее визуально, лучше работает в плотных интерфейсах.</p>
+  <div class="modal-tools">
+    <button class="btn-icon" title="Очистить">
+      <svg width="17" height="17" viewBox="0 0 16 16" fill="currentColor">
+        <path d="M9.3 1.7c-.4-.4-1-.4-1.4 0L1.7 7.9c-.4.4-.4 1 0 1.4L4.5 12H3a.7.7 0 100 1.4h10a.7.7 0 100-1.4H7.5l5.8-5.8c.4-.4.4-1 0-1.4L9.3 1.7z"/>
+      </svg>
+    </button>
+    <button class="btn-icon" title="Замок открыт">
+      <svg width="17" height="17" viewBox="0 0 16 16" fill="currentColor">
+        <path d="M5 7V4.5a3 3 0 014.4-2.5l.6.4-.7 1.2-.6-.4a1.6 1.6 0 00-2.3 1.3V7H13a1 1 0 011 1v6a1 1 0 01-1 1H3a1 1 0 01-1-1V8a1 1 0 011-1h2zm3 6a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/>
+      </svg>
+    </button>
+    <button class="btn-icon" title="Замок закрыт">
+      <svg width="17" height="17" viewBox="0 0 16 16" fill="currentColor">
+        <path d="M5 7V4.5a3 3 0 016 0V7h2a1 1 0 011 1v6a1 1 0 01-1 1H3a1 1 0 01-1-1V8a1 1 0 011-1h2zm1.5 0h3V4.5a1.5 1.5 0 00-3 0V7zM8 13a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/>
+      </svg>
+    </button>
+    <button class="btn-icon" title="Показать на схеме">
+      <svg width="17" height="17" viewBox="0 0 16 16" fill="currentColor">
+        <path d="M8 1a5 5 0 00-5 5c0 4 5 8.5 5 8.5s5-4.5 5-8.5a5 5 0 00-5-5zm0 7a2 2 0 110-4 2 2 0 010 4z"/>
+      </svg>
+    </button>
+    <div class="modal-tools-spacer"></div>
+    <button class="btn-icon btn-icon-danger" title="Удалить ячейку">
+      <svg width="17" height="17" viewBox="0 0 16 16" fill="currentColor">
+        <path d="M6 2a1 1 0 011-1h2a1 1 0 011 1v1h3.5a.5.5 0 110 1H13l-.8 9.4a1.5 1.5 0 01-1.5 1.4H5.3a1.5 1.5 0 01-1.5-1.4L3 4h-.5a.5.5 0 110-1H6V2zm1 .5v.5h2v-.5H7zm-.5 4a.5.5 0 00-.5.5v5a.5.5 0 101 0v-5a.5.5 0 00-.5-.5zm3 0a.5.5 0 00-.5.5v5a.5.5 0 101 0v-5a.5.5 0 00-.5-.5z"/>
+      </svg>
+    </button>
+  </div>
+  <div class="pick-row">→ <code>Pick #3</code> для tougher / премиум-фининтех look</div>
+</section>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<!-- VARIANT 4: DUOTONE (outline + accent fill) -->
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<section class="variant">
+  <div class="variant-hdr">
+    <div class="variant-name">4 · Duotone Apollo</div>
+    <span class="variant-tag">Phosphor-style · outline + tint</span>
+  </div>
+  <p class="variant-desc">Outline-форма + полупрозрачный fill (Phosphor duotone style). Объёмное, чуть декоративное, но без перегруза. Подходит для премиум-app — у Notion внутри страницы такие.</p>
+  <div class="modal-tools">
+    <button class="btn-icon" title="Очистить">
+      <svg width="17" height="17" viewBox="0 0 16 16">
+        <path class="duotone-fill" fill="currentColor" d="M9.5 2L14 6.5 7 13.5H3V9.5z"/>
+        <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M9.5 2l4.5 4.5-7 7H3v-4z M6 13.5h8.5"/>
+      </svg>
+    </button>
+    <button class="btn-icon" title="Замок открыт">
+      <svg width="17" height="17" viewBox="0 0 16 16">
+        <rect class="duotone-fill" fill="currentColor" x="3" y="7" width="10" height="7" rx="1.5"/>
+        <rect fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" x="3" y="7" width="10" height="7" rx="1.5"/>
+        <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M5 7V4.5a3 3 0 015.5-1.7"/>
+      </svg>
+    </button>
+    <button class="btn-icon" title="Замок закрыт">
+      <svg width="17" height="17" viewBox="0 0 16 16">
+        <rect class="duotone-fill" fill="currentColor" x="3" y="7" width="10" height="7" rx="1.5"/>
+        <rect fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" x="3" y="7" width="10" height="7" rx="1.5"/>
+        <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M5 7V4.5a3 3 0 016 0V7"/>
+      </svg>
+    </button>
+    <button class="btn-icon" title="Показать на схеме">
+      <svg width="17" height="17" viewBox="0 0 16 16">
+        <path class="duotone-fill" fill="currentColor" d="M8 14s5-4.5 5-8.5a5 5 0 00-10 0c0 4 5 8.5 5 8.5z"/>
+        <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M8 14s5-4.5 5-8.5a5 5 0 00-10 0c0 4 5 8.5 5 8.5z"/>
+        <circle fill="var(--bg)" cx="8" cy="6" r="1.8"/>
+      </svg>
+    </button>
+    <div class="modal-tools-spacer"></div>
+    <button class="btn-icon btn-icon-danger" title="Удалить ячейку">
+      <svg width="17" height="17" viewBox="0 0 16 16">
+        <path class="duotone-fill" fill="currentColor" d="M3.5 4.5l1 9.5h7l1-9.5z"/>
+        <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M2.5 4.5h11 M6 4.5V3a1 1 0 011-1h2a1 1 0 011 1v1.5 M4.5 4.5l1 9.5h5l1-9.5"/>
+      </svg>
+    </button>
+  </div>
+  <div class="pick-row">→ <code>Pick #4</code> для премиум-Notion / Phosphor look</div>
+</section>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<!-- VARIANT 5: HAIRLINE (stroke 1.0, super lean) -->
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<section class="variant">
+  <div class="variant-hdr">
+    <div class="variant-name">5 · Hairline Mono</div>
+    <span class="variant-tag">Stroke 1.0 · Vercel / минимал</span>
+  </div>
+  <p class="variant-desc">Тончайший stroke 1px, square caps. Vercel-style минимализм. Дает максимум воздуха в toolbar'е. Лучше всего работает на десктопных дашбордах и презентациях. На iPhone Retina выглядит изящно, но на старых устройствах может «исчезать» при определённых углах.</p>
+  <div class="modal-tools">
+    <button class="btn-icon" title="Очистить">
+      <svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="square" stroke-linejoin="miter">
+        <path d="M9.5 2l4.5 4.5-7 7H3v-4z"/>
+        <path d="M6 13.5h8.5"/>
+      </svg>
+    </button>
+    <button class="btn-icon" title="Замок открыт">
+      <svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="square" stroke-linejoin="miter">
+        <rect x="3" y="7" width="10" height="7"/>
+        <path d="M5 7V4.5a3 3 0 015.5-1.7"/>
+      </svg>
+    </button>
+    <button class="btn-icon" title="Замок закрыт">
+      <svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="square" stroke-linejoin="miter">
+        <rect x="3" y="7" width="10" height="7"/>
+        <path d="M5 7V4.5a3 3 0 016 0V7"/>
+      </svg>
+    </button>
+    <button class="btn-icon" title="Показать на схеме">
+      <svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="square" stroke-linejoin="miter">
+        <path d="M8 14s5-4.5 5-8.5a5 5 0 00-10 0c0 4 5 8.5 5 8.5z"/>
+        <circle cx="8" cy="6" r="1.5"/>
+      </svg>
+    </button>
+    <div class="modal-tools-spacer"></div>
+    <button class="btn-icon btn-icon-danger" title="Удалить ячейку">
+      <svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="square" stroke-linejoin="miter">
+        <path d="M2.5 4.5h11"/>
+        <path d="M6 4.5V3a1 1 0 011-1h2a1 1 0 011 1v1.5"/>
+        <path d="M4.5 4.5l1 9.5h5l1-9.5"/>
+      </svg>
+    </button>
+  </div>
+  <div class="pick-row">→ <code>Pick #5</code> для Vercel-style минимализма</div>
+</section>
+
+</main>
+
+<footer>
+  Все 5 вариантов используют тот же layout, hover, active feedback. Toggle темы вверху → проверь light + dark.<br>
+  Когда выберешь — скажи «делаем №X», заменю в parking.html.
+</footer>
+
+<script>
+function setTheme(t){
+  document.documentElement.setAttribute('data-theme', t);
+  document.getElementById('themeLight').classList.toggle('active', t==='light');
+  document.getElementById('themeDark').classList.toggle('active', t==='dark');
+}
+</script>
+</body>
+</html>
