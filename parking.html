@@ -1140,6 +1140,15 @@ html[data-theme="paper"] .stabs{
   font-family:inherit;transition:all .15s}
 .mfield input:not([type=checkbox]):not([type=radio]):focus,.mfield select:focus,.mfield textarea:focus{
   border-color:var(--acc);box-shadow:var(--glow)}
+/* Prefill cue — fields auto-populated from the lpanel car selection
+   get a left iOS-blue stripe + faint blue tint. Removed by JS on the
+   first manual edit (input handler in openEdit setup). */
+.mfield input[data-prefilled],
+.mfield select[data-prefilled],
+.mfield textarea[data-prefilled]{
+  border-left:3px solid var(--acc);
+  background:rgba(var(--acc-rgb),.04);
+  padding-left:9px}
 /* Global: every checkbox/radio gets theme-aware accent + pointer cursor */
 input[type=checkbox],input[type=radio]{accent-color:var(--acc);cursor:pointer}
 /* Checkboxes/radios inside .mfield labels — keep inline */
@@ -4691,6 +4700,24 @@ const LIM_L=4.95, LIM_H_HI=2.0, LIM_H_LO=1.55, LIM_M=2000;
 
 let selCar=null, hlMode=false, curSec='А', curV='plan';
 
+// ─── Selection-prefill helpers (used by openEdit) ────────────────
+// Format CARS_DB dimensions (m + kg) → user-facing string used in
+// the "Габариты" field: "ДхШхВ×Вес" in mm/kg, e.g. "4920х1880х1750х2185".
+function formatDims(car){
+  if(!car || car.l == null || car.w == null || car.h == null) return '';
+  const mm = v => Math.round(v * 1000);
+  const kg = car.cm != null ? Math.round(car.cm) : '';
+  return `${mm(car.l)}х${mm(car.w)}х${mm(car.h)}${kg !== '' ? 'х' + kg : ''}`;
+}
+// Infer Klaus cell type (Высокая / Низкая) from a car's height.
+// >2.0 → не влезет в Klaus вовсе → null (caller defaults to Высокая).
+function inferKlausType(car){
+  if(!car || car.h == null) return null;
+  if(car.h > LIM_H_HI) return null;
+  if(car.h <= LIM_H_LO) return 'Низкая';
+  return 'Высокая';
+}
+
 // ═══════════════════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════════════════
@@ -4703,6 +4730,17 @@ document.addEventListener('DOMContentLoaded',()=>{
   updateStats();
   switchS('А');
   initPlanPdf();
+
+  // Selection-prefill: clear the data-prefilled cue once the user
+  // starts editing a prefilled field manually (so the blue stripe
+  // doesn't linger after they take ownership of the value).
+  ['eCar','eDims','eType'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(!el) return;
+    const clear = ()=> el.removeAttribute('data-prefilled');
+    el.addEventListener('input', clear);
+    el.addEventListener('change', clear);
+  });
 
   // Attach car checker events via addEventListener (not inline onchange)
   // This is more reliable on macOS/Safari native select widgets
@@ -6749,12 +6787,41 @@ function openEdit(sec,id){
   document.getElementById('editSec').value=sec;
   document.getElementById('editId').value=id;
   document.getElementById('editIdBadge').textContent=`Секция ${secLabel} · ${sec==='Н'||sec==='ВНЕ'?'Машиноместо':'Ячейка'} ${dispId}`;
-  document.getElementById('eCompany').value=cell.co||'';
-  document.getElementById('eOwner').value=cell.ow||'';
-  document.getElementById('ePlate').value=cell.pl||'';
-  document.getElementById('eCar').value=cell.cr||'';
-  document.getElementById('eDims').value=cell.dm||'';
-  document.getElementById('eType').value=cell.tp||'Высокая';
+  const eCompany = document.getElementById('eCompany');
+  const eOwner   = document.getElementById('eOwner');
+  const ePlate   = document.getElementById('ePlate');
+  const eCar     = document.getElementById('eCar');
+  const eDims    = document.getElementById('eDims');
+  const eType    = document.getElementById('eType');
+  eCompany.value = cell.co || '';
+  eOwner.value   = cell.ow || '';
+  ePlate.value   = cell.pl || '';
+  eCar.value     = cell.cr || '';
+  eDims.value    = cell.dm || '';
+  eType.value    = cell.tp || 'Высокая';
+  // Reset any prior prefill markers (re-applied below if needed).
+  [eCar, eDims, eType].forEach(el => el && el.removeAttribute('data-prefilled'));
+
+  // ─── Selection-prefill ──────────────────────────────────────
+  // If user picked a car in the lpanel and the cell is empty, prefill
+  // Марка/модель + Габариты + Тип ячейки so they don't have to retype.
+  // Guard: never overwrite existing data (cell occupied or has any text).
+  const cellEmpty = !cell.cr && !cell.co && !cell.ow && !cell.pl;
+  if(cellEmpty && selCar){
+    if(!eCar.value){
+      eCar.value = selCar.m || '';
+      if(eCar.value) eCar.setAttribute('data-prefilled','1');
+    }
+    if(!eDims.value){
+      eDims.value = formatDims(selCar);
+      if(eDims.value) eDims.setAttribute('data-prefilled','1');
+    }
+    const inferred = inferKlausType(selCar);
+    if(inferred){
+      eType.value = inferred;
+      eType.setAttribute('data-prefilled','1');
+    }
+  }
   // Klaus-специфичные поля (Тип ячейки + Габариты) актуальны только для
   // механических ячеек подземки А/В/С. Для Н и ВНЕ это бетонный пол — поля скрыты.
   const isKlaus = (sec==='А' || sec==='В' || sec==='С');
@@ -6880,6 +6947,20 @@ function saveEdit(){
   updateStats();
   if(typeof renderPlanShapes==='function') renderPlanShapes();
   closeModal();
+
+  // ─── Selection-prefill follow-through ──────────────────────
+  // If the user picked a car in the lpanel and that car ended up
+  // saved into THIS cell, the workflow is "complete". Reset the
+  // lpanel selection and confirm with a toast.
+  try{
+    if(selCar && cr && selCar.m && cr.trim() === selCar.m.trim()){
+      const placedName = selCar.m;
+      if(typeof doClear === 'function') doClear();   // clears selCar + highlights
+      if(dvToast && typeof dvToast.success === 'function'){
+        dvToast.success('Машина припаркована', `${placedName} → ${sec} · ${id}`);
+      }
+    }
+  }catch(_){}
 }
 
 // Короткое описание изменения ячейки для уведомлений
