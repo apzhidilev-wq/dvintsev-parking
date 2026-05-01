@@ -7591,11 +7591,11 @@ async function goToPlanCell(sec, id, opts){
         vp.scrollLeft += (r.left + r.width/2) - (vr.left + vr.width/2);
         vp.scrollTop  += (r.top  + r.height/2) - (vr.top  + vr.height/2);
       }
-      // Пульс
+      // Пульс — 6 циклов × 1.1s = 6.6s, +400ms запас на cleanup
       target.classList.remove('pulse');
       void target.getBoundingClientRect();
       target.classList.add('pulse');
-      setTimeout(()=>target.classList.remove('pulse'), 3500);
+      setTimeout(()=>target.classList.remove('pulse'), 7000);
     }));
   }, 320);
 }
