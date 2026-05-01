@@ -1229,6 +1229,37 @@ input[type=checkbox],input[type=radio]{accent-color:var(--acc);cursor:pointer}
 .btn-sm{padding:7px 12px;font-size:11.5px}
 .btn-block{width:100%;flex:1 1 auto}
 
+/* ───────────────────────────────────────────────────────────────────
+   ICON BUTTON — compact 34×34 toolbar action.
+   Used in modal-tools rows where label space is precious.
+   .btn-icon-danger — red tint variant (delete, irreversible actions)
+   ─────────────────────────────────────────────────────────────────── */
+.btn-icon{width:36px;height:36px;border-radius:var(--r-sm);
+  border:1px solid transparent;background:transparent;color:var(--tx2);
+  display:inline-flex;align-items:center;justify-content:center;
+  font-size:16px;cursor:pointer;flex-shrink:0;padding:0;line-height:1;
+  transition:transform var(--dur-fast) var(--ease-out),
+             background-color var(--dur-fast) var(--ease-out),
+             border-color var(--dur-fast) var(--ease-out),
+             color var(--dur-fast) var(--ease-out)}
+.btn-icon:hover{background:var(--bg);border-color:var(--bd2);color:var(--tx)}
+.btn-icon:active{transform:scale(.92)}
+.btn-icon-danger{color:var(--red)}
+.btn-icon-danger:hover{background:rgba(224,85,61,.10);
+  border-color:rgba(224,85,61,.5);color:var(--red)}
+
+/* MODAL ACTION FOOTER — two-row layout: tool icons + primary buttons */
+.modal-actions{display:flex;flex-direction:column;gap:10px;margin-top:18px}
+.modal-tools{display:flex;gap:4px;align-items:center;
+  padding:4px;border:1px solid var(--bd);border-radius:var(--r-sm);
+  background:var(--surf2)}
+.modal-tools-spacer{flex:1}
+.modal-primary{display:flex;gap:8px}
+@media (max-width:600px){
+  .modal-primary{flex-wrap:wrap}
+  .modal-primary .btn{min-height:42px}
+}
+
 /* ═══════════════════════════════════════════════════════════════════
    LIST-ROW PRIMITIVE — iOS-style card row (white card, soft shadow,
    subtle border). Use for any vertical list of selectable/editable items.
@@ -2008,15 +2039,19 @@ html[data-role="viewer"] .readonly-banner{display:flex}
         <option value="склад">Склад</option>
       </select>
     </div>
-    <div class="mbtn-row">
-      <button class="mbtn-save" onclick="saveEdit()">💾 Сохранить</button>
-      <button class="mbtn-del" onclick="clearCell()">🗑 Очистить</button>
-      <button id="eLockBtn" class="admin-only mbtn-cancel" onclick="openLockModal()" title="Заблокировать/разблокировать ячейку (admin)" style="font-size:16px;padding:8px 14px">🔓</button>
-      <button class="mbtn-danger admin-only" onclick="deleteCellFully()" id="eDelBtn">🗑 Удалить ячейку</button>
-      <button class="mbtn-cancel" onclick="closeModal()">Отмена</button>
-    </div>
-    <div style="text-align:right;margin-top:8px">
-      <button id="ePlanBtn" class="ghost-link" style="display:none" onclick="goToPlanFromEdit()">📍 Показать на схеме</button>
+    <!-- Compact action footer (rebuilt 2026-05) — toolbar row + primary row -->
+    <div class="modal-actions">
+      <div class="modal-tools" role="toolbar" aria-label="Действия с ячейкой">
+        <button class="btn-icon" onclick="clearCell()" title="Очистить данные ячейки" aria-label="Очистить">🧹</button>
+        <button class="btn-icon admin-only" id="eLockBtn" onclick="openLockModal()" title="Заблокировать / разблокировать (admin)" aria-label="Замок">🔓</button>
+        <button class="btn-icon" id="ePlanBtn" style="display:none" onclick="goToPlanFromEdit()" title="Показать на схеме" aria-label="Показать на схеме">📍</button>
+        <div class="modal-tools-spacer"></div>
+        <button class="btn-icon btn-icon-danger admin-only" onclick="deleteCellFully()" id="eDelBtn" title="Удалить ячейку полностью (admin)" aria-label="Удалить ячейку">🗑</button>
+      </div>
+      <div class="modal-primary">
+        <button class="btn btn-secondary" onclick="closeModal()">Отмена</button>
+        <button class="btn btn-primary btn-block" onclick="saveEdit()">💾 Сохранить</button>
+      </div>
     </div>
   </div>
 </div>
