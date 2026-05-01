@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" width="180" height="180">
+  <title>БЦ Двинцев · Паркинг</title>
+  <rect width="180" height="180" fill="#007AFF"/>
+  <circle cx="90" cy="90" r="58" fill="#fff"/>
+  <path d="M62 122V58h36c14.4 0 24 9 24 23.5S112.4 105 98 105H78v17H62zm16-32h18a8.5 8.5 0 100-17H78v17z" fill="#007AFF"/>
+</svg>
