@@ -1605,6 +1605,11 @@ html[data-role="viewer"] .vne-spot{cursor:default !important}
 html[data-role="viewer"] .exp-btn[data-act="import"],
 html[data-role="viewer"] .mbtn-save,
 html[data-role="viewer"] .mbtn-del{display:none !important}
+/* Notes are internal — viewers must never see them, even via DOM
+   inspection. Defensive: openEdit blocks viewer entry, but if a
+   future flow ever lets a viewer reach the modal the field stays
+   collapsed. */
+html[data-role="viewer"] #eNoteField{display:none !important}
 html[data-role="operator"] .exp-btn[data-act="import"]{display:none !important}
 html[data-role="operator"] .admin-only,
 html[data-role="viewer"] .admin-only{display:none !important}
@@ -2047,6 +2052,11 @@ html[data-role="viewer"] .readonly-banner{display:flex}
         <option value="Законсервированные">Законсервированные</option>
         <option value="склад">Склад</option>
       </select>
+    </div>
+    <!-- Note (admin/operator only — see CSS rule on data-role) -->
+    <div class="mfield" id="eNoteField">
+      <label>Примечание <span style="color:var(--tx3);font-weight:400;text-transform:none;letter-spacing:0">(внутреннее, гостям не показывается)</span></label>
+      <textarea id="eNote" rows="3" placeholder="Заметки для смены / охраны: например, владелец не отвечает по телефону, ключи у консьержа…" style="resize:vertical;min-height:60px"></textarea>
     </div>
     <!-- Compact action footer (rebuilt 2026-05) — toolbar row + primary row -->
     <div class="modal-actions">
@@ -4528,7 +4538,7 @@ function logAudit(action, sec, id, before, after, extra){
 }
 
 function buildAuditSummary(action, changes, extra){
-  const labels = {co:'компания',ow:'владелец',pl:'гос.номер',cr:'авто',dm:'габариты',tp:'тип',oc:'статус занятости',zone:'зона'};
+  const labels = {co:'компания',ow:'владелец',pl:'гос.номер',cr:'авто',dm:'габариты',tp:'тип',nt:'примечание',oc:'статус занятости',zone:'зона'};
   const keys = Object.keys(changes||{});
   if(action === 'create') return 'Создана ячейка';
   if(action === 'delete') return 'Удалена ячейка';
@@ -4604,7 +4614,7 @@ function renderAuditList(){
     const dateStr = d.toLocaleString('ru', {year:'2-digit',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'});
     const actionColors = {create:'var(--green)',edit:'var(--acc)',clear:'var(--yel)',delete:'var(--red)',bind:'#7c6cb4',unbind:'#7c6cb4',series:'var(--acc)'};
     const actionEmoji = {create:'➕',edit:'✏',clear:'🗑',delete:'❌',bind:'📍',unbind:'✖',series:'📊'};
-    const labels = {co:'компания',ow:'владелец',pl:'гос.номер',cr:'авто',dm:'габариты',tp:'тип',oc:'занято',zone:'зона'};
+    const labels = {co:'компания',ow:'владелец',pl:'гос.номер',cr:'авто',dm:'габариты',tp:'тип',nt:'примечание',oc:'занято',zone:'зона'};
     const ch = e.changes || {};
     const chRows = Object.keys(ch).map(k=>{
       const [a,b] = ch[k];
@@ -6756,6 +6766,7 @@ function showTT(e,sec,id){
     ${cell.pl?`<div class="tt-row"><span class="tt-k">Гос. номер</span><span class="tt-v">${esc(cell.pl)}</span></div>`:''}
     ${cell.cr?`<div class="tt-row"><span class="tt-k">Автомобиль</span><span class="tt-v">${esc(cell.cr)}</span></div>`:''}
     ${cell.dm?`<div class="tt-row"><span class="tt-k">Габариты</span><span class="tt-v" style="font-size:10px">${esc(cell.dm)}</span></div>`:''}
+    ${cell.nt && canEdit() ? `<div class="tt-row"><span class="tt-k" style="color:var(--acc)">Примечание</span><span class="tt-v" style="white-space:pre-wrap;word-break:break-word;font-size:11.5px;line-height:1.4">${esc(cell.nt)}</span></div>` : ''}
     ${!cell.co&&!cell.ow&&!cell.cr?'<div class="tt-row"><span class="tt-v" style="color:var(--tx3);font-style:italic">Нет данных</span></div>':''}
     ${status}
   `;
@@ -6793,12 +6804,14 @@ function openEdit(sec,id){
   const eCar     = document.getElementById('eCar');
   const eDims    = document.getElementById('eDims');
   const eType    = document.getElementById('eType');
+  const eNote    = document.getElementById('eNote');
   eCompany.value = cell.co || '';
   eOwner.value   = cell.ow || '';
   ePlate.value   = cell.pl || '';
   eCar.value     = cell.cr || '';
   eDims.value    = cell.dm || '';
   eType.value    = cell.tp || 'Высокая';
+  if(eNote) eNote.value = cell.nt || '';
   // Reset any prior prefill markers (re-applied below if needed).
   [eCar, eDims, eType].forEach(el => el && el.removeAttribute('data-prefilled'));
 
@@ -6887,13 +6900,16 @@ function saveEdit(){
   const cr=document.getElementById('eCar').value.trim();
   const dm=document.getElementById('eDims').value.trim();
   const tp=document.getElementById('eType').value;
-  
+  const ntEl=document.getElementById('eNote');
+  const nt=ntEl ? ntEl.value.trim() : (PARKING[sec][id].nt || '');
+
   PARKING[sec][id].co=co;
   PARKING[sec][id].ow=ow;
   PARKING[sec][id].pl=pl;
   PARKING[sec][id].cr=cr;
   PARKING[sec][id].dm=dm;
   PARKING[sec][id].tp=tp;
+  PARKING[sec][id].nt=nt;
   PARKING[sec][id].oc=!!(co&&!co.includes('Имущество'));
   PARKING[sec][id].zone=sec;
   stampCellEdit(PARKING[sec][id]);
@@ -6967,7 +6983,7 @@ function saveEdit(){
 function describeCellChange(before, after){
   if(!after) return '';
   const FIELDS = [['co','Компания'],['ow','Владелец'],['pl','Гос.номер'],
-    ['cr','Авто'],['dm','Габариты'],['tp','Тип']];
+    ['cr','Авто'],['dm','Габариты'],['tp','Тип'],['nt','Примечание']];
   if(!before){
     // create: показываем основные заполненные поля
     const filled = FIELDS.map(([k,l])=> after[k] ? `${l}: ${after[k]}` : null).filter(Boolean);
@@ -6993,7 +7009,9 @@ function clearCell(){
     denyToast(cell.locked ? '🔒 Ячейка заблокирована' : 'Правка отклонена');
     return;
   }
-  ['eCompany','eOwner','ePlate','eCar','eDims'].forEach(f=>document.getElementById(f).value='');
+  ['eCompany','eOwner','ePlate','eCar','eDims','eNote'].forEach(f=>{
+    const el=document.getElementById(f); if(el) el.value='';
+  });
   document.getElementById('eType').value=(PARKING[sec]?.[id]?.tp)||'Высокая';
   if(confirm('Очистить все данные по этой ячейке?')){
     window.__auditOverrideAction = 'clear';
