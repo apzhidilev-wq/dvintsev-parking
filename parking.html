@@ -764,39 +764,13 @@ html[data-theme="paper"] .stabs{
   justify-content:safe center;align-items:safe flex-start}
 
 /* Underground PDF — empty zones cropped via clip-path + neg margins.
-   Currently 184/183 (initial pick). User is fine-tuning further via
-   the TEMP-PLAN-RESIZE drag tool below; final values land here. */
+   Final values: top 335px (22%), bottom 367px (24%), page h ≈ 1506px.
+   Picked iteratively via the (now removed) TEMP-PLAN-RESIZE drag tool. */
 .plan-page[data-doc="underground"]{
-  clip-path:inset(184px 0 183px 0);
-  -webkit-clip-path:inset(184px 0 183px 0);
-  margin-top:-184px;
-  margin-bottom:-183px}
-
-/* ═══════════════════════════════════════════════════════════════════
-   TEMP-PLAN-RESIZE — re-enabled to fine-tune underground crop further.
-   Search "TEMP-PLAN-RESIZE" to find every piece for cleanup once the
-   final value is picked.
-   ═══════════════════════════════════════════════════════════════════ */
-.plan-handle{height:8px;background:var(--surf2);
-  border-top:1px solid var(--bd);border-bottom:1px solid var(--bd);
-  cursor:ns-resize;display:flex;align-items:center;justify-content:center;
-  user-select:none;-webkit-user-select:none;flex-shrink:0;
-  transition:background var(--dur-fast) var(--ease-out)}
-.plan-handle:hover{background:var(--acc-glow)}
-.plan-handle.is-dragging{background:rgba(var(--acc-rgb),.22)}
-.plan-handle-grip{font-family:var(--mono);font-size:10px;
-  color:var(--tx3);letter-spacing:2px;line-height:1;
-  pointer-events:none}
-.plan-handle:hover .plan-handle-grip,
-.plan-handle.is-dragging .plan-handle-grip{color:var(--acc)}
-.plan-readout{position:absolute;bottom:14px;right:14px;z-index:8;
-  background:var(--surf);border:1px solid var(--bd);
-  border-radius:var(--r-sm);padding:6px 10px;
-  font-family:var(--mono);font-size:11px;color:var(--tx2);
-  letter-spacing:.3px;box-shadow:var(--shadow-md);
-  pointer-events:none;user-select:none}
-.plan-readout b{color:var(--acc);font-weight:700;
-  font-feature-settings:'tnum'}
+  clip-path:inset(335px 0 367px 0);
+  -webkit-clip-path:inset(335px 0 367px 0);
+  margin-top:-335px;
+  margin-bottom:-367px}
 .plan-canvas canvas,.plan-canvas iframe,.plan-canvas embed,.plan-canvas object{display:block;background:#fff;
   box-shadow:0 16px 48px rgba(0,0,0,.10), 0 3px 10px rgba(0,0,0,.06),
     0 0 0 1px var(--bd);
@@ -2015,10 +1989,6 @@ html[data-role="viewer"] .readonly-banner{display:flex}
             <button class="pt-btn" onclick="openExportModal()" title="Экспорт снимка схемы (PNG/PDF)">📷 Снимок</button>
             <a class="pt-btn pt-link" href="scheme.pdf" target="_blank" title="Открыть PDF в новой вкладке">↗ PDF</a>
           </div>
-          <!-- TEMP-PLAN-RESIZE: top handle (drag down to chop more empty PDF space off top) -->
-          <div class="plan-handle plan-handle-top" id="planHandleTop" data-tmp-resize>
-            <span class="plan-handle-grip">•••</span>
-          </div>
           <!-- Pannable viewport with rendered PDF pages -->
           <div class="plan-viewport" id="planViewport">
             <div class="plan-canvas" id="planCanvas">
@@ -2027,14 +1997,6 @@ html[data-role="viewer"] .readonly-banner{display:flex}
                 <div>Загрузка схемы…</div>
               </div>
             </div>
-          </div>
-          <!-- TEMP-PLAN-RESIZE: bottom handle -->
-          <div class="plan-handle plan-handle-bottom" id="planHandleBottom" data-tmp-resize>
-            <span class="plan-handle-grip">•••</span>
-          </div>
-          <!-- TEMP-PLAN-RESIZE: live readout — copy these numbers when picking final values -->
-          <div class="plan-readout" id="planReadout" data-tmp-resize>
-            <span id="planReadoutDoc">Подземная</span> · top:<b id="planReadoutTop">184</b> · bottom:<b id="planReadoutBottom">183</b> · h:<b id="planReadoutH">—</b>px
           </div>
         </div>
       </div>
@@ -5375,83 +5337,6 @@ let planState = {
   set pdf(v){ this.docs[this.activeDoc].pdf = v; }
 };
 
-// ═══════════════════════════════════════════════════════════════
-// TEMP-PLAN-RESIZE — re-enabled. Pre-loaded with current applied
-// crop (underground: 184/183) so user fine-tunes from there.
-// Inline styles override the CSS rule, so adjustments are live.
-// ═══════════════════════════════════════════════════════════════
-function attachPlanResizeHandles_TEMP(){
-  const wrap = document.getElementById('planWrap');
-  const vp   = document.getElementById('planViewport');
-  const top  = document.getElementById('planHandleTop');
-  const bot  = document.getElementById('planHandleBottom');
-  const ro   = document.getElementById('planReadout');
-  if(!wrap || !vp || !top || !bot || !ro) return;
-  // Initial values match the current hardcoded CSS so there's no jump.
-  const crop = { underground:{top:184, bottom:183}, surface:{top:0, bottom:0} };
-  const docName  = ()=> (planState && planState.activeDoc) || 'underground';
-  const docLabel = ()=> docName()==='surface' ? 'Наземная' : 'Подземная';
-  function pageHeightCss(){
-    const p = vp.querySelector('.plan-page-active canvas, .plan-page canvas');
-    if(!p) return 1;
-    return parseFloat(p.style.height) || p.getBoundingClientRect().height || 1;
-  }
-  function applyAndReadout(){
-    const cur = crop[docName()];
-    vp.querySelectorAll('.plan-page').forEach(pg=>{
-      pg.style.clipPath = `inset(${cur.top}px 0 ${cur.bottom}px 0)`;
-      pg.style.webkitClipPath = `inset(${cur.top}px 0 ${cur.bottom}px 0)`;
-      pg.style.marginTop    = (-cur.top)    + 'px';
-      pg.style.marginBottom = (-cur.bottom) + 'px';
-    });
-    const ph = pageHeightCss();
-    const pctTop = ph > 0 ? Math.round((cur.top / ph) * 100) : 0;
-    const pctBot = ph > 0 ? Math.round((cur.bottom / ph) * 100) : 0;
-    document.getElementById('planReadoutDoc').textContent    = docLabel();
-    document.getElementById('planReadoutTop').textContent    = `${cur.top}px (${pctTop}%)`;
-    document.getElementById('planReadoutBottom').textContent = `${cur.bottom}px (${pctBot}%)`;
-    document.getElementById('planReadoutH').textContent      = Math.round(ph);
-  }
-  function startDrag(handle, edge){
-    handle.addEventListener('pointerdown', e=>{
-      e.preventDefault();
-      handle.setPointerCapture(e.pointerId);
-      handle.classList.add('is-dragging');
-      const startY = e.clientY;
-      const startVal = crop[docName()][edge];
-      const onMove = ev => {
-        const dy = ev.clientY - startY;
-        // Top: drag DOWN → chop more off top. Bottom: drag UP → chop more off bottom.
-        const next = edge==='top' ? startVal + dy : startVal - dy;
-        const ph = pageHeightCss();
-        crop[docName()][edge] = Math.max(0, Math.min(ph - 100, Math.round(next)));
-        applyAndReadout();
-      };
-      const onUp = () => {
-        handle.classList.remove('is-dragging');
-        try{ handle.releasePointerCapture(e.pointerId); }catch(_){}
-        window.removeEventListener('pointermove', onMove);
-        window.removeEventListener('pointerup',  onUp);
-        window.removeEventListener('pointercancel', onUp);
-      };
-      window.addEventListener('pointermove', onMove);
-      window.addEventListener('pointerup',  onUp);
-      window.addEventListener('pointercancel', onUp);
-    });
-  }
-  startDrag(top, 'top');
-  startDrag(bot, 'bottom');
-  window.addEventListener('resize', applyAndReadout);
-  let lastDoc = docName();
-  setInterval(()=>{
-    const cur = docName();
-    if(cur !== lastDoc){ lastDoc = cur; applyAndReadout(); }
-  }, 200);
-  setTimeout(applyAndReadout, 50);
-  setTimeout(applyAndReadout, 800);
-  setTimeout(applyAndReadout, 2200);
-}
-
 async function initPlanPdf(){
   planState.canvasEl   = document.getElementById('planCanvas');
   planState.viewportEl = document.getElementById('planViewport');
@@ -5459,7 +5344,6 @@ async function initPlanPdf(){
   attachPlanPan();
   attachPlanWheel();
   attachPlanTouch();
-  attachPlanResizeHandles_TEMP(); // TEMP-PLAN-RESIZE
   // Подгонка высоты viewport — после layout. Несколько вызовов
   // покрывают разные стадии (DOM ready, PDF rendered, URL-bar collapse).
   setTimeout(syncPlanViewportHeight, 50);
