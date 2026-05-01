@@ -1309,6 +1309,42 @@ html[data-theme="paper"] .list-row,html[data-theme="paper"] .um-list-item{backgr
 .pill-muted{color:var(--tx2);background:var(--surf2);border-color:var(--bd2)}
 
 /* ═══════════════════════════════════════════════════════════════════
+   INTERACTIVE LEGEND (lpanel · «Условные обозначения»)
+   Each .li becomes a status filter button. body.legend-filtering
+   dims everything that isn't .legend-hit, leaving the chosen
+   status colour to stand out across all three views.
+   ═══════════════════════════════════════════════════════════════════ */
+.li{cursor:pointer;
+  transition:transform var(--dur-fast) var(--ease-out),
+             background var(--dur-fast) var(--ease-out),
+             padding var(--dur-fast) var(--ease-out),
+             margin var(--dur-fast) var(--ease-out)}
+.li:hover{background:var(--surf2);border-radius:6px;
+  padding:2px 6px;margin:-2px -6px}
+.li:active{transform:scale(.97)}
+.li.is-active{background:var(--surf2);border-radius:6px;
+  padding:2px 6px;margin:-2px -6px;
+  outline:1.5px solid var(--acc);outline-offset:1px;
+  font-weight:700;color:var(--tx)}
+.li.is-disabled{opacity:.4;cursor:not-allowed}
+.li-count{margin-left:auto;font-family:var(--mono);font-size:10px;
+  color:var(--tx3);font-weight:700;letter-spacing:.3px}
+.li.is-active .li-count{color:var(--acc)}
+
+body.legend-filtering .cell:not(.legend-hit),
+body.legend-filtering .gspot:not(.legend-hit),
+body.legend-filtering .vne-spot:not(.legend-hit){
+  opacity:.22;filter:saturate(.6);
+  transition:opacity var(--dur-base) var(--ease-out),
+             filter var(--dur-base) var(--ease-out)}
+body.legend-filtering .plan-overlay .cell-shape:not(.legend-hit){
+  opacity:.20}
+.cell.legend-hit,.gspot.legend-hit,.vne-spot.legend-hit{
+  z-index:2;position:relative}
+.plan-overlay .cell-shape.legend-hit{
+  filter:drop-shadow(0 0 6px currentColor)}
+
+/* ═══════════════════════════════════════════════════════════════════
    PHASE 4 · EMPTY STATE PRIMITIVE
    iOS-style placeholder for "no data" / "no results" zones.
    Compose: <div class="empty-state">
@@ -1855,15 +1891,15 @@ html[data-role="viewer"] .readonly-banner{display:flex}
       <div id="srchRes" style="margin-top:6px"></div>
     </div>
 
-    <!-- Legend -->
+    <!-- Legend (clickable: filter cells by status across all three views) -->
     <div class="psec">
-      <div class="ptitle">Условные обозначения</div>
+      <div class="ptitle">Условные обозначения <span style="color:var(--tx3);font-weight:400;text-transform:none;letter-spacing:0;font-size:9px;font-family:var(--sans)">— клик для фильтра</span></div>
       <div class="leg">
-        <div class="li"><div class="ld" style="background:rgba(120,179,66,.18);border:1px solid var(--green)"></div>Свободна</div>
-        <div class="li"><div class="ld" style="background:rgba(224,85,61,.18);border:1px solid var(--red)"></div>Занята</div>
-        <div class="li"><div class="ld" style="background:rgba(232,167,58,.18);border:1px solid var(--yel)"></div>Имущество</div>
-        <div class="li"><div class="ld" style="background:rgba(124,108,180,.18);border:1px solid #7c6cb4"></div>Законсерв.</div>
-        <div class="li"><div class="ld" style="background:rgba(201,124,46,.20);border:1px solid var(--acc-deep)"></div>Склад</div>
+        <div class="li" data-leg="free" onclick="toggleLegendFilter('free')"><div class="ld" style="background:rgba(120,179,66,.18);border:1px solid var(--green)"></div>Свободна <span class="li-count"></span></div>
+        <div class="li" data-leg="occupied" onclick="toggleLegendFilter('occupied')"><div class="ld" style="background:rgba(224,85,61,.18);border:1px solid var(--red)"></div>Занята <span class="li-count"></span></div>
+        <div class="li" data-leg="reserved" onclick="toggleLegendFilter('reserved')"><div class="ld" style="background:rgba(232,167,58,.18);border:1px solid var(--yel)"></div>Имущество <span class="li-count"></span></div>
+        <div class="li" data-leg="conserved" onclick="toggleLegendFilter('conserved')"><div class="ld" style="background:rgba(124,108,180,.18);border:1px solid #7c6cb4"></div>Законсерв. <span class="li-count"></span></div>
+        <div class="li" data-leg="warehouse" onclick="toggleLegendFilter('warehouse')"><div class="ld" style="background:rgba(201,124,46,.20);border:1px solid var(--acc-deep)"></div>Склад <span class="li-count"></span></div>
       </div>
       <div style="margin-top:8px;padding:7px;background:var(--surf2);border-radius:5px;font-size:10px;color:var(--tx3)">
         <b style="color:var(--tx2)">Лимит:</b> 8 авт./блок<br>
@@ -4878,8 +4914,78 @@ function checkCar(car){
   banner.style.display='block';
 }
 
+// ═══════════════════════════════════════════════════════════════
+// INTERACTIVE LEGEND — click a status square to highlight all cells
+// of that status across block view, plan view, and ground/outdoor.
+// Mutex with car-fit highlight (doHighlight) — only one filter at a
+// time so the visual stays clean.
+// ═══════════════════════════════════════════════════════════════
+const LEGEND_STATUSES = {
+  free:      { label:'Свободна',   match:(c)=>!c.oc && !isRes(c) && c.tp!=='Законсервированные' && c.tp!=='склад' && c.ow!=='удалено' },
+  occupied:  { label:'Занята',     match:(c)=>!!c.oc },
+  reserved:  { label:'Имущество',  match:(c)=>isRes(c) },
+  conserved: { label:'Законсерв.', match:(c)=>c.tp==='Законсервированные' },
+  warehouse: { label:'Склад',      match:(c)=>c.tp==='склад' }
+};
+let _activeLegendKey = null;
+
+function toggleLegendFilter(key){
+  if(!LEGEND_STATUSES[key]) return;
+  // Mutex with the car-fit highlight (✦ Найти свободные ячейки).
+  if(typeof hlMode !== 'undefined' && hlMode && typeof doClear === 'function') doClear();
+  if(_activeLegendKey === key){ clearLegendFilter(); return; }
+  _activeLegendKey = key;
+  document.body.classList.add('legend-filtering');
+  applyLegendFilter(key);
+}
+
+function applyLegendFilter(key){
+  const def = LEGEND_STATUSES[key];
+  if(!def) return;
+  const matcher = def.match;
+  let total = 0;
+  ['А','В','С','Н','ВНЕ'].forEach(sec=>{
+    const d = PARKING[sec] || {};
+    Object.entries(d).forEach(([id, c])=>{
+      const el = document.getElementById('c-'+sec+'-'+id);
+      if(!el) return;
+      if(matcher(c)){ el.classList.add('legend-hit'); total++; }
+      else el.classList.remove('legend-hit');
+    });
+  });
+  // SVG plan overlay — same matcher applied to .cell-shape
+  document.querySelectorAll('.plan-overlay .cell-shape').forEach(shape=>{
+    const sec = shape.getAttribute('data-sec');
+    const id  = shape.getAttribute('data-id');
+    const c = (PARKING[sec] || {})[id];
+    if(c && matcher(c)) shape.classList.add('legend-hit');
+    else shape.classList.remove('legend-hit');
+  });
+  // Update legend item state + counts
+  document.querySelectorAll('.li[data-leg]').forEach(li=>{
+    const isActive = li.dataset.leg === key;
+    li.classList.toggle('is-active', isActive);
+    const cntEl = li.querySelector('.li-count');
+    if(cntEl) cntEl.textContent = isActive ? `(${total})` : '';
+  });
+  // Light feedback toast
+  if(typeof dvToast !== 'undefined' && dvToast && typeof dvToast.info === 'function'){
+    dvToast.info(`${def.label}: ${total}`);
+  }
+}
+
+function clearLegendFilter(){
+  _activeLegendKey = null;
+  document.body.classList.remove('legend-filtering');
+  document.querySelectorAll('.legend-hit').forEach(el=>el.classList.remove('legend-hit'));
+  document.querySelectorAll('.li.is-active').forEach(li=>li.classList.remove('is-active'));
+  document.querySelectorAll('.li-count').forEach(c=>c.textContent='');
+}
+
 function doHighlight(){
   if(!selCar)return;
+  // Mutex with the legend status filter — clear it before highlighting fits.
+  if(_activeLegendKey) clearLegendFilter();
   hlMode=true;
   const fHi=selCar.l<=LIM_L&&selCar.h<=LIM_H_HI&&selCar.cm<=LIM_M;
   const fLo=selCar.l<=LIM_L&&selCar.h&&selCar.h<=LIM_H_LO&&selCar.cm<=LIM_M;
