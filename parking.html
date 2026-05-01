@@ -2058,14 +2058,32 @@ html[data-role="viewer"] .readonly-banner{display:flex}
       <label>Примечание <span style="color:var(--tx3);font-weight:400;text-transform:none;letter-spacing:0">(внутреннее, гостям не показывается)</span></label>
       <textarea id="eNote" rows="3" style="resize:vertical;min-height:60px"></textarea>
     </div>
-    <!-- Compact action footer (rebuilt 2026-05) — toolbar row + primary row -->
+    <!-- Compact action footer (rebuilt 2026-05) — toolbar row + primary row.
+         Icons: Filled Premium (solid silhouettes, Stripe/Bloomberg style). -->
     <div class="modal-actions">
       <div class="modal-tools" role="toolbar" aria-label="Действия с ячейкой">
-        <button class="btn-icon" onclick="clearCell()" title="Очистить данные ячейки" aria-label="Очистить">🧹</button>
-        <button class="btn-icon admin-only" id="eLockBtn" onclick="openLockModal()" title="Заблокировать / разблокировать (admin)" aria-label="Замок">🔓</button>
-        <button class="btn-icon" id="ePlanBtn" style="display:none" onclick="goToPlanFromEdit()" title="Показать на схеме" aria-label="Показать на схеме">📍</button>
+        <button class="btn-icon" onclick="clearCell()" title="Очистить данные ячейки" aria-label="Очистить">
+          <svg width="17" height="17" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+            <path d="M9.3 1.7c-.4-.4-1-.4-1.4 0L1.7 7.9c-.4.4-.4 1 0 1.4L4.5 12H3a.7.7 0 100 1.4h10a.7.7 0 100-1.4H7.5l5.8-5.8c.4-.4.4-1 0-1.4L9.3 1.7z"/>
+          </svg>
+        </button>
+        <button class="btn-icon admin-only" id="eLockBtn" onclick="openLockModal()" title="Заблокировать / разблокировать (admin)" aria-label="Замок">
+          <!-- icon swapped by JS based on cell.locked — default: lock-open -->
+          <svg width="17" height="17" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+            <path d="M5 7V4.5a3 3 0 014.4-2.5l.6.4-.7 1.2-.6-.4a1.6 1.6 0 00-2.3 1.3V7H13a1 1 0 011 1v6a1 1 0 01-1 1H3a1 1 0 01-1-1V8a1 1 0 011-1h2zm3 6a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/>
+          </svg>
+        </button>
+        <button class="btn-icon" id="ePlanBtn" style="display:none" onclick="goToPlanFromEdit()" title="Показать на схеме" aria-label="Показать на схеме">
+          <svg width="17" height="17" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+            <path d="M8 1a5 5 0 00-5 5c0 4 5 8.5 5 8.5s5-4.5 5-8.5a5 5 0 00-5-5zm0 7a2 2 0 110-4 2 2 0 010 4z"/>
+          </svg>
+        </button>
         <div class="modal-tools-spacer"></div>
-        <button class="btn-icon btn-icon-danger admin-only" onclick="deleteCellFully()" id="eDelBtn" title="Удалить ячейку полностью (admin)" aria-label="Удалить ячейку">🗑</button>
+        <button class="btn-icon btn-icon-danger admin-only" onclick="deleteCellFully()" id="eDelBtn" title="Удалить ячейку полностью (admin)" aria-label="Удалить ячейку">
+          <svg width="17" height="17" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+            <path d="M6 2a1 1 0 011-1h2a1 1 0 011 1v1h3.5a.5.5 0 110 1H13l-.8 9.4a1.5 1.5 0 01-1.5 1.4H5.3a1.5 1.5 0 01-1.5-1.4L3 4h-.5a.5.5 0 110-1H6V2zm1 .5v.5h2v-.5H7zm-.5 4a.5.5 0 00-.5.5v5a.5.5 0 101 0v-5a.5.5 0 00-.5-.5zm3 0a.5.5 0 00-.5.5v5a.5.5 0 101 0v-5a.5.5 0 00-.5-.5z"/>
+          </svg>
+        </button>
       </div>
       <div class="modal-primary">
         <button class="btn btn-secondary" onclick="closeModal()">Отмена</button>
@@ -4727,6 +4745,18 @@ function inferKlausType(car){
   if(car.h <= LIM_H_LO) return 'Низкая';
   return 'Высокая';
 }
+// Filled Premium SVG icons for lock-open / lock-closed.
+// Swapped on the eLockBtn whenever cell.locked changes.
+const LOCK_OPEN_SVG = '<svg width="17" height="17" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">'+
+  '<path d="M5 7V4.5a3 3 0 014.4-2.5l.6.4-.7 1.2-.6-.4a1.6 1.6 0 00-2.3 1.3V7H13a1 1 0 011 1v6a1 1 0 01-1 1H3a1 1 0 01-1-1V8a1 1 0 011-1h2zm3 6a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/>'+
+  '</svg>';
+const LOCK_CLOSED_SVG = '<svg width="17" height="17" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">'+
+  '<path d="M5 7V4.5a3 3 0 016 0V7h2a1 1 0 011 1v6a1 1 0 01-1 1H3a1 1 0 01-1-1V8a1 1 0 011-1h2zm1.5 0h3V4.5a1.5 1.5 0 00-3 0V7zM8 13a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/>'+
+  '</svg>';
+function renderLockIcon(btn, isLocked){
+  if(!btn) return;
+  btn.innerHTML = isLocked ? LOCK_CLOSED_SVG : LOCK_OPEN_SVG;
+}
 
 // ═══════════════════════════════════════════════════════════════
 // INIT
@@ -6850,7 +6880,7 @@ function openEdit(sec,id){
   try{
     const lockBtn = document.getElementById('eLockBtn');
     if(lockBtn){
-      lockBtn.textContent = cell.locked ? '🔒' : '🔓';
+      renderLockIcon(lockBtn, !!cell.locked);
       lockBtn.title = cell.locked
         ? 'Снять блокировку (нужен пароль admin)'
         : 'Заблокировать ячейку (нужен пароль admin)';
@@ -7077,7 +7107,7 @@ async function confirmLockToggle(){
   if(typeof sbWriteCell === 'function') sbWriteCell(sec, id, cell);
   // Обновляем UI editModal
   const lockBtn = document.getElementById('eLockBtn');
-  if(lockBtn) lockBtn.textContent = cell.locked ? '🔒' : '🔓';
+  if(lockBtn) renderLockIcon(lockBtn, !!cell.locked);
   const banner = document.getElementById('eLockBanner');
   if(banner) banner.style.display = cell.locked ? 'block' : 'none';
   closeLockModal();
