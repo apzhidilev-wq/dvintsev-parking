@@ -5046,7 +5046,19 @@ function buildGrid(){
 
 function buildSectionGrid(sec){
   const d=PARKING[sec]||{};
-  const ids=Object.keys(d).filter(k=>/^\d+$/.test(k)).map(Number).sort((a,b)=>a-b);
+  // Robust sort — handles both pure-numeric ("15") and alphanumeric
+  // ("15С", "А-15", etc.) keys. Numeric prefix sorts numerically;
+  // ties (or non-numeric) fall back to lexicographic compare.
+  const ids=Object.keys(d).sort((a,b)=>{
+    const na=parseInt(a,10), nb=parseInt(b,10);
+    if(!isNaN(na)&&!isNaN(nb)){
+      if(na!==nb) return na-nb;
+      return String(a).localeCompare(String(b));
+    }
+    if(!isNaN(na)) return -1;
+    if(!isNaN(nb)) return 1;
+    return String(a).localeCompare(String(b));
+  });
   let html='<div class="fhdr"><h3 style="color:var(--c'+sec.toLowerCase()+')" >Секция '+sec+' — Блоки</h3>';
   html+='<button class="exp-btn admin-only" onclick="openNewCellModal(\''+sec+'\')" style="margin-left:auto;font-size:11px;padding:5px 10px" title="Добавить новую ячейку в секцию '+sec+'">+ Ячейка</button>';
   html+='<div class="fprog"><div class="fprogbar" id="prog-'+sec.toLowerCase()+'" style="background:var(--c'+sec.toLowerCase()+')"></div></div>';
